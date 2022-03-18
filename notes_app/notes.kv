@@ -1,0 +1,52 @@
+#:kivy 1.0
+
+<MainWindow>:
+    orientation: "vertical"
+    open_button: btn_open
+    save_button: btn_save
+    text_view: textInput
+
+    BoxLayout:
+
+        size_hint: (1,None)
+        size: (1,20)
+        orientation: "horizontal"
+
+        Button:
+            id: btn_open
+            text: "Open"
+            on_press: root.on_open()
+
+        Button:
+            id: btn_save
+            text: "Save"
+            on_press: root.on_save()
+
+    BoxLayout:
+
+        orientation: "vertical"
+        text_view: textInput
+
+        TextInput:
+            id: textInput
+
+
+<OpenDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+            filters: [lambda folder, filename: filename.endswith('.txt')]
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.dialog_cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.open_file(filechooser.path, filechooser.selection)
