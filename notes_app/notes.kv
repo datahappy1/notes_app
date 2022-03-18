@@ -9,18 +9,29 @@
     BoxLayout:
 
         size_hint: (1,None)
-        size: (1,20)
+        size: (1,25)
         orientation: "horizontal"
 
         Button:
             id: btn_open
             text: "Open"
             on_press: root.on_open()
+            color: 1,0,1,1
+            background_color: (0, 0, 150, 1)
+
+        Button:
+            id: btn_search
+            text: "Search"
+            on_press: root.on_search()
+            color: 1,0,1,1
+            background_color: (100, 0, 0, 1)
 
         Button:
             id: btn_save
             text: "Save"
             on_press: root.on_save()
+            color: 1,0,1,1
+            background_color: (0, 100, 0, 1)
 
     BoxLayout:
 

@@ -28,6 +28,7 @@ class SaveDialog(FloatLayout):
 class MainWindow(BoxLayout):
     open_button = ObjectProperty()
     save_button = ObjectProperty()
+    search_button = ObjectProperty()
     text_view = ObjectProperty()
 
     def __init__(self, **kwargs):
@@ -57,6 +58,9 @@ class MainWindow(BoxLayout):
         f = open(self.filepath, 'w')
         f.write(self.text_view.text)
         f.close()
+
+    def on_search(self, *args):
+        pass
 
 
 if __name__ == '__main__':
