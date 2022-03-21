@@ -1,5 +1,6 @@
 Kivy==2.1.0
 Kivy-Garden==0.1.4
+kivymd==0.104.2
 Pygments==2.11.2
 Pympler==1.0.1
 atomicwrites==1.4.0

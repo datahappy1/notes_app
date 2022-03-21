@@ -1,18 +1,11 @@
-from kivy.app import App
-from kivy.properties import *
-from kivy.uix.boxlayout import *
-from kivy.uix.floatlayout import *
+from kivy.properties import ObjectProperty
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 
-BASE_FILE_PATH = "C:\\Users\pavel.prudky\\agents_with_default_profiles.txt"
+from notes_app.view import main_screen
 
-
-class NotesApp(App):
-    def __init__(self):
-        App.__init__(self)
-
-    def build(self):
-        return MainWindow()
+from notes_app.settings import APP_STARTUP_FILE_PATH
 
 
 class OpenDialog(FloatLayout):
@@ -25,16 +18,18 @@ class SaveDialog(FloatLayout):
     cancel = ObjectProperty(None)
 
 
-class MainWindow(BoxLayout):
+class MainScreenController(BoxLayout):
     open_button = ObjectProperty()
     save_button = ObjectProperty()
     search_button = ObjectProperty()
     text_view = ObjectProperty()
 
     def __init__(self, **kwargs):
-        super(MainWindow, self).__init__()
+        super(MainScreenController, self).__init__()
+        self._view = main_screen()
         self.clipboard_text = ""
-        self.filepath = ""
+        self.filepath = APP_STARTUP_FILE_PATH
+        self.on_startup()
 
     def on_open(self, *args):
         content = OpenDialog(open_file=self.open_file,
@@ -62,6 +57,12 @@ class MainWindow(BoxLayout):
     def on_search(self, *args):
         pass
 
+    def on_startup(self):
+        f = open(self.filepath, 'r')
+        s = f.read()
+        self.text_view.text = s
+        f.close()
 
-if __name__ == '__main__':
-    NotesApp().run()
+    def get_screen(self):
+        """The method creates get the view."""
+        return self._view

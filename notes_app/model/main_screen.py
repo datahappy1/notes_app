@@ -1,0 +1,2 @@
+class MainScreenModel:
+    pass
