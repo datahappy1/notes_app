@@ -19,5 +19,5 @@ class MyScreenController:
         self.model = model
         self.view = MyScreenView(controller=self, model=self.model)
 
-    def on_startup(self):
-        self.view.MainWindow.on_startup(self.model)
+    # def on_startup(self):
+    #     self.view.MainWindow.on_startup(self.model)
