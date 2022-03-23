@@ -1,6 +1,8 @@
 from kivymd.app import MDApp
-from notes_app.controller.myscreen import MyScreenController, MainWindow
+
+from notes_app.controller.myscreen import MyScreenController
 from notes_app.model.myscreen import MyScreenModel
+from notes_app.view.myscreen import MyScreenView
 
 
 class NotesApp(MDApp):
@@ -10,7 +12,7 @@ class NotesApp(MDApp):
         self.controller = MyScreenController(self.model)
 
     def build(self):
-        return MainWindow(model=self.model)
+        return MyScreenView.MainWindow(model=self.model)
 
 
 NotesApp().run()
