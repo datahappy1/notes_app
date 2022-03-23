@@ -2,12 +2,12 @@ import os
 
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivymd.uix.screen import MDScreen
-from notes_app.settings import APP_STARTUP_FILE_PATH
 
+from notes_app.settings import APP_STARTUP_FILE_PATH
 from notes_app.utils.observer import Observer
 
 
@@ -66,7 +66,7 @@ class MyScreenView(MDScreen, Observer):
 
         def on_open(self, *args):
             content = self.view.OpenDialog(open_file=self.open_file,
-                                            cancel=self.cancel_dialog)
+                                           cancel=self.cancel_dialog)
             self._popup = Popup(title="Open File", content=content,
                                 size_hint=(0.9, 0.9))
             self._popup.open()

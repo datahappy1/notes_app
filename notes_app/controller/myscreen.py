@@ -15,9 +15,12 @@ class MyScreenController:
         The constructor takes a reference to the model.
         The constructor creates the view.
         """
-
         self.model = model
         self.view = MyScreenView(controller=self, model=self.model)
 
     # def on_startup(self):
     #     self.view.MainWindow.on_startup(self.model)
+
+    def get_screen(self):
+        """The method creates get the view."""
+        return self.view.MainWindow(model=self.model)
