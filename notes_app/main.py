@@ -5,8 +5,7 @@ from kivy.uix.popup import Popup
 from kivymd.app import MDApp
 from notes_app.controller.myscreen import MyScreenController
 from notes_app.model.myscreen import MyScreenModel
-
-BASE_FILE_PATH = "C:\\Users\pavel.prudky\\agents_with_default_profiles.txt"
+from notes_app.settings import APP_STARTUP_FILE_PATH
 
 
 class OpenDialog(FloatLayout):
@@ -58,7 +57,7 @@ class MainWindow(BoxLayout):
         pass
 
     def on_startup(self):
-        self.filepath = BASE_FILE_PATH
+        self.filepath = APP_STARTUP_FILE_PATH
         f = open(self.filepath, 'r')
         s = f.read()
         self.text_view.text = s
