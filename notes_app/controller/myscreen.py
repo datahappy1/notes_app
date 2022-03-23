@@ -1,4 +1,5 @@
 from notes_app.view.myscreen import MyScreenView
+from notes_app.settings import APP_STARTUP_FILE_PATH
 
 
 class MyScreenController:
@@ -18,9 +19,12 @@ class MyScreenController:
         self.model = model
         self.view = MyScreenView(controller=self, model=self.model)
 
-    # def on_startup(self):
-    #     self.view.MainWindow.on_startup(self.model)
+    def on_startup(self):
+        f = open(APP_STARTUP_FILE_PATH, 'r')
+        s = f.read()
+        f.close()
+        return s
 
     def get_screen(self):
         """The method creates get the view."""
-        return self.view.MainWindow(model=self.model)
+        return self.view.main_window
