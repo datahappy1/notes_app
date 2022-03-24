@@ -16,14 +16,21 @@ class MyScreenController:
         The constructor takes a reference to the model.
         The constructor creates the view.
         """
+        self.file_path = APP_STARTUP_FILE_PATH
         self.model = model
         self.view = MyScreenView(controller=self, model=self.model)
 
-    def on_startup(self):
-        f = open(APP_STARTUP_FILE_PATH, 'r')
+    def read_file_data(self):
+        f = open(self.file_path, 'r')
         s = f.read()
         f.close()
         return s
+
+    def save_file_data(self, data):
+        f = open(self.file_path, 'w')
+        f.write(data)
+        f.close()
+        self.model.data = data
 
     def get_screen(self):
         """The method creates get the view."""
