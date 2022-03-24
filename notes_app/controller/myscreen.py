@@ -30,8 +30,8 @@ class MyScreenController:
         f = open(self.file_path, 'w')
         f.write(data)
         f.close()
-        self.model.data = data
+        # self.model.data = data
 
     def get_screen(self):
         """The method creates get the view."""
-        return self.view.main_window
+        return self.view
