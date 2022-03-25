@@ -1,11 +1,14 @@
 import os
 
 from kivy.lang import Builder
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
+from kivymd.uix.button import MDFlatButton
 from kivymd.uix.screen import MDScreen
+from kivymd.uix.snackbar import Snackbar, BaseSnackbar
 
 from notes_app.utils.observer import Observer
 
@@ -20,6 +23,12 @@ class SaveDialog(FloatLayout):
     cancel = ObjectProperty(None)
 
 
+class CustomSnackbar(BaseSnackbar):
+    text = StringProperty(None)
+    icon = StringProperty(None)
+    font_size = NumericProperty("15sp")
+
+
 class MyScreenView(BoxLayout, MDScreen, Observer):
     """"
     A class that implements the visual presentation `MyScreenModel`.
@@ -32,6 +41,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     save_button = ObjectProperty()
     search_button = ObjectProperty()
     text_view = ObjectProperty()
+    saved_label = ObjectProperty()
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -45,8 +55,17 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         The method is called when the model changes.
         Requests and displays the value of the sum.
         """
-        self.ids.result.text = str(self.model.sum)
-        # TODO here it fails on save -> we update back through the kv
+        snackbar = CustomSnackbar(
+            text="All is saved!",
+            icon="information",
+            snackbar_x="10dp",
+            snackbar_y="10dp",
+            buttons=[MDFlatButton(text="ACTION", text_color=(1, 1, 1, 1))]
+        )
+        snackbar.size_hint_x = (
+            Window.width - (snackbar.snackbar_x * 2)
+        ) / Window.width
+        snackbar.open()
 
     def on_startup(self):
         self.text_view.text = self.controller.read_file_data()
