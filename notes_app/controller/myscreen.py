@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from notes_app.view.myscreen import MyScreenView
 from notes_app.settings import APP_STARTUP_FILE_PATH
 
@@ -30,7 +32,11 @@ class MyScreenController:
         f = open(self.file_path, 'w')
         f.write(data)
         f.close()
-        # self.model.data = data
+
+        self.model.metadata = dict(
+            updatedOn=str(datetime.now()),
+            byteCount=len(data)
+        )
 
     def get_screen(self):
         """The method creates get the view."""

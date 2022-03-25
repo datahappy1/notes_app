@@ -40,20 +40,13 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.save_dialog = SaveDialog()
         self.on_startup()
 
-    # def set_c(self, focus, value):
-    #     if not focus:
-    #         self.controller.set_c(value)
-    #
-    # def set_d(self, focus, value):
-    #     if not focus:
-    #         self.controller.set_d(value)
-
     def model_is_changed(self):
         """
         The method is called when the model changes.
         Requests and displays the value of the sum.
         """
         self.ids.result.text = str(self.model.sum)
+        # TODO here it fails on save -> we update back through the kv
 
     def on_startup(self):
         self.text_view.text = self.controller.read_file_data()
