@@ -29,6 +29,8 @@ class CustomSnackbar(BaseSnackbar):
     font_size = NumericProperty("15sp")
 
 
+# TODO continue here https://stackoverflow.com/questions/69176665/kivymd-how-can-i-create-dropdown-menu-with-toolbar-action-item
+
 class MyScreenView(BoxLayout, MDScreen, Observer):
     """"
     A class that implements the visual presentation `MyScreenModel`.
@@ -37,6 +39,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     controller = ObjectProperty()
     model = ObjectProperty()
 
+    nav_toolbar = ObjectProperty()
     open_button = ObjectProperty()
     save_button = ObjectProperty()
     search_button = ObjectProperty()
@@ -59,8 +62,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             text="All is saved!",
             icon="information",
             snackbar_x="10dp",
-            snackbar_y="10dp",
-            buttons=[MDFlatButton(text="ACTION", text_color=(1, 1, 1, 1))]
+            snackbar_y="10dp"
         )
         snackbar.size_hint_x = (
             Window.width - (snackbar.snackbar_x * 2)

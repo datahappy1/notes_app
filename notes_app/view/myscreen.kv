@@ -20,39 +20,44 @@
 
 <MyScreenView>:
     orientation: "vertical"
+    nav_toolbar: toolbar
     open_button: btn_open
     save_button: btn_save
     text_view: textInput
 
-    BoxLayout:
+    MDToolbar:
+        id: toolbar
+        title: "Notes"
+        left_action_items: [["dots-vertical", lambda x: app.menu.open()]]
+        elevation: 8
 
+    MDBoxLayout:
         size_hint: (1,None)
         size: (1,25)
         orientation: "horizontal"
 
-        Button:
+        MDFlatButton:
             id: btn_open
             text: "Open"
             on_press: root.on_open()
             color: 1,0,1,1
             background_color: (0, 0, 150, 1)
 
-        Button:
+        MDFlatButton:
             id: btn_search
             text: "Search"
             on_press: root.on_search()
             color: 1,0,1,1
             background_color: (100, 0, 0, 1)
 
-        Button:
+        MDFlatButton:
             id: btn_save
             text: "Save"
             on_press: root.on_save()
             color: 1,0,1,1
             background_color: (0, 100, 0, 1)
 
-    BoxLayout:
-
+    MDBoxLayout:
         orientation: "vertical"
         text_view: textInput
 
@@ -61,7 +66,7 @@
 
 
 <OpenDialog>:
-    BoxLayout:
+    MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
