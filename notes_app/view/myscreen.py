@@ -33,7 +33,8 @@ class CustomSnackbar(BaseSnackbar):
 
 
 class MenuItems(Enum):
-    ChooseFile = "Choose File"
+    ChooseFile = "Choose a file"
+    ShowCurrentFileInfo = "Show file info"
     Search = "Search"
     Save = "Save"
 
@@ -77,6 +78,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def menu_callback(self, text_item):
         if text_item == MenuItems.Save.value:
             self.on_save()
+        elif text_item == MenuItems.ShowCurrentFileInfo.value:
+            self.on_show_metadata()
         elif text_item == MenuItems.ChooseFile.value:
             self.on_open()
         elif text_item == MenuItems.Search.value:
@@ -90,15 +93,13 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         Requests and displays the value of the sum.
         """
         snackbar = CustomSnackbar(
-            text="All is saved!",
+            text="Note was saved!",
             icon="information",
             snackbar_x="10dp",
             snackbar_y="10dp"
         )
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
-
-        self.lbl.text = f"{self.model.metadata}"
 
     def cancel_dialog(self):
         self._popup.dismiss()
@@ -116,6 +117,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self._popup = Popup(title="Open File", content=content,
                             size_hint=(0.9, 0.9))
         self._popup.open()
+
+    def on_show_metadata(self, *args):
+        self.lbl.text = f"{self.model.metadata}"
 
     def on_save(self, *args):
         self.controller.save_file_data(data=self.text_view.text)
