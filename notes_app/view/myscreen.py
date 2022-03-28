@@ -8,6 +8,7 @@ from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
+from kivymd.uix.label import MDLabel
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -45,19 +46,13 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     controller = ObjectProperty()
     model = ObjectProperty()
 
-    # nav_toolbar = ObjectProperty()
-    # open_button = ObjectProperty()
-    # save_button = ObjectProperty()
-    # search_button = ObjectProperty()
-    # text_view = ObjectProperty()
-    # saved_label = ObjectProperty()
-
     def __init__(self, **kw):
         super().__init__(**kw)
         self.model.add_observer(self)  # register the view as an observer
         self.open_dialog = OpenDialog()
         self.save_dialog = SaveDialog()
         self.menu = self._setup_menu()
+        #self.lbl = NoneCustomLabel()
         self._popup = None
         self._on_startup()
 
@@ -102,6 +97,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         )
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
+
+        self.lbl.text = f"{self.model.metadata}"
 
     def cancel_dialog(self):
         self._popup.dismiss()

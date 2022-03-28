@@ -24,6 +24,7 @@
     open_button: btn_open
     save_button: btn_save
     text_view: textInput
+    lbl: Label
 
     MDToolbar:
         id: toolbar
@@ -56,6 +57,14 @@
             on_press: root.on_save()
             color: 1,0,1,1
             background_color: (0, 100, 0, 1)
+
+    MDBoxLayout:
+        size_hint: (1,None)
+        size: (1,25)
+        orientation: "horizontal"
+
+        MDLabel:
+            id: Label
 
     MDBoxLayout:
         orientation: "vertical"

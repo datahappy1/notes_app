@@ -27,6 +27,15 @@ class MyScreenModel:
         self._metadata = NotesMetaData()
         self._observers = []
 
+    # def __str__(self):
+    #     return str(
+    #         dict(
+    #             updatedOn=self._metadata.updatedOn,
+    #             filePath=self._metadata.filePath,
+    #             byteCount=self._metadata.byteCount
+    #         )
+    #     )
+
     @property
     def metadata(self):
         return self._metadata
