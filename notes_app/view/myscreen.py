@@ -36,7 +36,6 @@ class CustomSnackbar(BaseSnackbar):
 class MenuItems(Enum):
     ChooseFile = "Choose a file"
     ShowCurrentFileInfo = "Show file info"
-    Search = "Search"
     Save = "Save"
 
 
@@ -55,7 +54,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.open_dialog = OpenDialog()
         self.save_dialog = SaveDialog()
         self.menu = self._setup_menu()
-        # self.lbl = NoneCustomLabel()
         self._popup = None
         self._on_startup()
 
@@ -74,7 +72,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         return MDDropdownMenu(
             caller=self.ids.toolbar,
             items=menu_items,
-            width_mult=2,
+            width_mult=5,
         )
 
     def menu_callback(self, text_item):
@@ -84,8 +82,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             self.on_show_metadata()
         elif text_item == MenuItems.ChooseFile.value:
             self.on_open()
-        elif text_item == MenuItems.Search.value:
-            pass
 
         self.menu.dismiss()
 
@@ -103,7 +99,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
 
-    def cancel_dialog(self):
+    def cancel_popup(self):
         self._popup.dismiss()
 
     def _open_file(self, path, filename):
@@ -112,24 +108,27 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.text_view.text = self.controller.read_file_data(file_path=file_path)
         self.controller.set_file_path(file_path)
 
-        self.cancel_dialog()
+        self.cancel_popup()
 
     def on_open(self, *args):
         content = OpenDialog(open_file=self._open_file,
-                             cancel=self.cancel_dialog)
+                             cancel=self.cancel_popup)
         self._popup = Popup(title="Open File", content=content,
                             size_hint=(0.9, 0.9))
         self._popup.open()
 
+    def close_dialog(self, *args):
+        self.dialog.dismiss(force=True)
+
     def on_show_metadata(self, *args):
-        # self.lbl.text = f"{self.model}"
         if not self.dialog:
             self.dialog = MDDialog(
-                text=f"{self.model}",
+                text=f"{self.model.get_formatted()}",
                 buttons=[
                     MDFlatButton(
                         text="OK",
-                        theme_text_color="Custom"
+                        theme_text_color="Custom",
+                        on_release=self.close_dialog
                     )
                 ],
             )

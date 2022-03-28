@@ -21,11 +21,7 @@
 <MyScreenView>:
     orientation: "vertical"
     nav_toolbar: toolbar
-    open_button: btn_open
-    save_button: btn_save
     text_view: textInput
-    lbl: Label
-    search_input: SearchInput
 
     MDToolbar:
         id: toolbar
@@ -38,35 +34,6 @@
         size: (1,25)
         orientation: "horizontal"
 
-        MDFlatButton:
-            id: btn_open
-            text: "Open"
-            on_press: root.on_open()
-            color: 1,0,1,1
-            background_color: (0, 0, 150, 1)
-
-        MDFlatButton:
-            id: btn_search
-            text: "Search"
-            on_press: root.on_search()
-            color: 1,0,1,1
-            background_color: (100, 0, 0, 1)
-
-        MDFlatButton:
-            id: btn_save
-            text: "Save"
-            on_press: root.on_save()
-            color: 1,0,1,1
-            background_color: (0, 100, 0, 1)
-
-    MDBoxLayout:
-        size_hint: (1,None)
-        size: (1,25)
-        orientation: "horizontal"
-
-        MDLabel:
-            id: Label
-
     MDBoxLayout:
         size_hint: (1,None)
         size: (1,25)
@@ -74,7 +41,7 @@
 
         MDTextField:
             id: SearchInput
-            hint_text: "No helper text"
+            hint_text: "Search for string..."
 
     MDBoxLayout:
         orientation: "vertical"

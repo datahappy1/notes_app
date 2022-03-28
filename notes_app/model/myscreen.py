@@ -6,7 +6,7 @@
 # method). For this, observers must be descendants of an abstract class,
 # inheriting which, the `model_is_changed` method must be overridden.
 from datetime import datetime
-
+from os import linesep
 from notes_app.settings import APP_STARTUP_FILE_PATH
 
 
@@ -41,6 +41,11 @@ class MyScreenModel:
 
     def __str__(self):
         return str(self._metadata.__dict__)
+
+    def get_formatted(self):
+        return f"Updated on: {self._metadata.updatedOn}\n" \
+               f"File path: {self._metadata.filePath}\n" \
+               f"Byte Count: {self._metadata.byteCount}"
 
     @property
     def metadata(self):
