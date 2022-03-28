@@ -8,7 +8,8 @@ from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
-from kivymd.uix.label import MDLabel
+from kivymd.uix.button import MDFlatButton
+from kivymd.uix.dialog import MDDialog
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -46,6 +47,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     """
     controller = ObjectProperty()
     model = ObjectProperty()
+    dialog = None
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -53,7 +55,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.open_dialog = OpenDialog()
         self.save_dialog = SaveDialog()
         self.menu = self._setup_menu()
-        #self.lbl = NoneCustomLabel()
+        # self.lbl = NoneCustomLabel()
         self._popup = None
         self._on_startup()
 
@@ -120,12 +122,24 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self._popup.open()
 
     def on_show_metadata(self, *args):
-        self.lbl.text = f"{self.model}"
+        # self.lbl.text = f"{self.model}"
+        if not self.dialog:
+            self.dialog = MDDialog(
+                text=f"{self.model}",
+                buttons=[
+                    MDFlatButton(
+                        text="OK",
+                        theme_text_color="Custom"
+                    )
+                ],
+            )
+        self.dialog.open()
 
     def on_save(self, *args):
         self.controller.save_file_data(data=self.text_view.text)
 
     def on_search(self, *args):
+        # search_input
         pass
 
 

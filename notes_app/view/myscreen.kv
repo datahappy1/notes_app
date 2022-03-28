@@ -25,6 +25,7 @@
     save_button: btn_save
     text_view: textInput
     lbl: Label
+    search_input: SearchInput
 
     MDToolbar:
         id: toolbar
@@ -65,6 +66,15 @@
 
         MDLabel:
             id: Label
+
+    MDBoxLayout:
+        size_hint: (1,None)
+        size: (1,25)
+        orientation: "horizontal"
+
+        MDTextField:
+            id: SearchInput
+            hint_text: "No helper text"
 
     MDBoxLayout:
         orientation: "vertical"
