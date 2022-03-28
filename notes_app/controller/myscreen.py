@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from notes_app.model.myscreen import NotesMetaData
 from notes_app.view.myscreen import MyScreenView
 from notes_app.settings import APP_STARTUP_FILE_PATH
 
@@ -22,8 +23,15 @@ class MyScreenController:
         self.model = model
         self.view = MyScreenView(controller=self, model=self.model)
 
+    def _update_metadata(self):
+        self.model.metadata = NotesMetaData(
+            updated_on=str(datetime.now()),
+            file_path=self.file_path,
+        )
+
     def set_file_path(self, file_path):
         self.file_path = file_path
+        self._update_metadata()
 
     def read_file_data(self, file_path=None):
         f = open(file_path or self.file_path, 'r')
@@ -36,11 +44,7 @@ class MyScreenController:
         f.write(data)
         f.close()
 
-        self.model.metadata = dict(
-            updatedOn=str(datetime.now()),
-            filePath=self.file_path,
-            byteCount=len(data)
-        )
+        self._update_metadata()
         print(self.model.metadata)
 
     def get_screen(self):

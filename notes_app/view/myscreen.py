@@ -93,7 +93,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         Requests and displays the value of the sum.
         """
         snackbar = CustomSnackbar(
-            text="Note was saved!",
+            text="Success",
             icon="information",
             snackbar_x="10dp",
             snackbar_y="10dp"
@@ -106,9 +106,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def _open_file(self, path, filename):
         file_path = filename[0]
-        self.controller.set_file_path(file_path)
 
         self.text_view.text = self.controller.read_file_data(file_path=file_path)
+        self.controller.set_file_path(file_path)
+
         self.cancel_dialog()
 
     def on_open(self, *args):
@@ -119,7 +120,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self._popup.open()
 
     def on_show_metadata(self, *args):
-        self.lbl.text = f"{self.model.metadata}"
+        self.lbl.text = f"{self.model}"
 
     def on_save(self, *args):
         self.controller.save_file_data(data=self.text_view.text)

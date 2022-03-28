@@ -5,11 +5,20 @@
 # model when they are notified (in this case, it is the `model_is_changed`
 # method). For this, observers must be descendants of an abstract class,
 # inheriting which, the `model_is_changed` method must be overridden.
+from datetime import datetime
+
+from notes_app.settings import APP_STARTUP_FILE_PATH
+
 
 class NotesMetaData:
-    updatedOn: str = None
-    filePath: str = None
-    byteCount: int = 0
+    def __init__(self, updated_on, file_path):
+        self.updatedOn: str = updated_on
+        self.filePath: str = file_path
+        self.byteCount: int = self._get_byte_count()
+
+    def _get_byte_count(self):
+        with open(self.filePath, mode="r") as f:
+            return len(f.read())
 
 
 class MyScreenModel:
@@ -24,17 +33,14 @@ class MyScreenModel:
     """
 
     def __init__(self):
-        self._metadata = NotesMetaData()
+        self._metadata = NotesMetaData(
+            updated_on=str(datetime.now()),
+            file_path=APP_STARTUP_FILE_PATH
+        )
         self._observers = []
 
-    # def __str__(self):
-    #     return str(
-    #         dict(
-    #             updatedOn=self._metadata.updatedOn,
-    #             filePath=self._metadata.filePath,
-    #             byteCount=self._metadata.byteCount
-    #         )
-    #     )
+    def __str__(self):
+        return str(self._metadata.__dict__)
 
     @property
     def metadata(self):
