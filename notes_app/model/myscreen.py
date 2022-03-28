@@ -8,6 +8,7 @@
 
 class NotesMetaData:
     updatedOn: str = None
+    filePath: str = None
     byteCount: int = 0
 
 

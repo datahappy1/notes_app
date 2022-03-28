@@ -103,19 +103,18 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
 
-    def open_file(self, path, filename):
-        self.file_path = filename[0]
-        f = open(self.file_path, 'r')
-        s = f.read()
-        self.text_view.text = s
-        f.close()
-        self.cancel_dialog()
-
     def cancel_dialog(self):
         self._popup.dismiss()
 
+    def _open_file(self, path, filename):
+        file_path = filename[0]
+        self.controller.set_file_path(file_path)
+
+        self.text_view.text = self.controller.read_file_data(file_path=file_path)
+        self.cancel_dialog()
+
     def on_open(self, *args):
-        content = OpenDialog(open_file=self.open_file,
+        content = OpenDialog(open_file=self._open_file,
                              cancel=self.cancel_dialog)
         self._popup = Popup(title="Open File", content=content,
                             size_hint=(0.9, 0.9))

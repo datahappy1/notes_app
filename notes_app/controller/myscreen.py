@@ -22,8 +22,11 @@ class MyScreenController:
         self.model = model
         self.view = MyScreenView(controller=self, model=self.model)
 
-    def read_file_data(self):
-        f = open(self.file_path, 'r')
+    def set_file_path(self, file_path):
+        self.file_path = file_path
+
+    def read_file_data(self, file_path=None):
+        f = open(file_path or self.file_path, 'r')
         s = f.read()
         f.close()
         return s
@@ -35,8 +38,10 @@ class MyScreenController:
 
         self.model.metadata = dict(
             updatedOn=str(datetime.now()),
+            filePath=self.file_path,
             byteCount=len(data)
         )
+        print(self.model.metadata)
 
     def get_screen(self):
         """The method creates get the view."""
