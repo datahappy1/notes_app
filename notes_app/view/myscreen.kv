@@ -28,7 +28,7 @@
     MDToolbar:
         id: toolbar
         title: "Notes"
-        left_action_items: [["dots-vertical", lambda x: app.menu.open()]]
+        left_action_items: [["dots-vertical", lambda x: root.menu.open()]]
         elevation: 8
 
     MDBoxLayout:
@@ -79,7 +79,7 @@
             height: 30
             Button:
                 text: "Cancel"
-                on_release: root.dialog_cancel()
+                on_release: root.cancel()
 
             Button:
                 text: "Load"

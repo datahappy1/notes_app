@@ -1,14 +1,16 @@
 import os
+from enum import Enum
 
-from kivy.lang import Builder
-from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.core.window import Window
+from kivy.lang import Builder
+from kivy.metrics import dp
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
-from kivymd.uix.button import MDFlatButton
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
-from kivymd.uix.snackbar import Snackbar, BaseSnackbar
+from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.utils.observer import Observer
 
@@ -29,7 +31,11 @@ class CustomSnackbar(BaseSnackbar):
     font_size = NumericProperty("15sp")
 
 
-# TODO continue here https://stackoverflow.com/questions/69176665/kivymd-how-can-i-create-dropdown-menu-with-toolbar-action-item
+class MenuItems(Enum):
+    ChooseFile = "Choose File"
+    Search = "Search"
+    Save = "Save"
+
 
 class MyScreenView(BoxLayout, MDScreen, Observer):
     """"
@@ -39,19 +45,49 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     controller = ObjectProperty()
     model = ObjectProperty()
 
-    nav_toolbar = ObjectProperty()
-    open_button = ObjectProperty()
-    save_button = ObjectProperty()
-    search_button = ObjectProperty()
-    text_view = ObjectProperty()
-    saved_label = ObjectProperty()
+    # nav_toolbar = ObjectProperty()
+    # open_button = ObjectProperty()
+    # save_button = ObjectProperty()
+    # search_button = ObjectProperty()
+    # text_view = ObjectProperty()
+    # saved_label = ObjectProperty()
 
     def __init__(self, **kw):
         super().__init__(**kw)
         self.model.add_observer(self)  # register the view as an observer
         self.open_dialog = OpenDialog()
         self.save_dialog = SaveDialog()
-        self.on_startup()
+        self.menu = self._setup_menu()
+        self._popup = None
+        self._on_startup()
+
+    def _on_startup(self):
+        self.text_view.text = self.controller.read_file_data()
+
+    def _setup_menu(self):
+        menu_items = [
+            {
+                "text": f"{i.value}",
+                "viewclass": "OneLineListItem",
+                "height": dp(40),
+                "on_release": lambda x=f"{i.value}": self.menu_callback(x),
+            } for i in MenuItems
+        ]
+        return MDDropdownMenu(
+            caller=self.ids.toolbar,
+            items=menu_items,
+            width_mult=2,
+        )
+
+    def menu_callback(self, text_item):
+        if text_item == MenuItems.Save.value:
+            self.on_save()
+        elif text_item == MenuItems.ChooseFile.value:
+            self.on_open()
+        elif text_item == MenuItems.Search.value:
+            pass
+
+        self.menu.dismiss()
 
     def model_is_changed(self):
         """
@@ -64,13 +100,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             snackbar_x="10dp",
             snackbar_y="10dp"
         )
-        snackbar.size_hint_x = (
-            Window.width - (snackbar.snackbar_x * 2)
-        ) / Window.width
+        snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
-
-    def on_startup(self):
-        self.text_view.text = self.controller.read_file_data()
 
     def open_file(self, path, filename):
         self.file_path = filename[0]
