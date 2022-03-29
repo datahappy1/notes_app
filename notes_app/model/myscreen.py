@@ -56,7 +56,9 @@ class MyScreenModel:
     @last_updated_on.setter
     def last_updated_on(self, value):
         if value:
-            self._lastUpdatedOn = time.strftime(LAST_UPDATED_ON_TIME_FORMAT, time.localtime(value))
+            self._lastUpdatedOn = time.strftime(
+                LAST_UPDATED_ON_TIME_FORMAT, time.localtime(value)
+            )
         else:
             self._lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
         self.notify_observers()
