@@ -25,7 +25,8 @@ class MyScreenModel:
     def __init__(self):
         self._filePath = APP_STARTUP_FILE_PATH
         self._fileSize = path.getsize(self._filePath)
-        self._lastUpdatedOn = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(path.getmtime(self._filePath)))
+        self._lastUpdatedOn = \
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(path.getmtime(self._filePath)))
         self._observers = []
 
     @property
@@ -62,12 +63,10 @@ class MyScreenModel:
             "_fileSize": "file size",
             "_lastUpdatedOn": "last updated on"
         }
-        _filtered_instance_attributes = [
-            item for item in _all_instance_attributes if item[0] in _attribute_name_mapping
-        ]
 
         return linesep.join(
-            [f"{_attribute_name_mapping[item[0]]} : {item[1]}" for item in _filtered_instance_attributes]
+            [f"{_attribute_name_mapping[item[0]]} : {item[1]}" for item
+             in _all_instance_attributes if item[0] in _attribute_name_mapping]
         )
 
     def add_observer(self, observer):
