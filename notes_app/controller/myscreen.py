@@ -1,8 +1,7 @@
-from datetime import datetime
+import time
+from os import path
 
-from notes_app.model.myscreen import NotesMetaData
 from notes_app.view.myscreen import MyScreenView
-from notes_app.settings import APP_STARTUP_FILE_PATH
 
 
 class MyScreenController:
@@ -19,33 +18,26 @@ class MyScreenController:
         The constructor takes a reference to the model.
         The constructor creates the view.
         """
-        self.file_path = APP_STARTUP_FILE_PATH
         self.model = model
         self.view = MyScreenView(controller=self, model=self.model)
 
-    def _update_metadata(self):
-        self.model.metadata = NotesMetaData(
-            updated_on=str(datetime.now()),
-            file_path=self.file_path,
-        )
-
     def set_file_path(self, file_path):
-        self.file_path = file_path
-        self._update_metadata()
+        self.model.file_path = file_path
+        self.model.file_size = path.getsize(file_path)
 
     def read_file_data(self, file_path=None):
-        f = open(file_path or self.file_path, 'r')
+        f = open(file_path or self.model.file_path, 'r')
         s = f.read()
         f.close()
         return s
 
     def save_file_data(self, data):
-        f = open(self.file_path, 'w')
+        f = open(self.model.file_path, 'w')
         f.write(data)
         f.close()
 
-        self._update_metadata()
-        print(self.model.metadata)
+        self.model.file_size = path.getsize(self.model.file_path)
+        self.model.last_updated_on = time.time()
 
     def get_screen(self):
         """The method creates get the view."""

@@ -5,20 +5,10 @@
 # model when they are notified (in this case, it is the `model_is_changed`
 # method). For this, observers must be descendants of an abstract class,
 # inheriting which, the `model_is_changed` method must be overridden.
-from datetime import datetime
-from os import linesep
+import time
+from os import path, linesep
+
 from notes_app.settings import APP_STARTUP_FILE_PATH
-
-
-class NotesMetaData:
-    def __init__(self, updated_on, file_path):
-        self.updatedOn: str = updated_on
-        self.filePath: str = file_path
-        self.byteCount: int = self._get_byte_count()
-
-    def _get_byte_count(self):
-        with open(self.filePath, mode="r") as f:
-            return len(f.read())
 
 
 class MyScreenModel:
@@ -33,28 +23,52 @@ class MyScreenModel:
     """
 
     def __init__(self):
-        self._metadata = NotesMetaData(
-            updated_on=str(datetime.now()),
-            file_path=APP_STARTUP_FILE_PATH
-        )
+        self._filePath = APP_STARTUP_FILE_PATH
+        self._fileSize = path.getsize(self._filePath)
+        self._lastUpdatedOn = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(path.getmtime(self._filePath)))
         self._observers = []
 
-    def __str__(self):
-        return str(self._metadata.__dict__)
+    @property
+    def file_path(self):
+        return self._filePath
 
-    def get_formatted(self):
-        return f"Updated on: {self._metadata.updatedOn}\n" \
-               f"File path: {self._metadata.filePath}\n" \
-               f"Byte Count: {self._metadata.byteCount}"
+    @file_path.setter
+    def file_path(self, value):
+        self._filePath = value
+        self.notify_observers()
 
     @property
-    def metadata(self):
-        return self._metadata
+    def file_size(self):
+        return self._fileSize
 
-    @metadata.setter
-    def metadata(self, value):
-        self._metadata = value
+    @file_size.setter
+    def file_size(self, value):
+        self._fileSize = value
         self.notify_observers()
+
+    @property
+    def last_updated_on(self):
+        return self._lastUpdatedOn
+
+    @last_updated_on.setter
+    def last_updated_on(self, value):
+        self._lastUpdatedOn = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(value))
+        self.notify_observers()
+
+    def get_formatted(self):
+        _all_instance_attributes = list(self.__dict__.items())
+        _attribute_name_mapping = {
+            "_filePath": "file path",
+            "_fileSize": "file size",
+            "_lastUpdatedOn": "last updated on"
+        }
+        _filtered_instance_attributes = [
+            item for item in _all_instance_attributes if item[0] in _attribute_name_mapping
+        ]
+
+        return linesep.join(
+            [f"{_attribute_name_mapping[item[0]]} : {item[1]}" for item in _filtered_instance_attributes]
+        )
 
     def add_observer(self, observer):
         self._observers.append(observer)
