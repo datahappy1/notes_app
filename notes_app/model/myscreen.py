@@ -10,6 +10,9 @@ from os import path, linesep
 
 from notes_app.settings import APP_STARTUP_FILE_PATH
 
+LAST_UPDATED_ON_VALUE_PLACEHOLDER = "-"
+LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 
 class MyScreenModel:
     """
@@ -25,8 +28,7 @@ class MyScreenModel:
     def __init__(self):
         self._filePath = APP_STARTUP_FILE_PATH
         self._fileSize = path.getsize(self._filePath)
-        self._lastUpdatedOn = \
-            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(path.getmtime(self._filePath)))
+        self._lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
         self._observers = []
 
     @property
@@ -53,7 +55,10 @@ class MyScreenModel:
 
     @last_updated_on.setter
     def last_updated_on(self, value):
-        self._lastUpdatedOn = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(value))
+        if value:
+            self._lastUpdatedOn = time.strftime(LAST_UPDATED_ON_TIME_FORMAT, time.localtime(value))
+        else:
+            self._lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
         self.notify_observers()
 
     def get_formatted(self):
