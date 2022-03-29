@@ -1,5 +1,13 @@
 #:kivy 1.0
 
+<SearchContent>
+    orientation: "vertical"
+    size_hint_y: None
+
+    MDTextField:
+        hint_text: "String to search for..."
+
+
 <CustomSnackbar>
     MDIconButton:
         pos_hint: {'center_y': .5}
@@ -26,7 +34,7 @@
     MDToolbar:
         id: toolbar
         title: "Notes"
-        left_action_items: [["dots-vertical", lambda x: root.menu.open()]]
+        left_action_items: [["dots-vertical", lambda x: root.menu.open()], ["magnify", lambda x: root.on_search()]]
         elevation: 8
 
     MDBoxLayout:

@@ -27,6 +27,10 @@ class SaveDialog(FloatLayout):
     cancel = ObjectProperty(None)
 
 
+class SearchContent(BoxLayout):
+    pass
+
+
 class CustomSnackbar(BaseSnackbar):
     text = StringProperty(None)
     icon = StringProperty(None)
@@ -54,6 +58,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.save_dialog = SaveDialog()
         self.menu = self._setup_menu()
         self._file_info_dialog = None
+        self._search_dialog = None
         self._popup = None
         self._on_startup()
 
@@ -126,10 +131,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def on_show_metadata(self, *args):
         if not self._file_info_dialog:
             self._file_info_dialog = MDDialog(
+                title="File info",
                 text=f"{self.model.get_formatted()}",
                 buttons=[
                     MDFlatButton(
-                        text="OK",
+                        text="CLOSE",
                         theme_text_color="Custom",
                         on_release=self.close_file_info_dialog
                     )
@@ -137,8 +143,35 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
         self._file_info_dialog.open()
 
+    def close_search_dialog(self, *args):
+        self._search_dialog.dismiss(force=True)
+        self._search_dialog = None
+
+    def execute_search(self, *args):
+        print("yeea", args, self)
+        #TODO https://kivymd.readthedocs.io/en/latest/components/dialog/#kivymd.uix.dialog.dialog.MDDialog.content_cls
+
     def on_search(self, *args):
-        pass
+        if not self._search_dialog:
+            self._search_dialog = MDDialog(
+                title="Search",
+                text="What to search for?",
+                type="custom",
+                content_cls=SearchContent(),
+                buttons=[
+                    MDFlatButton(
+                        text="OK",
+                        theme_text_color="Custom",
+                        on_release=self.execute_search
+                    ),
+                    MDFlatButton(
+                        text="CLOSE",
+                        theme_text_color="Custom",
+                        on_release=self.close_search_dialog
+                    )
+                ],
+            )
+        self._search_dialog.open()
 
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "myscreen.kv"))
