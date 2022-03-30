@@ -48,12 +48,12 @@
         TextInput:
             id: textInput
 
-
-<OpenDialog>:
+<OpenFileDialog>:
     MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
+
         FileChooserListView:
             id: filechooser
             filters: [lambda folder, filename: filename.endswith('.txt')]
@@ -68,3 +68,19 @@
             Button:
                 text: "Load"
                 on_release: root.open_file(filechooser.path, filechooser.selection)
+
+<FileInfoDialog>:
+    MDBoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+
+        MDLabel:
+            id: file_info_dialog_text
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()

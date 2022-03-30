@@ -9,6 +9,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.label import MDLabel
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -17,8 +18,13 @@ from kivymd.uix.snackbar import BaseSnackbar
 from notes_app.utils.observer import Observer
 
 
-class OpenDialog(FloatLayout):
+class OpenFileDialog(FloatLayout):
     open_file = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
+class FileInfoDialog(FloatLayout):
+    file_info_dialog_text = StringProperty(None)
     cancel = ObjectProperty(None)
 
 
@@ -49,12 +55,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def __init__(self, **kw):
         super().__init__(**kw)
         self.model.add_observer(self)  # register the view as an observer
-        self.open_dialog = OpenDialog()
-        self.menu = self._setup_menu()
-        self._file_info_dialog = None
+        self._menu = self._setup_menu()
         self._search_dialog = None
         self._search_content = SearchContent()
-        self._popup = None
+        self._popup_choose_file = None
+        self._popup_show_file_info = None
         self._on_startup()
 
     def _on_startup(self):
@@ -83,7 +88,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         elif text_item == MenuItems.Save.value:
             self.on_save()
 
-        self.menu.dismiss()
+        self._menu.dismiss()
 
     def model_is_changed(self):
         """
@@ -99,22 +104,22 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
 
-    def cancel_dialog(self):
-        self._popup.dismiss()
+    def cancel_choose_file_dialog(self):
+        self._popup_choose_file.dismiss()
 
     def _open_file(self, path, filename):
         file_path = filename[0]
         self.controller.set_file_path(file_path)
 
         self.text_view.text = self.controller.read_file_data(file_path=file_path)
-        self.cancel_dialog()
+        self.cancel_choose_file_dialog()
 
     def on_open(self, *args):
-        content = OpenDialog(open_file=self._open_file,
-                             cancel=self.cancel_dialog)
-        self._popup = Popup(title="Open File", content=content,
-                            size_hint=(0.9, 0.9))
-        self._popup.open()
+        content = OpenFileDialog(open_file=self._open_file,
+                                 cancel=self.cancel_choose_file_dialog)
+        self._popup_choose_file = Popup(title="Open File", content=content,
+                                        size_hint=(0.9, 0.9))
+        self._popup_choose_file.open()
 
     def on_save(self, *args):
         self.controller.save_file_data(data=self.text_view.text)
@@ -123,25 +128,18 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self._file_info_dialog.dismiss(force=True)
         self._file_info_dialog = None
 
-    def on_show_metadata(self, *args):
-        if not self._file_info_dialog:
-            self._file_info_dialog = MDDialog(
-                title="File info",
-                text=f"{self.model.get_formatted()}",
-                buttons=[
-                    MDFlatButton(
-                        text="CLOSE",
-                        theme_text_color="Custom",
-                        on_release=self.close_file_info_dialog
-                    )
-                ],
-            )
-        self._file_info_dialog.open()
+    def cancel_show_file_dialog(self):
+        self._popup_show_file_info.dismiss()
 
-        # TODO next change show_metadata and search Dialogs to popups so can be resized
-        # self._popup = Popup(title="File info", content=f"{self.model.get_formatted()}",
-        #                     size_hint=(0.9, 0.9))
-        # self._popup.open()
+    def on_show_metadata(self, *args):
+        content = FileInfoDialog(
+            file_info_dialog_text=self.model.get_formatted(),#MDLabel(text=self.model.get_formatted()),
+            cancel=self.cancel_show_file_dialog)
+        # content = MDLabel(text=self.model.get_formatted())
+        self._popup_show_file_info = Popup(title="File information",
+                                           content=content,
+                                           size_hint=(0.9, 0.9))
+        self._popup_show_file_info.open()
 
     def close_search_dialog(self, *args):
         self._search_dialog.dismiss(force=True)
