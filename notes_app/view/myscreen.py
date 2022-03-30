@@ -22,11 +22,6 @@ class OpenDialog(FloatLayout):
     cancel = ObjectProperty(None)
 
 
-class SaveDialog(FloatLayout):
-    save_file = ObjectProperty(None)
-    cancel = ObjectProperty(None)
-
-
 class SearchContent(BoxLayout):
     pass
 
@@ -55,7 +50,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         super().__init__(**kw)
         self.model.add_observer(self)  # register the view as an observer
         self.open_dialog = OpenDialog()
-        self.save_dialog = SaveDialog()
         self.menu = self._setup_menu()
         self._file_info_dialog = None
         self._search_dialog = None
@@ -143,6 +137,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                 ],
             )
         self._file_info_dialog.open()
+
+        # TODO next change show_metadata and search Dialogs to popups so can be resized
+        # self._popup = Popup(title="File info", content=f"{self.model.get_formatted()}",
+        #                     size_hint=(0.9, 0.9))
+        # self._popup.open()
 
     def close_search_dialog(self, *args):
         self._search_dialog.dismiss(force=True)
