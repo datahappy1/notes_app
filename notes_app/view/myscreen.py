@@ -13,7 +13,6 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
-from kivymd.uix.textfield import MDTextField
 
 from notes_app.utils.observer import Observer
 
@@ -60,6 +59,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu = self._setup_menu()
         self._file_info_dialog = None
         self._search_dialog = None
+        self._search_content = SearchContent()
         self._popup = None
         self._on_startup()
 
@@ -149,19 +149,15 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self._search_dialog = None
 
     def execute_search(self, *args):
-        search_string = ""
-        for obj in self._search_dialog.content_cls.children:
-            if isinstance(obj, MDTextField):
-                print(obj.text)
-                search_string = obj.text
+        search_string = self._search_dialog.content_cls.ids.search_string_text_field.text
 
-        if search_string in self.text_view.text:
-            print("found")
-            self._search_dialog.dismiss()
+        if search_string != "" and search_string in self.text_view.text:
+            # self._search_dialog.dismiss()
+            _mod_file_data = self.controller.read_file_data().replace(search_string, f"[b]{search_string}[/b]")
+
+            self._search_dialog.content_cls.ids.search_string_results_label.text = _mod_file_data
         else:
-            # update dialog with no results message
-            print("not found")
-            pass
+            self._search_dialog.content_cls.ids.search_string_results_label.text = "no results"
 
     def on_search(self, *args):
         if not self._search_dialog:
