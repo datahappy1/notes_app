@@ -1,17 +1,5 @@
 #:kivy 1.0
 
-<SearchContent>
-    orientation: "vertical"
-    size_hint_y: None
-
-    MDTextField:
-        id: search_string_text_field
-        hint_text: "String to search for..."
-
-    MDLabel:
-        markup: True
-        id: search_string_results_label
-
 <CustomSnackbar>
     MDIconButton:
         pos_hint: {'center_y': .5}
@@ -38,7 +26,7 @@
     MDToolbar:
         id: toolbar
         title: "Notes"
-        left_action_items: [["dots-vertical", lambda x: root.menu.open()], ["magnify", lambda x: root.on_search()]]
+        left_action_items: [["dots-vertical", lambda x: root.menu.open()], ["magnify", lambda x: root.press_icon_search()]]
         elevation: 8
 
     MDBoxLayout:
@@ -48,8 +36,19 @@
         TextInput:
             id: textInput
 
+<SearchContent>
+    orientation: "vertical"
+    size_hint_y: None
 
-<OpenDialog>:
+    MDTextField:
+        id: search_string_text_field
+        hint_text: "String to search for..."
+
+    MDLabel:
+        markup: True
+        id: search_string_results_label
+
+<OpenFileDialog>:
     MDBoxLayout:
         size: root.size
         pos: root.pos

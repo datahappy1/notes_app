@@ -2,9 +2,9 @@
 # support adding, removing, and alerting observers. In this case, the model is
 # completely independent of controllers and views. It is important that all
 # registered observers implement a specific method that will be called by the
-# model when they are notified (in this case, it is the `model_is_changed`
+# model when they are notified (in this case, it is the `notify_model_is_changed`
 # method). For this, observers must be descendants of an abstract class,
-# inheriting which, the `model_is_changed` method must be overridden.
+# inheriting which, the `notify_model_is_changed` method must be overridden.
 import time
 from os import path, linesep
 
@@ -26,62 +26,64 @@ class MyScreenModel:
     """
 
     def __init__(self):
-        self._filePath = APP_STARTUP_FILE_PATH
-        self._fileSize = path.getsize(self._filePath)
-        self._lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
-        self._observers = []
+        self.filePath = APP_STARTUP_FILE_PATH
+        self.fileSize = path.getsize(self.filePath)
+        self.lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
+        self.observers = []
 
     @property
     def file_path(self):
-        return self._filePath
+        return self.filePath
 
     @file_path.setter
     def file_path(self, value):
-        self._filePath = value
+        self.filePath = value
         self.notify_observers()
 
     @property
     def file_size(self):
-        return self._fileSize
+        return self.fileSize
 
     @file_size.setter
     def file_size(self, value):
-        self._fileSize = value
+        self.fileSize = value
         self.notify_observers()
 
     @property
     def last_updated_on(self):
-        return self._lastUpdatedOn
+        return self.lastUpdatedOn
 
     @last_updated_on.setter
     def last_updated_on(self, value):
         if value:
-            self._lastUpdatedOn = time.strftime(
+            self.lastUpdatedOn = time.strftime(
                 LAST_UPDATED_ON_TIME_FORMAT, time.localtime(value)
             )
         else:
-            self._lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
+            self.lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
         self.notify_observers()
 
-    def get_formatted(self):
-        _all_instance_attributes = list(self.__dict__.items())
-        _attribute_name_mapping = {
-            "_filePath": "file path",
-            "_fileSize": "file size",
-            "_lastUpdatedOn": "last updated on"
+    @property
+    def formatted(self):
+        all_instance_attributes = list(self.__dict__.items())
+        attribute_to_formatted_name_map = {
+            "filePath": "file path",
+            "fileSize": "file size",
+            "lastUpdatedOn": "last updated on"
         }
 
         return linesep.join(
-            [f"{_attribute_name_mapping[item[0]]} : {item[1]}" for item
-             in _all_instance_attributes if item[0] in _attribute_name_mapping]
+            [f"{attribute_to_formatted_name_map[map_item[0]]} : {map_item[1]}"
+             for map_item in all_instance_attributes
+             if map_item[0] in attribute_to_formatted_name_map]
         )
 
     def add_observer(self, observer):
-        self._observers.append(observer)
+        self.observers.append(observer)
 
     def remove_observer(self, observer):
-        self._observers.remove(observer)
+        self.observers.remove(observer)
 
     def notify_observers(self):
-        for o in self._observers:
-            o.model_is_changed()
+        for o in self.observers:
+            o.notify_model_is_changed()
