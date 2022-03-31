@@ -8,9 +8,6 @@ from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
-from kivymd.uix.button import MDFlatButton
-from kivymd.uix.label import MDLabel
-from kivymd.uix.dialog import MDDialog
 from kivymd.uix.list import OneLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -19,13 +16,19 @@ from kivymd.uix.snackbar import BaseSnackbar
 from notes_app.utils.observer import Observer
 
 
-class OpenFileDialog(FloatLayout):
+class OpenFilePopup(FloatLayout):
     open_file = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
-class SearchContent(BoxLayout):
-    pass
+class ShowFileMetadataPopup(FloatLayout):
+    show_file_label = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
+# class SearchPopup(FloatLayout):
+#     show_file_label = ObjectProperty(None)
+#     cancel = ObjectProperty(None)
 
 
 class CustomSnackbar(BaseSnackbar):
@@ -51,10 +54,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def __init__(self, **kw):
         super().__init__(**kw)
         self.model.add_observer(self)  # register the view as an observer
-        self.open_file_dialog = OpenFileDialog()
         self.menu = self.get_menu()
-        self.file_info_dialog = None
-        self.search_dialog = None
         self.popup = None
         self.load_initial_data()
 
@@ -80,7 +80,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         if text_item == MenuItems.ChooseFile.value:
             self.press_menu_item_open_file()
         elif text_item == MenuItems.ShowFileInfo.value:
-            self.press_menu_item_show_metadata()
+            self.press_menu_item_show_file_metadata()
         elif text_item == MenuItems.Save.value:
             self.press_menu_item_save_file()
 
@@ -105,7 +105,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.controller.set_file_path(file_path)
 
         self.text_view.text = self.controller.read_file_data(file_path=file_path)
-        self.cancel_open_file_popup()
+        self.cancel_popup()
 
     def execute_search(self, *args):
         search_string = self.search_dialog.content_cls.ids.search_string_text_field.text
@@ -121,20 +121,16 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         else:
             self.search_dialog.content_cls.ids.search_string_results_label.text = "no results"
 
-    def cancel_open_file_popup(self):
+    def cancel_popup(self):
         self.popup.dismiss()
-
-    def cancel_file_info_dialog(self, *args):
-        self.file_info_dialog.dismiss(force=True)
-        self.file_info_dialog = None
 
     def cancel_search_dialog(self, *args):
         self.search_dialog.dismiss(force=True)
         self.search_dialog = None
 
     def press_menu_item_open_file(self, *args):
-        content = OpenFileDialog(open_file=self.execute_open_file,
-                                 cancel=self.cancel_open_file_popup)
+        content = OpenFilePopup(open_file=self.execute_open_file,
+                                cancel=self.cancel_popup)
         self.popup = Popup(title="Open File", content=content,
                            size_hint=(0.9, 0.9))
         self.popup.open()
@@ -142,42 +138,36 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def press_menu_item_save_file(self, *args):
         self.controller.save_file_data(data=self.text_view.text)
 
-    def press_menu_item_show_metadata(self, *args):
-        if not self.file_info_dialog:
-            self.file_info_dialog = MDDialog(
-                title="File info",
-                text=f"{self.model.formatted}",
-                buttons=[
-                    MDFlatButton(
-                        text="CLOSE",
-                        theme_text_color="Custom",
-                        on_release=self.cancel_file_info_dialog
-                    )
-                ],
-            )
-        self.file_info_dialog.open()
+    def press_menu_item_show_file_metadata(self, *args):
+        content = ShowFileMetadataPopup(
+            show_file_label=f"{self.model.formatted}",
+            cancel=self.cancel_popup
+        )
+        self.popup = Popup(title="Show File info", content=content,
+                           size_hint=(0.9, 0.9))
+        self.popup.open()
 
-    def press_icon_search(self, *args):
-        if not self.search_dialog:
-            self.search_dialog = MDDialog(
-                title="Search",
-                text="What to search for?",
-                type="custom",
-                content_cls=SearchContent(),
-                buttons=[
-                    MDFlatButton(
-                        text="OK",
-                        theme_text_color="Custom",
-                        on_release=self.execute_search
-                    ),
-                    MDFlatButton(
-                        text="CLOSE",
-                        theme_text_color="Custom",
-                        on_release=self.cancel_search_dialog
-                    )
-                ],
-            )
-        self.search_dialog.open()
+    # def press_icon_search(self, *args):
+    #     if not self.search_dialog:
+    #         self.search_dialog = MDDialog(
+    #             title="Search",
+    #             text="What to search for?",
+    #             type="custom",
+    #             content_cls=SearchDialog(),
+    #             buttons=[
+    #                 MDFlatButton(
+    #                     text="OK",
+    #                     theme_text_color="Custom",
+    #                     on_release=self.execute_search
+    #                 ),
+    #                 MDFlatButton(
+    #                     text="CLOSE",
+    #                     theme_text_color="Custom",
+    #                     on_release=self.cancel_search_dialog
+    #                 )
+    #             ],
+    #         )
+    #     self.search_dialog.open()
 
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "myscreen.kv"))

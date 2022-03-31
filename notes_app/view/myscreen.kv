@@ -7,7 +7,6 @@
         opposite_colors: True
 
     MDLabel:
-        id: lbl_saved
         size_hint_y: None
         height: self.texture_size[1]
         text: root.text
@@ -36,19 +35,7 @@
         TextInput:
             id: textInput
 
-<SearchContent>
-    orientation: "vertical"
-    size_hint_y: None
-
-    MDTextField:
-        id: search_string_text_field
-        hint_text: "String to search for..."
-
-    MDLabel:
-        markup: True
-        id: search_string_results_label
-
-<OpenFileDialog>:
+<OpenFilePopup>:
     MDBoxLayout:
         size: root.size
         pos: root.pos
@@ -68,3 +55,19 @@
             Button:
                 text: "Load"
                 on_release: root.open_file(filechooser.path, filechooser.selection)
+
+<ShowFileMetadataPopup>
+    MDBoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+
+        MDLabel:
+            text: root.show_file_label
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
