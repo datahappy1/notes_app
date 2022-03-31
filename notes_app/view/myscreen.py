@@ -26,9 +26,10 @@ class ShowFileMetadataPopup(FloatLayout):
     cancel = ObjectProperty(None)
 
 
-# class SearchPopup(FloatLayout):
-#     show_file_label = ObjectProperty(None)
-#     cancel = ObjectProperty(None)
+class SearchPopup(FloatLayout):
+    search_results_list = ObjectProperty(None)
+    execute_search = ObjectProperty(None)
+    cancel = ObjectProperty(None)
 
 
 class CustomSnackbar(BaseSnackbar):
@@ -108,25 +109,26 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.cancel_popup()
 
     def execute_search(self, *args):
-        search_string = self.search_dialog.content_cls.ids.search_string_text_field.text
+        search_string = args[0]
 
-        if search_string != "" and search_string in self.text_view.text:
+        if search_string and search_string in self.text_view.text:
             file_data = self.controller.read_file_data()
 
             for item in file_data.split(" "):
                 if search_string in item:
                     position = (item, file_data.find(item))
-                    self.search_dialog.content_cls.add_widget(OneLineListItem(text=f"{position}"))
+                    print(position)
+                    # self.search_dialog.content_cls.add_widget(OneLineListItem(text=f"{position}"))
+                    # self.popup.search_results_list.add_widget(OneLineListItem(text=f"{position}"))
 
         else:
-            self.search_dialog.content_cls.ids.search_string_results_label.text = "no results"
+            print("not found")
+            print(self.popup.__dir__())
+            # self.popup.search_results_list[0] = "0 match found"
+            # self.search_dialog.content_cls.ids.search_string_results_label.text = "no results"
 
     def cancel_popup(self):
         self.popup.dismiss()
-
-    def cancel_search_dialog(self, *args):
-        self.search_dialog.dismiss(force=True)
-        self.search_dialog = None
 
     def press_menu_item_open_file(self, *args):
         content = OpenFilePopup(open_file=self.execute_open_file,
@@ -143,31 +145,19 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             show_file_label=f"{self.model.formatted}",
             cancel=self.cancel_popup
         )
-        self.popup = Popup(title="Show File info", content=content,
+        self.popup = Popup(title="Show File metadata", content=content,
                            size_hint=(0.9, 0.9))
         self.popup.open()
 
-    # def press_icon_search(self, *args):
-    #     if not self.search_dialog:
-    #         self.search_dialog = MDDialog(
-    #             title="Search",
-    #             text="What to search for?",
-    #             type="custom",
-    #             content_cls=SearchDialog(),
-    #             buttons=[
-    #                 MDFlatButton(
-    #                     text="OK",
-    #                     theme_text_color="Custom",
-    #                     on_release=self.execute_search
-    #                 ),
-    #                 MDFlatButton(
-    #                     text="CLOSE",
-    #                     theme_text_color="Custom",
-    #                     on_release=self.cancel_search_dialog
-    #                 )
-    #             ],
-    #         )
-    #     self.search_dialog.open()
+    def press_icon_search(self, *args):
+        content = SearchPopup(
+            search_results_list=[],
+            execute_search=self.execute_search,
+            cancel=self.cancel_popup
+        )
+        self.popup = Popup(title="Search", content=content,
+                           size_hint=(0.9, 0.9))
+        self.popup.open()
 
 
 Builder.load_file(os.path.join(os.path.dirname(__file__), "myscreen.kv"))
