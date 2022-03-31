@@ -8,6 +8,7 @@ from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
+from kivymd.uix.label import MDLabel
 from kivymd.uix.list import OneLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -27,7 +28,8 @@ class ShowFileMetadataPopup(FloatLayout):
 
 
 class SearchPopup(FloatLayout):
-    search_results_list = ObjectProperty(None)
+    search_results_count = StringProperty(None)
+    search_results_markup = ObjectProperty(None)
     execute_search = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
@@ -113,19 +115,22 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         if search_string and search_string in self.text_view.text:
             file_data = self.controller.read_file_data()
-
+            positions = []
             for item in file_data.split(" "):
                 if search_string in item:
-                    position = (item, file_data.find(item))
-                    print(position)
-                    # self.search_dialog.content_cls.add_widget(OneLineListItem(text=f"{position}"))
-                    # self.popup.search_results_list.add_widget(OneLineListItem(text=f"{position}"))
+                    position = file_data.find(item)
+                    positions.append(position)
+
+            marked_file_data = file_data.replace(search_string, f"[b]{search_string}[/b]")
+            self.popup.content.search_results_markup = marked_file_data
+
+            item_count = len(positions)
+            self.popup.content.search_results_count = \
+                f"{str(item_count)} matches found" if item_count > 1 else f"{str(item_count)} match found"
 
         else:
-            print("not found")
-            print(self.popup.__dir__())
-            # self.popup.search_results_list[0] = "0 match found"
-            # self.search_dialog.content_cls.ids.search_string_results_label.text = "no results"
+            self.popup.content.search_results_markup = ""
+            self.popup.content.search_results_count = "0 matches found"
 
     def cancel_popup(self):
         self.popup.dismiss()
@@ -151,7 +156,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def press_icon_search(self, *args):
         content = SearchPopup(
-            search_results_list=[],
+            search_results_count="",
+            search_results_markup="",
             execute_search=self.execute_search,
             cancel=self.cancel_popup
         )

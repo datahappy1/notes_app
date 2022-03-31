@@ -82,7 +82,11 @@
         md_bg_color: app.theme_cls.primary_light
 
         MDLabel:
-            id: root.search_results_list
+            text: root.search_results_count
+
+        MDLabel:
+            markup: True
+            text: root.search_results_markup
 
         MDTextField:
             id: search_string_input_value
