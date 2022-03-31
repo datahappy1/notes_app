@@ -9,6 +9,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.label import MDLabel
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.list import OneLineListItem
 from kivymd.uix.menu import MDDropdownMenu
