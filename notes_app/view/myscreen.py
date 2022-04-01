@@ -9,7 +9,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
-from kivymd.uix.list import OneLineListItem
+from kivymd.uix.list import OneLineListItem, MDList
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -119,6 +119,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def execute_search(self, *args):
         search_string = args[0]
+        self.popup.content.results_list.clear_widgets()
+
+        #  TODO  https://kivy.org/doc/stable/api-kivy.uix.textinput.html#kivy.uix.textinput.TextInput.cursor
+        # print(self.text_view.cursor_row)
 
         if search_string:
             row_data = self.text_view.text.split("\n")
