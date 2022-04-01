@@ -41,6 +41,7 @@
         pos: root.pos
         orientation: "vertical"
         md_bg_color: app.theme_cls.primary_light
+        padding: [dp(20),dp(10),dp(20),dp(10)]
 
         FileChooserListView:
             id: filechooser
@@ -63,9 +64,10 @@
         pos: root.pos
         orientation: "vertical"
         md_bg_color: app.theme_cls.primary_light
+        padding: [dp(20),dp(10),dp(20),dp(10)]
 
         MDLabel:
-            text: root.show_file_label
+            text: root.show_file_metadata_label
 
         BoxLayout:
             size_hint_y: None
@@ -75,18 +77,21 @@
                 on_release: root.cancel()
 
 <SearchPopup>
+    results_list: scroll
+
     MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
         md_bg_color: app.theme_cls.primary_light
+        padding: [dp(20),dp(10),dp(20),dp(10)]
 
         MDLabel:
             text: root.search_results_count
 
-        MDLabel:
+        MDList:
             markup: True
-            text: root.search_results_markup
+            id: scroll
 
         MDTextField:
             id: search_string_input_value

@@ -9,7 +9,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivymd.uix.label import MDLabel
-from kivymd.uix.list import OneLineListItem
+from kivymd.uix.list import OneLineListItem, OneLineAvatarIconListItem, MDList
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -23,13 +23,12 @@ class OpenFilePopup(FloatLayout):
 
 
 class ShowFileMetadataPopup(FloatLayout):
-    show_file_label = ObjectProperty(None)
+    show_file_metadata_label = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
 class SearchPopup(FloatLayout):
     search_results_count = StringProperty(None)
-    search_results_markup = ObjectProperty(None)
     execute_search = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
@@ -44,6 +43,10 @@ class MenuItems(Enum):
     ChooseFile = "Choose File"
     ShowFileInfo = "Show File info"
     Save = "Save"
+
+
+class CustomListItem(OneLineListItem):
+    pass
 
 
 class MyScreenView(BoxLayout, MDScreen, Observer):
@@ -114,23 +117,22 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         search_string = args[0]
 
         if search_string and search_string in self.text_view.text:
-            file_data = self.controller.read_file_data()
-            positions = []
-            for item in file_data.split(" "):
-                if search_string in item:
-                    position = file_data.find(item)
-                    positions.append(position)
+            file_data = self.controller.read_file_data_by_rows()
+            matched_row_count = 0
 
-            marked_file_data = file_data.replace(search_string, f"[b]{search_string}[/b]")
-            self.popup.content.search_results_markup = marked_file_data
+            for row_item in file_data:
+                if search_string in row_item[1]:
+                    marked_row_item = row_item[1].replace(search_string, f"[b][color=ff0000]{search_string}[/color][/b]")
+                    matched_row_count += 1
+                    self.popup.content.results_list.add_widget(
+                        CustomListItem(text=f"Row {row_item[0]} -> {marked_row_item}")
+                    )
 
-            item_count = len(positions)
-            self.popup.content.search_results_count = \
-                f"{str(item_count)} matches found" if item_count > 1 else f"{str(item_count)} match found"
+            self.popup.content.search_results_count = f"{str(matched_row_count)} matches found" \
+                if matched_row_count > 1 else f"{str(matched_row_count)} match found"
 
         else:
-            self.popup.content.search_results_markup = ""
-            self.popup.content.search_results_count = "0 matches found"
+            self.popup.content.search_results_count = "No match found"
 
     def cancel_popup(self):
         self.popup.dismiss()
@@ -147,17 +149,16 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataPopup(
-            show_file_label=f"{self.model.formatted}",
+            show_file_metadata_label=self.model.formatted,
             cancel=self.cancel_popup
         )
         self.popup = Popup(title="Show File metadata", content=content,
-                           size_hint=(0.9, 0.9))
+                           size_hint=(0.5, 0.5))
         self.popup.open()
 
     def press_icon_search(self, *args):
         content = SearchPopup(
             search_results_count="",
-            search_results_markup="",
             execute_search=self.execute_search,
             cancel=self.cancel_popup
         )
