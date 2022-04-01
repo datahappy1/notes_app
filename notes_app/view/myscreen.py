@@ -8,8 +8,8 @@ from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
-from kivymd.uix.label import MDLabel
-from kivymd.uix.list import OneLineListItem, OneLineAvatarIconListItem, MDList
+from kivy.uix.scrollview import ScrollView
+from kivymd.uix.list import OneLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -33,6 +33,14 @@ class SearchPopup(FloatLayout):
     cancel = ObjectProperty(None)
 
 
+class ScrollableLabel(ScrollView):
+    pass
+
+
+class CustomListItem(OneLineListItem):
+    pass
+
+
 class CustomSnackbar(BaseSnackbar):
     text = StringProperty(None)
     icon = StringProperty(None)
@@ -43,10 +51,6 @@ class MenuItems(Enum):
     ChooseFile = "Choose File"
     ShowFileInfo = "Show File info"
     Save = "Save"
-
-
-class CustomListItem(OneLineListItem):
-    pass
 
 
 class MyScreenView(BoxLayout, MDScreen, Observer):
@@ -116,23 +120,25 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def execute_search(self, *args):
         search_string = args[0]
 
-        if search_string and search_string in self.text_view.text:
-            file_data = self.controller.read_file_data_by_rows()
+        if search_string:
+            row_data = self.text_view.text.split("\n")
             matched_row_count = 0
 
-            for row_item in file_data:
-                if search_string in row_item[1]:
-                    marked_row_item = row_item[1].replace(search_string, f"[b][color=ff0000]{search_string}[/color][/b]")
+            for idx, row in enumerate(row_data):
+                if search_string in row:
+                    marked_row = row.replace(search_string, f"[b][color=ff0000]{search_string}[/color][/b]")
                     matched_row_count += 1
                     self.popup.content.results_list.add_widget(
-                        CustomListItem(text=f"Row {row_item[0]} -> {marked_row_item}")
+                        CustomListItem(text=f"Line {idx + 1} : {marked_row}")
                     )
 
-            self.popup.content.search_results_count = f"{str(matched_row_count)} matches found" \
-                if matched_row_count > 1 else f"{str(matched_row_count)} match found"
+            #  TODO  https://www.geeksforgeeks.org/python-scrollview-widget-in-kivy/
 
-        else:
-            self.popup.content.search_results_count = "No match found"
+            self.popup.content.search_results_count = f"Matches on {str(matched_row_count)} lines found" \
+                if matched_row_count > 1 else f"Match on {str(matched_row_count)} line found"
+
+            if matched_row_count == 0:
+                self.popup.content.search_results_count = "No match found"
 
     def cancel_popup(self):
         self.popup.dismiss()

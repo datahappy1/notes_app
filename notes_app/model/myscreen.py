@@ -67,9 +67,9 @@ class MyScreenModel:
     def formatted(self):
         all_instance_attributes = list(self.__dict__.items())
         attribute_to_formatted_name_map = {
-            "filePath": "file path",
-            "fileSize": "file size",
-            "lastUpdatedOn": "last updated on"
+            "filePath": "File path",
+            "fileSize": "File size (bytes)",
+            "lastUpdatedOn": "Last updated on"
         }
 
         return linesep.join(

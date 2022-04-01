@@ -67,6 +67,10 @@
         padding: [dp(20),dp(10),dp(20),dp(10)]
 
         MDLabel:
+            font_style: "H6"
+            halign: "center"
+            valign: "center"
+            markup: True
             text: root.show_file_metadata_label
 
         BoxLayout:
@@ -87,11 +91,15 @@
         padding: [dp(20),dp(10),dp(20),dp(10)]
 
         MDLabel:
+            font_style: "H6"
+            halign: "center"
+            valign: "center"
             text: root.search_results_count
 
-        MDList:
-            markup: True
-            id: scroll
+        ScrollableLabel:
+            MDList:
+                markup: True
+                id: scroll
 
         MDTextField:
             id: search_string_input_value

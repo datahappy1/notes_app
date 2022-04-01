@@ -1,3 +1,7 @@
+from kivy.config import Config
+
+Config.set('graphics', 'window_state', 'maximized')
+
 from kivymd.app import MDApp
 
 from notes_app.controller.myscreen import MyScreenController
@@ -10,7 +14,7 @@ class NotesApp(MDApp):
         self.model = MyScreenModel()
         self.controller = MyScreenController(self.model)
 
-        self.theme_cls.primary_palette = "BlueGray"
+        self.theme_cls.primary_palette = "Orange"
         self.theme_cls.theme_style = "Light"
 
     def build(self):

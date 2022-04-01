@@ -32,14 +32,6 @@ class MyScreenController:
         f.close()
         return s
 
-    def read_file_data_by_rows(self, file_path=None):
-        res = []
-        f = open(file_path or self.model.file_path, 'r')
-        for idx, row in enumerate(f.readlines()):
-            res.append((idx+1, row))
-        f.close()
-        return res
-
     def save_file_data(self, data):
         f = open(self.model.file_path, 'w')
         f.write(data)
