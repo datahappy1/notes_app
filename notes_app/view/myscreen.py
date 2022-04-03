@@ -9,7 +9,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
-from kivymd.uix.list import OneLineListItem, MDList
+from kivymd.uix.list import TwoLineListItem, MDList
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -37,7 +37,7 @@ class ScrollableLabel(ScrollView):
     pass
 
 
-class CustomListItem(OneLineListItem):
+class CustomListItem(TwoLineListItem):
     pass
 
 
@@ -66,10 +66,13 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.model.add_observer(self)  # register the view as an observer
         self.menu = self.get_menu()
         self.popup = None
+        self.last_searched_string = str()
         self.load_initial_data()
 
     def load_initial_data(self):
         self.text_view.text = self.controller.read_file_data()
+
+        self.text_view.cursor = (2, 4)
 
     def get_menu(self):
         menu_items = [
@@ -117,26 +120,68 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.text_view.text = self.controller.read_file_data(file_path=file_path)
         self.cancel_popup()
 
+    def execute_goto_search_result(self, custom_list_item):
+        # row_number = int(int(
+        #     custom_list_item.secondary_text.replace("Position ", "")
+        # ) / (self.text_view.width * 8))
+        # column_number = 1
+        # print("xcolrow", column_number, row_number)
+        # self.text_view.cursor = (column_number, row_number)
+        # self.text_view.select_text(row_number, row_number+10)
+        self.cancel_popup()
+
     def execute_search(self, *args):
-        search_string = args[0]
+        # if self.last_searched_string == args[0]:
+        #     return
+        #
+        # if self.last_searched_string != args[0]:
+        #     self.popup.content.results_list.clear_widgets()
+        # TODO implement logic to store last search results
+
+        self.last_searched_string = args[0]
         self.popup.content.results_list.clear_widgets()
 
         #  TODO  https://kivy.org/doc/stable/api-kivy.uix.textinput.html#kivy.uix.textinput.TextInput.cursor
         # print(self.text_view.cursor_row)
+        # self.text_view.cursor = (4,2)
+        # self.text_view.cursor_blink = False
+        # self.text_view.select_text(40, 42)
+        # # print(self.text_view.cursor_offset())
+        # # print(self.text_view.cursor_row)
+        print("min w:", self.text_view.width)
 
-        if search_string:
+        if self.last_searched_string:
             row_data = self.text_view.text.split("\n")
             matched_row_count = 0
+            print("len row data",len(row_data))
 
             for idx, row in enumerate(row_data):
-                if search_string in row:
-                    marked_row = row.replace(search_string, f"[b][color=ff0000]{search_string}[/color][/b]")
+                if self.last_searched_string in row:
+                    marked_row = row.replace(self.last_searched_string, f"[b][color=ff0000]{self.last_searched_string}[/color][/b]")
                     matched_row_count += 1
+                    position = 0
+
+                    try:
+                        position = row.index(self.last_searched_string)
+                        print("ci", self.text_view.cursor_pos)
+
+                    except ValueError:
+                        pass
+
+                    print("position:", position)
                     self.popup.content.results_list.add_widget(
-                        CustomListItem(text=f"Line {idx + 1} : {marked_row}")
+                        CustomListItem(
+                            text=marked_row,
+                            secondary_text=f"Position {position}",
+                            on_release=self.execute_goto_search_result,
+                        )
                     )
 
             #  TODO  https://www.geeksforgeeks.org/python-scrollview-widget-in-kivy/
+
+            # res = [i for i in range(len(row_data)) if row_data.startswith(self.last_searched_string, i)]
+            # matched_row_count = len(res)
+
 
             self.popup.content.search_results_count = f"Matches on {str(matched_row_count)} lines found" \
                 if matched_row_count > 1 else f"Match on {str(matched_row_count)} line found"
@@ -163,7 +208,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             cancel=self.cancel_popup
         )
         self.popup = Popup(title="Show File metadata", content=content,
-                           size_hint=(0.5, 0.5))
+                           size_hint=(0.9, 0.9))
         self.popup.open()
 
     def press_icon_search(self, *args):

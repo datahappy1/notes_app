@@ -24,7 +24,7 @@ class MyScreenController:
     def set_file_path(self, file_path):
         self.model.file_path = file_path
         self.model.file_size = path.getsize(file_path)
-        self.model.last_updated_on = None
+        self.model.last_updated_on = path.getmtime(file_path)
 
     def read_file_data(self, file_path=None):
         f = open(file_path or self.model.file_path, 'r')

@@ -10,7 +10,6 @@ from os import path, linesep
 
 from notes_app.settings import APP_STARTUP_FILE_PATH
 
-LAST_UPDATED_ON_VALUE_PLACEHOLDER = "-"
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -26,50 +25,49 @@ class MyScreenModel:
     """
 
     def __init__(self):
-        self.filePath = APP_STARTUP_FILE_PATH
-        self.fileSize = path.getsize(self.filePath)
-        self.lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
+        self._file_path = APP_STARTUP_FILE_PATH
+        self._file_size = path.getsize(self._file_path)
+        self._last_updated_on = MyScreenModel.format_epoch(path.getmtime(self._file_path))
         self.observers = []
+
+    @staticmethod
+    def format_epoch(epoch_time):
+        return time.strftime(LAST_UPDATED_ON_TIME_FORMAT, time.localtime(epoch_time))
 
     @property
     def file_path(self):
-        return self.filePath
+        return self._file_path
 
     @file_path.setter
     def file_path(self, value):
-        self.filePath = value
+        self._file_path = value
         self.notify_observers()
 
     @property
     def file_size(self):
-        return self.fileSize
+        return self._file_size
 
     @file_size.setter
     def file_size(self, value):
-        self.fileSize = value
+        self._file_size = value
         self.notify_observers()
 
     @property
     def last_updated_on(self):
-        return self.lastUpdatedOn
+        return self._last_updated_on
 
     @last_updated_on.setter
     def last_updated_on(self, value):
-        if value:
-            self.lastUpdatedOn = time.strftime(
-                LAST_UPDATED_ON_TIME_FORMAT, time.localtime(value)
-            )
-        else:
-            self.lastUpdatedOn = LAST_UPDATED_ON_VALUE_PLACEHOLDER
+        self._last_updated_on = MyScreenModel.format_epoch(value)
         self.notify_observers()
 
     @property
     def formatted(self):
         all_instance_attributes = list(self.__dict__.items())
         attribute_to_formatted_name_map = {
-            "filePath": "File path",
-            "fileSize": "File size (bytes)",
-            "lastUpdatedOn": "Last updated on"
+            "_file_path": "File path",
+            "_file_size": "File size (bytes)",
+            "_last_updated_on": "Last updated on"
         }
 
         return linesep.join(
