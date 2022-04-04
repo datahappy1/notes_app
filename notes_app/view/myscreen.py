@@ -1,4 +1,4 @@
-import os
+from os import path, linesep
 from enum import Enum
 from re import finditer
 
@@ -10,6 +10,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.tabbedpanel import TabbedPanel
 from kivymd.uix.list import TwoLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -24,6 +25,10 @@ SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 
 
+class MyNotesPanel(TabbedPanel):
+    pass
+
+
 class OpenFilePopup(FloatLayout):
     open_file = ObjectProperty(None)
     cancel = ObjectProperty(None)
@@ -31,6 +36,11 @@ class OpenFilePopup(FloatLayout):
 
 class ShowFileMetadataPopup(FloatLayout):
     show_file_metadata_label = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
+class ShowAppMetadataPopup(FloatLayout):
+    show_app_metadata_label = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
@@ -55,9 +65,12 @@ class CustomSnackbar(BaseSnackbar):
 
 
 class MenuItems(Enum):
-    ChooseFile = "Choose File"
-    ShowFileInfo = "Show File info"
-    Save = "Save"
+    ChooseFile = "Choose storage file"
+    ShowFileInfo = "Show storage file info"
+    Save = "Save storage file"
+    IncreaseFontSize = "Increase font size"
+    DecreaseFontSize = "Decrease font size"
+    ShowAppInfo = "Show application info"
 
 
 class MyScreenView(BoxLayout, MDScreen, Observer):
@@ -78,8 +91,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def load_initial_data(self):
         self.text_view.text = self.controller.read_file_data()
-
-        self.text_view.cursor = (2, 4)
 
     def get_menu(self):
         menu_items = [
@@ -103,6 +114,12 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             self.press_menu_item_show_file_metadata()
         elif text_item == MenuItems.Save.value:
             self.press_menu_item_save_file()
+        elif text_item == MenuItems.IncreaseFontSize.value:
+            self.text_view.font_size += 1
+        elif text_item == MenuItems.DecreaseFontSize.value:
+            self.text_view.font_size -= 1
+        elif text_item == MenuItems.ShowAppInfo.value:
+            self.press_menu_item_show_app_metadata()
 
         self.menu.dismiss()
 
@@ -145,6 +162,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         if not found_occurrences:
             self.popup.content.search_results_count = "No match found"
+            return
 
         found_occurrences_count = len(found_occurrences)
         self.popup.content.search_results_count = f"Matches on {found_occurrences_count} positions found" \
@@ -194,6 +212,26 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                            size_hint=(0.9, 0.9))
         self.popup.open()
 
+    def press_menu_item_show_app_metadata(self, *args):
+        app_info = linesep.join(
+            [
+                "A simple notes application",
+                "- version: TBD",
+                "- user can save notes to a local text file",
+                "- user can load notes from a local text file",
+                "- user can change font size",
+                "- user can search in notes"
+             ]
+        )
+
+        content = ShowAppMetadataPopup(
+            show_app_metadata_label=app_info,
+            cancel=self.cancel_popup
+        )
+        self.popup = Popup(title="Show App metadata", content=content,
+                           size_hint=(0.9, 0.9))
+        self.popup.open()
+
     def press_icon_search(self, *args):
         content = SearchPopup(
             search_results_count="",
@@ -205,4 +243,4 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.open()
 
 
-Builder.load_file(os.path.join(os.path.dirname(__file__), "myscreen.kv"))
+Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

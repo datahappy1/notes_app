@@ -82,6 +82,28 @@
                 text: "Cancel"
                 on_release: root.cancel()
 
+<ShowAppMetadataPopup>
+    MDBoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        md_bg_color: app.theme_cls.primary_light
+        padding: [dp(20),dp(10),dp(20),dp(10)]
+
+        MDLabel:
+            font_style: "H6"
+            halign: "center"
+            valign: "center"
+            markup: True
+            text: root.show_app_metadata_label
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
 
 <SearchPopup>
     results_list: scroll

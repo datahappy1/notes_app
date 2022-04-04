@@ -14,7 +14,7 @@ class NotesApp(MDApp):
         self.model = MyScreenModel()
         self.controller = MyScreenController(self.model)
 
-        self.theme_cls.primary_palette = "Orange"
+        self.theme_cls.primary_palette = "DeepPurple"
         self.theme_cls.theme_style = "Light"
 
     def build(self):
