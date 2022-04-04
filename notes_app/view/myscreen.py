@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from re import finditer
 
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -9,12 +10,18 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
-from kivymd.uix.list import TwoLineListItem, MDList
+from kivymd.uix.list import TwoLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.utils.observer import Observer
+
+
+SEARCH_LIST_ITEM_POSITION_STR = "Position "
+SEARCH_LIST_ITEM_MATCHED_STR_ADDED_SURROUNDING_CHAR_COUNT = 30
+SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
+SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 
 
 class OpenFilePopup(FloatLayout):
@@ -121,73 +128,49 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.cancel_popup()
 
     def execute_goto_search_result(self, custom_list_item):
-        # row_number = int(int(
-        #     custom_list_item.secondary_text.replace("Position ", "")
-        # ) / (self.text_view.width * 8))
-        # column_number = 1
-        # print("xcolrow", column_number, row_number)
-        # self.text_view.cursor = (column_number, row_number)
-        # self.text_view.select_text(row_number, row_number+10)
+        position = int(custom_list_item.secondary_text.replace(SEARCH_LIST_ITEM_POSITION_STR, ""))
+        self.text_view.select_text(position, position + len(self.last_searched_string))
+
+        cursor_position = self.text_view.get_cursor_from_index(position)
+        self.text_view.cursor = cursor_position
+
         self.cancel_popup()
 
     def execute_search(self, *args):
-        # if self.last_searched_string == args[0]:
-        #     return
-        #
-        # if self.last_searched_string != args[0]:
-        #     self.popup.content.results_list.clear_widgets()
-        # TODO implement logic to store last search results
-
         self.last_searched_string = args[0]
         self.popup.content.results_list.clear_widgets()
 
-        #  TODO  https://kivy.org/doc/stable/api-kivy.uix.textinput.html#kivy.uix.textinput.TextInput.cursor
-        # print(self.text_view.cursor_row)
-        # self.text_view.cursor = (4,2)
-        # self.text_view.cursor_blink = False
-        # self.text_view.select_text(40, 42)
-        # # print(self.text_view.cursor_offset())
-        # # print(self.text_view.cursor_row)
-        print("min w:", self.text_view.width)
+        text_data = self.text_view.text
+        found_occurrences = [m.start() for m in finditer(self.last_searched_string, text_data)]
 
-        if self.last_searched_string:
-            row_data = self.text_view.text.split("\n")
-            matched_row_count = 0
-            print("len row data",len(row_data))
+        if not found_occurrences:
+            self.popup.content.search_results_count = "No match found"
 
-            for idx, row in enumerate(row_data):
-                if self.last_searched_string in row:
-                    marked_row = row.replace(self.last_searched_string, f"[b][color=ff0000]{self.last_searched_string}[/color][/b]")
-                    matched_row_count += 1
-                    position = 0
+        found_occurrences_count = len(found_occurrences)
+        self.popup.content.search_results_count = f"Matches on {found_occurrences_count} positions found" \
+            if found_occurrences_count > 1 else f"Match on {found_occurrences_count} position found"
 
-                    try:
-                        position = row.index(self.last_searched_string)
-                        print("ci", self.text_view.cursor_pos)
+        for position in found_occurrences:
+            raw_sample = text_data[position:position+SEARCH_LIST_ITEM_MATCHED_STR_ADDED_SURROUNDING_CHAR_COUNT]
 
-                    except ValueError:
-                        pass
+            sample = raw_sample.replace(
+                self.last_searched_string,
+                f"[{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
+                f"[color={SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR}]"
+                f"{self.last_searched_string}"
+                f"[/color]"
+                f"[/{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
+            )
 
-                    print("position:", position)
-                    self.popup.content.results_list.add_widget(
-                        CustomListItem(
-                            text=marked_row,
-                            secondary_text=f"Position {position}",
-                            on_release=self.execute_goto_search_result,
-                        )
-                    )
+            sample += "..."
 
-            #  TODO  https://www.geeksforgeeks.org/python-scrollview-widget-in-kivy/
-
-            # res = [i for i in range(len(row_data)) if row_data.startswith(self.last_searched_string, i)]
-            # matched_row_count = len(res)
-
-
-            self.popup.content.search_results_count = f"Matches on {str(matched_row_count)} lines found" \
-                if matched_row_count > 1 else f"Match on {str(matched_row_count)} line found"
-
-            if matched_row_count == 0:
-                self.popup.content.search_results_count = "No match found"
+            self.popup.content.results_list.add_widget(
+                CustomListItem(
+                    text=sample,
+                    secondary_text=f"{SEARCH_LIST_ITEM_POSITION_STR}{position}",
+                    on_release=self.execute_goto_search_result,
+                )
+            )
 
     def cancel_popup(self):
         self.popup.dismiss()
