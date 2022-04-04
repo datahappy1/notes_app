@@ -1,5 +1,5 @@
-from os import path, linesep
 from enum import Enum
+from os import path, linesep
 from re import finditer
 
 from kivy.core.window import Window
@@ -17,7 +17,6 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.utils.observer import Observer
-
 
 SEARCH_LIST_ITEM_POSITION_STR = "Position "
 SEARCH_LIST_ITEM_MATCHED_STR_ADDED_SURROUNDING_CHAR_COUNT = 30
@@ -45,7 +44,8 @@ class ShowAppMetadataPopup(FloatLayout):
 
 
 class SearchPopup(FloatLayout):
-    search_results_count = StringProperty(None)
+    search_string_placeholder = StringProperty(None)
+    search_results_message = StringProperty(None)
     execute_search = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
@@ -154,37 +154,46 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.cancel_popup()
 
     def execute_search(self, *args):
+        if len(args[0]) < 2 or args[0].isspace():
+            self.popup.content.search_results_message = "Invalid search"
+            return
+
         self.last_searched_string = args[0]
         self.popup.content.results_list.clear_widgets()
 
         text_data = self.text_view.text
-        found_occurrences = [m.start() for m in finditer(self.last_searched_string, text_data)]
+        found_occurrences = [
+            m.start() for m in finditer(self.last_searched_string.lower(), text_data.lower())
+        ]
 
         if not found_occurrences:
-            self.popup.content.search_results_count = "No match found"
+            self.popup.content.search_results_message = "No match found"
             return
 
         found_occurrences_count = len(found_occurrences)
-        self.popup.content.search_results_count = f"Matches on {found_occurrences_count} positions found" \
+        self.popup.content.search_results_message = f"Matches on {found_occurrences_count} positions found" \
             if found_occurrences_count > 1 else f"Match on {found_occurrences_count} position found"
 
         for position in found_occurrences:
-            raw_sample = text_data[position:position+SEARCH_LIST_ITEM_MATCHED_STR_ADDED_SURROUNDING_CHAR_COUNT]
+            found_source_data_string = \
+                text_data[position:position + len(self.last_searched_string)]
+            raw_sample_with_surrounding = \
+                text_data[position:position + SEARCH_LIST_ITEM_MATCHED_STR_ADDED_SURROUNDING_CHAR_COUNT]
 
-            sample = raw_sample.replace(
-                self.last_searched_string,
+            sample_text = raw_sample_with_surrounding.replace(
+                found_source_data_string,
                 f"[{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
                 f"[color={SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR}]"
-                f"{self.last_searched_string}"
+                f"{found_source_data_string}"
                 f"[/color]"
                 f"[/{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
             )
 
-            sample += "..."
+            sample_text += "..."
 
             self.popup.content.results_list.add_widget(
                 CustomListItem(
-                    text=sample,
+                    text=sample_text,
                     secondary_text=f"{SEARCH_LIST_ITEM_POSITION_STR}{position}",
                     on_release=self.execute_goto_search_result,
                 )
@@ -234,7 +243,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def press_icon_search(self, *args):
         content = SearchPopup(
-            search_results_count="",
+            search_string_placeholder=self.last_searched_string,
+            search_results_message="",
             execute_search=self.execute_search,
             cancel=self.cancel_popup
         )
