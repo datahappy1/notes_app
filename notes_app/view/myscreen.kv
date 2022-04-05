@@ -18,7 +18,6 @@
         pos_hint: {'center_y': .5}
 
 <MyScreenView>:
-    cols: 2
     orientation: "vertical"
     nav_toolbar: toolbar
     text_view: textInput
@@ -26,22 +25,27 @@
     MDToolbar:
         id: toolbar
         title: "Notes"
-        left_action_items: [["dots-vertical", lambda x: root.menu.open()], ["magnify", lambda x: root.press_icon_search()]]
         elevation: 8
+        left_action_items: [["menu", lambda x: nav_drawer.set_state("open")], ["magnify", lambda x: root.press_icon_search()]]
+        right_action_items: [["cog", lambda x: root.menu.open()]]
 
-    MDBoxLayout:
-        MDBoxLayout:
-            orientation: "vertical"
+    ScreenManager:
+        MDScreen:
+            MDBoxLayout:
+                orientation: "vertical"
+                text_view: textInput
 
+                TextInput:
+                    id: textInput
+                    multiline: True
+                    do_wrap: True
 
-        MDBoxLayout:
-            orientation: "vertical"
-            text_view: textInput
+            MDNavigationDrawer:
+                id: nav_drawer
+                md_bg_color: get_color_from_hex("#f7f4e7")
 
-            TextInput:
-                id: textInput
-                multiline: True
-                do_wrap: True
+                ContentNavigationDrawer:
+
 
 <OpenFilePopup>:
     MDBoxLayout:

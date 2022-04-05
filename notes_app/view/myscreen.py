@@ -10,6 +10,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
+from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.list import TwoLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -22,6 +23,14 @@ SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "Position "
 SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
+
+
+# TODO
+# https://kivymd.readthedocs.io/en/latest/components/navigationdrawer/index.html
+
+
+class ContentNavigationDrawer(MDBoxLayout):
+    pass
 
 
 class OpenFilePopup(FloatLayout):
