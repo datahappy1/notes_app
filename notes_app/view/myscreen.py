@@ -10,7 +10,6 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.tabbedpanel import TabbedPanel
 from kivymd.uix.list import TwoLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -18,14 +17,11 @@ from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.utils.observer import Observer
 
-SEARCH_LIST_ITEM_POSITION_STR = "Position "
-SEARCH_LIST_ITEM_MATCHED_STR_ADDED_SURROUNDING_CHAR_COUNT = 30
+SEARCH_MINIMAL_CHAR_COUNT = 2
+SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "Position "
+SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
-
-
-class MyNotesPanel(TabbedPanel):
-    pass
 
 
 class OpenFilePopup(FloatLayout):
@@ -145,7 +141,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.cancel_popup()
 
     def execute_goto_search_result(self, custom_list_item):
-        position = int(custom_list_item.secondary_text.replace(SEARCH_LIST_ITEM_POSITION_STR, ""))
+        position = int(custom_list_item.secondary_text.replace(SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE, ""))
         self.text_view.select_text(position, position + len(self.last_searched_string))
 
         cursor_position = self.text_view.get_cursor_from_index(position)
@@ -154,11 +150,12 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.cancel_popup()
 
     def execute_search(self, *args):
-        if len(args[0]) < 2 or args[0].isspace():
+        if len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
             self.popup.content.search_results_message = "Invalid search"
             return
 
         self.last_searched_string = args[0]
+
         self.popup.content.results_list.clear_widgets()
 
         text_data = self.text_view.text
@@ -174,27 +171,24 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.content.search_results_message = f"Matches on {found_occurrences_count} positions found" \
             if found_occurrences_count > 1 else f"Match on {found_occurrences_count} position found"
 
-        for position in found_occurrences:
-            found_source_data_string = \
-                text_data[position:position + len(self.last_searched_string)]
-            raw_sample_with_surrounding = \
-                text_data[position:position + SEARCH_LIST_ITEM_MATCHED_STR_ADDED_SURROUNDING_CHAR_COUNT]
+        for position_start in found_occurrences:
+            position_end = position_start + len(self.last_searched_string)
 
-            sample_text = raw_sample_with_surrounding.replace(
-                found_source_data_string,
-                f"[{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
-                f"[color={SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR}]"
-                f"{found_source_data_string}"
-                f"[/color]"
-                f"[/{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
-            )
+            found_string = text_data[position_start:position_end]
 
-            sample_text += "..."
+            found_string_marked = f"[{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]" \
+                                  f"[color={SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR}]" \
+                                  f"{found_string}" \
+                                  f"[/color]" \
+                                  f"[/{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
+
+            found_string_extra_chars = \
+                text_data[position_end:position_end + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT]
 
             self.popup.content.results_list.add_widget(
                 CustomListItem(
-                    text=sample_text,
-                    secondary_text=f"{SEARCH_LIST_ITEM_POSITION_STR}{position}",
+                    text=f"{found_string_marked}{found_string_extra_chars}...",
+                    secondary_text=f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}",
                     on_release=self.execute_goto_search_result,
                 )
             )
@@ -230,7 +224,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                 "- user can load notes from a local text file",
                 "- user can change font size",
                 "- user can search in notes"
-             ]
+            ]
         )
 
         content = ShowAppMetadataPopup(
