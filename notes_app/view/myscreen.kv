@@ -25,7 +25,6 @@
         id: icon
         icon: root.icon
         theme_text_color: "Custom"
-        text_color: root.text_color
 
 <MyScreenView>:
     orientation: "vertical"
@@ -52,10 +51,15 @@
 
             MDNavigationDrawer:
                 id: nav_drawer
-                md_bg_color: get_color_from_hex("#f7f4e7")
 
                 ContentNavigationDrawer:
+                    orientation: "vertical"
+                    padding: "8dp"
+                    spacing: "8dp"
 
+                    ScrollView:
+                        DrawerList:
+                            id: md_list
 
 <OpenFilePopup>:
     MDBoxLayout:
