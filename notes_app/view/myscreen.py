@@ -150,6 +150,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         # TODO hardcoded first section element
         # return split_result[section]
         self.text_view.text = split_result[section]
+        self.ids.toolbar.title = f"Notes section {section}"
 
     def get_section_names(self):
         section_names = re.findall(SECTION_SEPARATOR_REGEX, self.text_data)
@@ -275,10 +276,15 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         xsplit_result = re.split(SECTION_SEPARATOR_REGEX, self.text_data)
         xsplit_result[1] = self.text_view.text
 
-        res = "xxx".join(xsplit_result)
+        # res = "xxx".join(xsplit_result)
+        xxx = zip(xsplit_result, self.section_names)
+        out = str()
+        for item in xxx:
+            print(item)
+            # out += xxx. + linesep + item
 
         # self.controller.save_file_data(data=self.text_view.text)
-        self.controller.save_file_data(data=res)
+        # self.controller.save_file_data(data=res)
 
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataPopup(
