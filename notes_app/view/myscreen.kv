@@ -17,6 +17,16 @@
         shorten_from: 'right'
         pos_hint: {'center_y': .5}
 
+<ItemDrawer>
+    theme_text_color: "Custom"
+    on_release: self.parent.set_color_item(self)
+
+    IconLeftWidget:
+        id: icon
+        icon: root.icon
+        theme_text_color: "Custom"
+        text_color: root.text_color
+
 <MyScreenView>:
     orientation: "vertical"
     nav_toolbar: toolbar

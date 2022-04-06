@@ -1,6 +1,6 @@
 from enum import Enum
 from os import path, linesep
-from re import finditer
+import re
 
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -11,12 +11,14 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.list import TwoLineListItem
+from kivymd.uix.list import TwoLineListItem, OneLineIconListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.utils.observer import Observer
+
+SECTION_SEPARATOR_REGEX = "<section=[a-zA-Z]+>"
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "Position "
@@ -25,12 +27,26 @@ SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 
 
+class ItemDrawer(OneLineIconListItem):
+    icon = StringProperty()
+
+
 # TODO
 # https://kivymd.readthedocs.io/en/latest/components/navigationdrawer/index.html
-
-
 class ContentNavigationDrawer(MDBoxLayout):
-    pass
+    def on_start(self):
+        icons_item = {
+            "folder": "My files",
+            "account-multiple": "Shared with me",
+            "star": "Starred",
+            "history": "Recent",
+            "checkbox-marked": "Shared with me",
+            "upload": "Upload",
+        }
+        for icon_name in icons_item.keys():
+            self.root.ids.content_drawer.ids.md_list.add_widget(
+                ItemDrawer(icon=icon_name, text=icons_item[icon_name])
+            )
 
 
 class OpenFilePopup(FloatLayout):
@@ -94,8 +110,22 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.last_searched_string = str()
         self.load_initial_data()
 
+        # TEMP
+        self.load_initial_data_split_by_section()
+        self.section_names = []
+        self.get_section_names()
+
     def load_initial_data(self):
         self.text_view.text = self.controller.read_file_data()
+
+    def load_initial_data_split_by_section(self):
+        split_result = re.split(SECTION_SEPARATOR_REGEX, self.controller.read_file_data())
+        return split_result
+
+    def get_section_names(self):
+        section_names = re.findall(SECTION_SEPARATOR_REGEX, self.controller.read_file_data())
+        self.section_names = section_names
+        return section_names
 
     def get_menu(self):
         menu_items = [
@@ -169,7 +199,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         text_data = self.text_view.text
         found_occurrences = [
-            m.start() for m in finditer(self.last_searched_string.lower(), text_data.lower())
+            m.start() for m in re.finditer(self.last_searched_string.lower(), text_data.lower())
         ]
 
         if not found_occurrences:
