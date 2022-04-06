@@ -110,10 +110,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu = self.get_menu()
         self.popup = None
         self.last_searched_string = str()
+
+        # TEMP
+        self.text_data = str()
+
         self.load_initial_data()
 
         # TEMP
-        self.load_initial_data_split_by_section()
+        self.filter_initial_data_split_by_section(section=1)
         self.section_names = []
         self.get_section_names()
         self.set_drawer_items()
@@ -133,18 +137,22 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         #     )
         for section_name in self.section_names:
             self.ids.md_list.add_widget(
-                ItemDrawer(icon="star", text=section_name)
+                ItemDrawer(icon="bookmark", text=section_name)
             )
 
     def load_initial_data(self):
-        self.text_view.text = self.controller.read_file_data()
+        # self.text_view.text = self.controller.read_file_data()
+        self.text_data = self.controller.read_file_data()
 
-    def load_initial_data_split_by_section(self):
-        split_result = re.split(SECTION_SEPARATOR_REGEX, self.controller.read_file_data())
-        return split_result
+    def filter_initial_data_split_by_section(self, section):
+        split_result = re.split(SECTION_SEPARATOR_REGEX, self.text_data)
+        print(split_result[section])
+        # TODO hardcoded first section element
+        # return split_result[section]
+        self.text_view.text = split_result[section]
 
     def get_section_names(self):
-        section_names = re.findall(SECTION_SEPARATOR_REGEX, self.controller.read_file_data())
+        section_names = re.findall(SECTION_SEPARATOR_REGEX, self.text_data)
         self.section_names = section_names
         return section_names
 
@@ -264,7 +272,13 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.open()
 
     def press_menu_item_save_file(self, *args):
-        self.controller.save_file_data(data=self.text_view.text)
+        xsplit_result = re.split(SECTION_SEPARATOR_REGEX, self.text_data)
+        xsplit_result[1] = self.text_view.text
+
+        res = "xxx".join(xsplit_result)
+
+        # self.controller.save_file_data(data=self.text_view.text)
+        self.controller.save_file_data(data=res)
 
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataPopup(
