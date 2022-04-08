@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 from os import path, linesep
+from typing import List, AnyStr, Dict
 
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -21,6 +22,7 @@ from kivymd.uix.textfield import TextInput
 from notes_app.utils.observer import Observer
 
 SECTION_SEPARATOR_REGEX = "<section=[a-zA-Z]+>"
+SECTION_SEPARATOR_DEFAULT_VALUE = "<section=default>"
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "Position "
@@ -98,6 +100,57 @@ class MenuItems(Enum):
     ShowAppInfo = "Show application info"
 
 
+class File:
+    def __init__(self, file_path, controller):
+        self._file_path = file_path
+        self._controller = controller
+        self._raw_data_content: AnyStr = self.get_raw_data_content()
+        self._sections: List = self.get_sections_from_raw_data_content()
+        self._data_by_sections: Dict[AnyStr, AnyStr] = self.transform_raw_data_content_to_data_by_sections()
+
+    def get_raw_data_content(self):
+        raw_file_data = self._controller.read_file_data(file_path=self._file_path)
+        matches = re.findall(SECTION_SEPARATOR_REGEX, raw_file_data)
+
+        if not matches:
+            return SECTION_SEPARATOR_DEFAULT_VALUE + raw_file_data
+        return raw_file_data
+
+    def get_sections_from_raw_data_content(self):
+        return re.findall(SECTION_SEPARATOR_REGEX, self._raw_data_content)
+
+    @property
+    def default_section(self):
+        if self._sections:
+            return self._sections[0]
+        return ""
+
+    @property
+    def sections(self):
+        return self._sections
+
+    def set_section_content(self, section_name, section_content):
+        self._data_by_sections[section_name] = section_content
+
+    def get_section_content(self, section_name):
+        return self._data_by_sections[section_name]
+
+    def transform_raw_data_content_to_data_by_sections(self):
+        dict_data = dict()
+        for item in zip(self._sections, re.split(SECTION_SEPARATOR_REGEX, self._raw_data_content)[1:]):
+            dict_data[item[0]] = item[1]
+
+        return dict_data
+
+    def transform_data_by_sections_to_raw_data_content(self):
+        text_data = str()
+        for k, v in self._data_by_sections.items():
+            text_data += k
+            text_data += v
+
+        return text_data
+
+
 class MyScreenView(BoxLayout, MDScreen, Observer):
     """"
     A class that implements the visual presentation `MyScreenModel`.
@@ -113,38 +166,25 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = None
         self.last_searched_string = str()
 
-        # self.text_data = ???
-        self.sections = list()
-        self.set_initial_sections_from_text_data()
-        self.set_drawer_items()
+        # # self.text_section_view = ???
+        self.file = File(
+            file_path=None,
+            controller=self.controller
+        )
 
-        self.text_data_by_sections = dict()
-        self.set_initial_text_data_by_sections()
-
-        self.filter_data_split_by_section(section_name=self.get_default_section())
-
-    def set_initial_sections_from_text_data(self, file_path=None):
-        self.sections = re.findall(SECTION_SEPARATOR_REGEX, self.controller.read_file_data(file_path=file_path))
-
-    def get_default_section(self):
-        return self.sections[0]
-
-    def get_text_data_split_by_sections(self, file_path=None):
-        return re.split(SECTION_SEPARATOR_REGEX, self.controller.read_file_data(file_path=file_path))
-
-    # TODO solve two reads from the file
-    def set_initial_text_data_by_sections(self, file_path=None):
-        for item in zip(self.sections, self.get_text_data_split_by_sections(file_path=file_path)[1:]):
-            self.text_data_by_sections[item[0]] = item[1]
+        self.filter_data_split_by_section(section_name=self.file.default_section)
+        self.set_drawer_items(sections=self.file.sections)
 
     def filter_data_split_by_section(self, section_name):
         self.text_section_view.section_name = section_name
-        self.text_section_view.text = self.text_data_by_sections[section_name]
-
+        self.text_section_view.text = self.file.get_section_content(section_name)
         self.ids.toolbar.title = f"Notes section {section_name}"
 
-    def set_drawer_items(self):
-        for section_name in self.sections:
+    def set_drawer_items(self, sections):
+        # TODO reset drawer list items on new file open
+        # self.ids.md_list = DrawerList()
+
+        for section_name in sections:
             self.ids.md_list.add_widget(
                 ItemDrawer(
                     icon="bookmark",
@@ -202,14 +242,20 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         snackbar.open()
 
     def execute_open_file(self, path, filename):
+        if not filename:
+            return
+
         file_path = filename[0]
         self.controller.set_file_path(file_path)
 
-        # TODO
-        # self.text_section_view.text = self.controller.read_file_data(file_path=file_path)
+        self.file = File(
+            file_path=file_path,
+            controller=self.controller
+        )
 
-        self.set_initial_sections_from_text_data(file_path=file_path)
-        self.set_initial_text_data_by_sections(file_path=file_path)
+        self.set_drawer_items(self.file.sections)
+
+        self.filter_data_split_by_section(section_name=self.file.default_section)
 
         self.cancel_popup()
 
@@ -277,12 +323,12 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.open()
 
     def press_menu_item_save_file(self, *args):
-        self.text_data_by_sections[self.text_section_view.section_name] = self.text_section_view.text
+        self.file.set_section_content(
+            section_name=self.text_section_view.section_name,
+            section_content=self.text_section_view.text
+        )
 
-        text_data = str()
-        for k, v in self.text_data_by_sections.items():
-            text_data += k
-            text_data += v
+        text_data = self.file.transform_data_by_sections_to_raw_data_content()
 
         self.controller.save_file_data(data=text_data)
 
