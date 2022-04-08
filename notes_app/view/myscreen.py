@@ -11,7 +11,6 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
-from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.list import TwoLineListItem, OneLineIconListItem, MDList
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -32,8 +31,6 @@ class ItemDrawer(OneLineIconListItem):
     icon = StringProperty()
 
 
-# TODO
-# https://kivymd.readthedocs.io/en/latest/components/navigationdrawer/index.html
 class ContentNavigationDrawer(BoxLayout):
     pass
 
@@ -111,51 +108,44 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = None
         self.last_searched_string = str()
 
-        # TEMP
-        self.text_data = str()
-
+        self.text_data = dict()
         self.load_initial_data()
-
-        # TEMP
-        self.filter_initial_data_split_by_section(section=1)
-        self.section_names = []
-        self.get_section_names()
+        self.filter_initial_data_split_by_section(section_name=self.get_default_section())
         self.set_drawer_items()
 
-    def set_drawer_items(self):
-        # icons_item = {
-        #     "folder": "My files",
-        #     "account-multiple": "Shared with me",
-        #     "star": "Starred",
-        #     "history": "Recent",
-        #     "checkbox-marked": "Shared with me",
-        #     "upload": "Upload",
-        # }
-        # for icon_name in icons_item.keys():
-        #     self.ids.md_list.add_widget(
-        #         ItemDrawer(icon=icon_name, text=icons_item[icon_name])
-        #     )
-        for section_name in self.section_names:
-            self.ids.md_list.add_widget(
-                ItemDrawer(icon="bookmark", text=section_name)
-            )
+    def get_section_names(self):
+        return re.findall(SECTION_SEPARATOR_REGEX, self.controller.read_file_data())
+
+    def get_default_section(self):
+        return "<section=first>"
+
+    def split_data(self):
+        return re.split(SECTION_SEPARATOR_REGEX, self.controller.read_file_data())
 
     def load_initial_data(self):
         # self.text_view.text = self.controller.read_file_data()
-        self.text_data = self.controller.read_file_data()
+        # self.text_data = self.controller.read_file_data()
 
-    def filter_initial_data_split_by_section(self, section):
-        split_result = re.split(SECTION_SEPARATOR_REGEX, self.text_data)
-        print(split_result[section])
-        # TODO hardcoded first section element
-        # return split_result[section]
-        self.text_view.text = split_result[section]
-        self.ids.toolbar.title = f"Notes section {section}"
+        for item in zip(self.get_section_names(), self.split_data()[1:]):
+            self.text_data[item[0]] = item[1]
 
-    def get_section_names(self):
-        section_names = re.findall(SECTION_SEPARATOR_REGEX, self.text_data)
-        self.section_names = section_names
-        return section_names
+    def filter_initial_data_split_by_section(self, section_name="<section=second>"):
+        self.text_view.text = self.text_data[section_name]
+
+        self.ids.toolbar.title = f"Notes section {section_name}"
+
+    def set_drawer_items(self):
+        for section_name in self.get_section_names():
+            self.ids.md_list.add_widget(
+                ItemDrawer(
+                    icon="bookmark",
+                    text=section_name,
+                    on_release=lambda x=f"{section_name}": self.press_drawer_item_callback(x)
+                )
+            )
+
+    def press_drawer_item_callback(self, text_item):
+        self.filter_initial_data_split_by_section(section_name=text_item.text)
 
     def get_menu(self):
         menu_items = [
@@ -273,18 +263,15 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.open()
 
     def press_menu_item_save_file(self, *args):
-        xsplit_result = re.split(SECTION_SEPARATOR_REGEX, self.text_data)
-        xsplit_result[1] = self.text_view.text
+        print(self.text_data)
+        print(self.text_view.text)
+        # self.text_data[]
+        res = str()
+        for k, v in self.text_data.items():
+            res += k
+            res += v
 
-        # res = "xxx".join(xsplit_result)
-        xxx = zip(xsplit_result, self.section_names)
-        out = str()
-        for item in xxx:
-            print(item)
-            # out += xxx. + linesep + item
-
-        # self.controller.save_file_data(data=self.text_view.text)
-        # self.controller.save_file_data(data=res)
+        self.controller.save_file_data(data=res)
 
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataPopup(
