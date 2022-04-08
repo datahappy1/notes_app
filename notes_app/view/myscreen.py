@@ -181,8 +181,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.ids.toolbar.title = f"Notes section {section_name}"
 
     def set_drawer_items(self, sections):
-        # TODO reset drawer list items on new file open
-        # self.ids.md_list = DrawerList()
+        self.ids.md_list.clear_widgets()
 
         for section_name in sections:
             self.ids.md_list.add_widget(
