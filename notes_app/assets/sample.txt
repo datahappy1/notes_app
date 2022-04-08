@@ -8,7 +8,7 @@ Quid tu, inquit, huc? Et homini, qui ceteris animantibus plurimum praestat, prae
 Iam id ipsum absurdum, maximum malum neglegi. Quod ea non occurrentia fingunt, vincunt Aristonem; Atqui perspicuum est hominem e corpore animoque constare, cum primae sint animi partes, secundae corporis. 
 Fieri, inquam, Triari, nullo pacto potest, ut non dicas, quid non probes eius, a quo dissentias. Equidem e Cn. An dubium est, quin virtus ita maximam partem optineat in rebus humanis, ut reliquas obruat?si!
 
-<section=second>
+<section=second>this is second section.yea
 
 Quod equidem non reprehendo;
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quibus natura iure responderit non esse verum aliunde finem beate vivendi, a se principia rei gerendae peti; Quae enim adhuc protulisti, popularia sunt, ego autem a te ele
@@ -16,7 +16,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quibus natura iure resp
 Quis istum dolorem timet?
 Summus dolor plures dies manere non potest? Dicet pro me ipsa virtus nec dubitabit isti vestro beato M. Tubulum fuisse, qua illum, cuius is condemnatus est rogatione, P. Quod si ita sit, cur opera philosophiae sit danda nescio.
 
-Ex eorum enim scriptis et institutis cum omnis doctrina liberalis, omnis historia.
+Ex eorum enim scriptis et institutis cum omnis doctrina liberalis, omnis historia.d
 Quod si ita est, sequitur id ipsum, quod te velle video, omnes semper beatos esse sapientes. Cum enim fertur quasi torrens oratio, quamvis multa cuiusque modi rapiat, nihil tamen teneas, nihil apprehendas, nusquam orationem rapidam coerceas. 
 Ita redarguitur ipse a sese, convincunturque scripta eius probitate ipsius ac moribus. At quanta conantur! Mundum hunc omnem oppidum esse nostrum! Incendi igitur eos, qui audiunt, vides. 
 Vide, ne magis, inquam, tuum fuerit, cum re idem tibi, quod mihi, videretur, non nova te rebus nomina inponere. Qui-vere falsone, quaerere mittimus-dicitur oculis se privasse; Si ista mala sunt, in quae potest incidere sapiens, sapientem esse non esse ad beate vivendum satis. 
@@ -26,7 +26,7 @@ At vero si ad vitem sensus accesserit, ut appetitum quendam habeat et per se ips
 <section=third>
 Quem si tenueris, non modo meum Ciceronem, sed etiam me ipsum abducas licebit.
 Stulti autem malorum memoria torquentur, sapientes bona praeterita grata recordatione renovata delectant.
-Esse enim quam vellet iniquus iustus poterat inpune.
+Esse enim quam vellet iniquus iustus poterat inpune.aax
 Quae autem natura suae primae institutionis oblita est?
 Verum tamen cum de rebus grandioribus dicas, ipsae res verba rapiunt;
 Hoc est non modo cor non habere, sed ne palatum quidem.

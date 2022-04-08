@@ -15,6 +15,8 @@ from kivymd.uix.list import TwoLineListItem, OneLineIconListItem, MDList
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
+from kivymd.uix.textfield import TextInput
+
 
 from notes_app.utils.observer import Observer
 
@@ -26,6 +28,9 @@ SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 
+
+# class Text(TextInput):
+#     pass
 
 class ItemDrawer(OneLineIconListItem):
     icon = StringProperty()
@@ -108,34 +113,38 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = None
         self.last_searched_string = str()
 
-        self.text_data = dict()
-        self.load_initial_data()
-        self.filter_initial_data_split_by_section(section_name=self.get_default_section())
+        # self.text_data = ???
+        self.sections = list()
+        self.set_initial_sections_from_text_data()
         self.set_drawer_items()
 
-    def get_section_names(self):
-        return re.findall(SECTION_SEPARATOR_REGEX, self.controller.read_file_data())
+        self.text_data_by_sections = dict()
+        self.set_initial_text_data_by_sections()
+
+        self.filter_data_split_by_section(section_name=self.get_default_section())
+
+    def set_initial_sections_from_text_data(self, file_path=None):
+        self.sections = re.findall(SECTION_SEPARATOR_REGEX, self.controller.read_file_data(file_path=file_path))
 
     def get_default_section(self):
-        return "<section=first>"
+        return self.sections[0]
 
-    def split_data(self):
-        return re.split(SECTION_SEPARATOR_REGEX, self.controller.read_file_data())
+    def get_text_data_split_by_sections(self, file_path=None):
+        return re.split(SECTION_SEPARATOR_REGEX, self.controller.read_file_data(file_path=file_path))
 
-    def load_initial_data(self):
-        # self.text_view.text = self.controller.read_file_data()
-        # self.text_data = self.controller.read_file_data()
+    # TODO solve two reads from the file
+    def set_initial_text_data_by_sections(self, file_path=None):
+        for item in zip(self.sections, self.get_text_data_split_by_sections(file_path=file_path)[1:]):
+            self.text_data_by_sections[item[0]] = item[1]
 
-        for item in zip(self.get_section_names(), self.split_data()[1:]):
-            self.text_data[item[0]] = item[1]
-
-    def filter_initial_data_split_by_section(self, section_name="<section=second>"):
-        self.text_view.text = self.text_data[section_name]
+    def filter_data_split_by_section(self, section_name):
+        self.text_section_view.section_name = section_name
+        self.text_section_view.text = self.text_data_by_sections[section_name]
 
         self.ids.toolbar.title = f"Notes section {section_name}"
 
     def set_drawer_items(self):
-        for section_name in self.get_section_names():
+        for section_name in self.sections:
             self.ids.md_list.add_widget(
                 ItemDrawer(
                     icon="bookmark",
@@ -145,7 +154,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
 
     def press_drawer_item_callback(self, text_item):
-        self.filter_initial_data_split_by_section(section_name=text_item.text)
+        self.filter_data_split_by_section(section_name=text_item.text)
 
     def get_menu(self):
         menu_items = [
@@ -170,9 +179,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         elif text_item == MenuItems.Save.value:
             self.press_menu_item_save_file()
         elif text_item == MenuItems.IncreaseFontSize.value:
-            self.text_view.font_size += 1
+            self.text_section_view.font_size += 1
         elif text_item == MenuItems.DecreaseFontSize.value:
-            self.text_view.font_size -= 1
+            self.text_section_view.font_size -= 1
         elif text_item == MenuItems.ShowAppInfo.value:
             self.press_menu_item_show_app_metadata()
 
@@ -196,15 +205,20 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         file_path = filename[0]
         self.controller.set_file_path(file_path)
 
-        self.text_view.text = self.controller.read_file_data(file_path=file_path)
+        # TODO
+        # self.text_section_view.text = self.controller.read_file_data(file_path=file_path)
+
+        self.set_initial_sections_from_text_data(file_path=file_path)
+        self.set_initial_text_data_by_sections(file_path=file_path)
+
         self.cancel_popup()
 
     def execute_goto_search_result(self, custom_list_item):
         position = int(custom_list_item.secondary_text.replace(SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE, ""))
-        self.text_view.select_text(position, position + len(self.last_searched_string))
+        self.text_section_view.select_text(position, position + len(self.last_searched_string))
 
-        cursor_position = self.text_view.get_cursor_from_index(position)
-        self.text_view.cursor = cursor_position
+        cursor_position = self.text_section_view.get_cursor_from_index(position)
+        self.text_section_view.cursor = cursor_position
 
         self.cancel_popup()
 
@@ -217,7 +231,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.popup.content.results_list.clear_widgets()
 
-        text_data = self.text_view.text
+        text_data = self.text_section_view.text
         found_occurrences = [
             m.start() for m in re.finditer(self.last_searched_string.lower(), text_data.lower())
         ]
@@ -263,15 +277,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.open()
 
     def press_menu_item_save_file(self, *args):
-        print(self.text_data)
-        print(self.text_view.text)
-        # self.text_data[]
-        res = str()
-        for k, v in self.text_data.items():
-            res += k
-            res += v
+        self.text_data_by_sections[self.text_section_view.section_name] = self.text_section_view.text
 
-        self.controller.save_file_data(data=res)
+        text_data = str()
+        for k, v in self.text_data_by_sections.items():
+            text_data += k
+            text_data += v
+
+        self.controller.save_file_data(data=text_data)
 
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataPopup(
