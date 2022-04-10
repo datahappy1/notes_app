@@ -12,7 +12,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
-from kivymd.uix.list import TwoLineListItem, OneLineIconListItem, MDList
+from kivymd.uix.list import TwoLineListItem, MDList, OneLineAvatarIconListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -21,8 +21,13 @@ from kivymd.uix.textfield import TextInput
 
 from notes_app.utils.observer import Observer
 
-SECTION_SEPARATOR_REGEX = "<section=[a-zA-Z]+>"
-SECTION_SEPARATOR_DEFAULT_VALUE = "<section=default>"
+APP_TITLE = "Notes"
+
+SECTION_FILE_SEPARATOR = "<section={name}>"
+SECTION_FILE_SEPARATOR_REGEX = "<section=[a-zA-Z]+>"
+SECTION_FILE_SEPARATOR_DEFAULT_VALUE = "<section=default>"
+SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
+SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "Position "
@@ -34,8 +39,11 @@ SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 # class Text(TextInput):
 #     pass
 
-class ItemDrawer(OneLineIconListItem):
+class ItemDrawer(OneLineAvatarIconListItem):
     icon = StringProperty()
+    right_text = StringProperty()
+    text = StringProperty()
+    delete = ObjectProperty()
 
 
 class ContentNavigationDrawer(BoxLayout):
@@ -67,6 +75,12 @@ class ShowFileMetadataPopup(FloatLayout):
 
 class ShowAppMetadataPopup(FloatLayout):
     show_app_metadata_label = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
+class AddSectionPopup(FloatLayout):
+    add_section_result_message = StringProperty(None)
+    execute_add_section = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
@@ -105,29 +119,37 @@ class File:
         self._file_path = file_path
         self._controller = controller
         self._raw_data_content: AnyStr = self.get_raw_data_content()
-        self._sections: List = self.get_sections_from_raw_data_content()
-        self._data_by_sections: Dict[AnyStr, AnyStr] = self.transform_raw_data_content_to_data_by_sections()
+        self._sections: List[AnyStr] = self.get_sections_from_raw_data_content()
+        self._data_by_sections: Dict[AnyStr, AnyStr] = \
+            self.transform_raw_data_content_to_data_by_sections()
 
     def get_raw_data_content(self):
         raw_file_data = self._controller.read_file_data(file_path=self._file_path)
-        matches = re.findall(SECTION_SEPARATOR_REGEX, raw_file_data)
+        matches = re.findall(SECTION_FILE_SEPARATOR_REGEX, raw_file_data)
 
         if not matches:
-            return SECTION_SEPARATOR_DEFAULT_VALUE + raw_file_data
+            raise ValueError("No section in file found")
         return raw_file_data
 
     def get_sections_from_raw_data_content(self):
-        return re.findall(SECTION_SEPARATOR_REGEX, self._raw_data_content)
+        return re.findall(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)
 
     @property
     def default_section(self):
-        if self._sections:
-            return self._sections[0]
-        return ""
+        return self._sections[0]
 
     @property
     def sections(self):
         return self._sections
+
+    def add_section(self, section_name):
+        self._sections.append(section_name)
+
+    def delete_all_sections(self):
+        self._sections = []
+
+    def delete_section(self, section_name):
+        self._sections.remove(section_name)
 
     def set_section_content(self, section_name, section_content):
         self._data_by_sections[section_name] = section_content
@@ -135,9 +157,18 @@ class File:
     def get_section_content(self, section_name):
         return self._data_by_sections[section_name]
 
+    def delete_all_sections_content(self):
+        self._data_by_sections = dict()
+
+    def delete_section_content(self, section_name):
+        self._data_by_sections.pop(section_name)
+
     def transform_raw_data_content_to_data_by_sections(self):
         dict_data = dict()
-        for item in zip(self._sections, re.split(SECTION_SEPARATOR_REGEX, self._raw_data_content)[1:]):
+        for item in zip(
+                self._sections,
+                re.split(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)[1:]
+        ):
             dict_data[item[0]] = item[1]
 
         return dict_data
@@ -166,7 +197,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = None
         self.last_searched_string = str()
 
-        # # self.text_section_view = ???
+        # self.text_section_view = ???
         self.file = File(
             file_path=None,
             controller=self.controller
@@ -178,7 +209,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def filter_data_split_by_section(self, section_name):
         self.text_section_view.section_name = section_name
         self.text_section_view.text = self.file.get_section_content(section_name)
-        self.ids.toolbar.title = f"Notes section {section_name}"
+        self.ids.toolbar.title = f"{APP_TITLE} {section_name}"
 
     def set_drawer_items(self, sections):
         self.ids.md_list.clear_widgets()
@@ -188,7 +219,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                 ItemDrawer(
                     icon="bookmark",
                     text=section_name,
-                    on_release=lambda x=f"{section_name}": self.press_drawer_item_callback(x)
+                    on_release=lambda x=f"{section_name}": self.press_drawer_item_callback(x),
+                    delete=self.press_delete_section
                 )
             )
 
@@ -240,6 +272,20 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
 
+    def show_error_bar(self, error_message):
+        """
+        The method is called when the model changes.
+        Requests and displays the value of the sum.
+        """
+        snackbar = CustomSnackbar(
+            text=error_message,
+            icon="information", # TODO error icon
+            snackbar_x="10dp",
+            snackbar_y="10dp"
+        )
+        snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
+        snackbar.open()
+
     def execute_open_file(self, path, filename):
         if not filename:
             return
@@ -247,16 +293,20 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         file_path = filename[0]
         self.controller.set_file_path(file_path)
 
-        self.file = File(
-            file_path=file_path,
-            controller=self.controller
-        )
+        try:
+            self.file = File(
+                file_path=file_path,
+                controller=self.controller
+            )
+            self.set_drawer_items(self.file.sections)
+            self.filter_data_split_by_section(section_name=self.file.default_section)
+            self.cancel_popup()
 
-        self.set_drawer_items(self.file.sections)
-
-        self.filter_data_split_by_section(section_name=self.file.default_section)
-
-        self.cancel_popup()
+        except ValueError:
+            self.file.delete_all_sections()
+            self.file.delete_all_sections_content()
+            self.cancel_popup()
+            self.press_add_section()
 
     def execute_goto_search_result(self, custom_list_item):
         position = int(custom_list_item.secondary_text.replace(SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE, ""))
@@ -268,7 +318,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.cancel_popup()
 
     def execute_search(self, *args):
-        if len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
+        if not args[0] or len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
             self.popup.content.search_results_message = "Invalid search"
             return
 
@@ -310,6 +360,30 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                     on_release=self.execute_goto_search_result,
                 )
             )
+
+    def execute_add_section(self, *args):
+        if not args[0] or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT or args[0].isspace():
+            self.popup.content.add_section_result_message = "Invalid name"
+            return
+
+        section_name = args[0]
+        section_file_separator = SECTION_FILE_SEPARATOR.format(name=section_name)
+
+        if section_name in self.file.sections:
+            self.popup.content.add_section_result_message = "Name already exists"
+            return
+
+        self.file.add_section(section_name=section_file_separator)
+        self.file.set_section_content(
+            section_name=section_file_separator,
+            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER
+        )
+
+        self.filter_data_split_by_section(section_name=section_file_separator)
+
+        self.set_drawer_items(sections=self.file.sections)
+
+        self.cancel_popup()
 
     def cancel_popup(self):
         self.popup.dismiss()
@@ -370,6 +444,28 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = Popup(title="Search", content=content,
                            size_hint=(0.9, 0.9))
         self.popup.open()
+
+    def press_add_section(self, *args):
+        content = AddSectionPopup(
+            add_section_result_message="",
+            execute_add_section=self.execute_add_section,
+            cancel=self.cancel_popup
+        )
+        self.popup = Popup(title="Add section", content=content,
+                           size_hint=(0.9, 0.9))
+        self.popup.open()
+
+    def press_delete_section(self, section_item):
+        if len(self.file.sections) == 1:
+            self.show_error_bar(error_message="Cannot delete last section")
+            return
+
+        self.ids.md_list.remove_widget(section_item)
+
+        self.filter_data_split_by_section(section_name=self.file.default_section)
+
+        self.file.delete_section(section_name=section_item.text)
+        self.file.delete_section_content(section_name=section_item.text)
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

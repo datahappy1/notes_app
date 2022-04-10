@@ -18,6 +18,7 @@
         pos_hint: {'center_y': .5}
 
 <ItemDrawer>
+    id: section_item
     theme_text_color: "Custom"
     on_release: self.parent.set_color_item(self)
 
@@ -25,6 +26,11 @@
         id: icon
         icon: root.icon
         theme_text_color: "Custom"
+
+    IconRightWidget:
+        icon: 'trash-can-outline'
+        theme_text_color: "Custom"
+        on_release: root.delete(section_item)
 
 <MyScreenView>:
     orientation: "vertical"
@@ -59,6 +65,12 @@
                     ScrollView:
                         DrawerList:
                             id: md_list
+
+                    MDFloatingActionButton:
+                        icon: 'plus-thick'
+                        on_release: root.press_add_section()
+                        elevation_normal: 12
+                        pos_hint: {'x': .8, 'y':.05}
 
 <OpenFilePopup>:
     MDBoxLayout:
@@ -163,3 +175,32 @@
             Button:
                 text: "Search"
                 on_release: root.execute_search(search_string_input_value.text)
+
+<AddSectionPopup>
+    MDBoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        md_bg_color: app.theme_cls.primary_light
+        padding: [dp(20),dp(10),dp(20),dp(10)]
+
+        MDLabel:
+            font_style: "H6"
+            halign: "center"
+            valign: "center"
+            text: root.add_section_result_message
+
+        MDTextField:
+            id: section_name_input_value
+            hint_text: "What section name to add?"
+            max_text_length: 20
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+            Button:
+                text: "Add"
+                on_release: root.execute_add_section(section_name_input_value.text)
