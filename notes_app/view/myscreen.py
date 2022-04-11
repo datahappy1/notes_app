@@ -1,7 +1,6 @@
 import re
 from enum import Enum
 from os import path, linesep
-from typing import List, AnyStr, Dict
 
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -12,22 +11,18 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
+from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
+from kivymd.uix.button import MDFlatButton
 from kivymd.uix.list import TwoLineListItem, MDList, OneLineAvatarIconListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
-from kivymd.uix.textfield import TextInput
 
-
-from notes_app.utils.observer import Observer
+from notes_app.utils.file import File, SECTION_FILE_NEW_SECTION_PLACEHOLDER, SECTION_FILE_SEPARATOR, \
+    SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+from notes_app.observer.observer import Observer
 
 APP_TITLE = "Notes"
-
-SECTION_FILE_SEPARATOR = "<section={name}>"
-SECTION_FILE_SEPARATOR_REGEX = "<section=[a-zA-Z]+>"
-SECTION_FILE_SEPARATOR_DEFAULT_VALUE = "<section=default>"
-SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
-SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "Position "
@@ -84,6 +79,10 @@ class AddSectionPopup(FloatLayout):
     cancel = ObjectProperty(None)
 
 
+class MyToggleButton(MDFlatButton, MDToggleButton):
+    pass
+
+
 class SearchPopup(FloatLayout):
     search_string_placeholder = StringProperty(None)
     search_results_message = StringProperty(None)
@@ -112,74 +111,6 @@ class MenuItems(Enum):
     IncreaseFontSize = "Increase font size"
     DecreaseFontSize = "Decrease font size"
     ShowAppInfo = "Show application info"
-
-
-class File:
-    def __init__(self, file_path, controller):
-        self._file_path = file_path
-        self._controller = controller
-        self._raw_data_content: AnyStr = self.get_raw_data_content()
-        self._sections: List[AnyStr] = self.get_sections_from_raw_data_content()
-        self._data_by_sections: Dict[AnyStr, AnyStr] = \
-            self.transform_raw_data_content_to_data_by_sections()
-
-    def get_raw_data_content(self):
-        raw_file_data = self._controller.read_file_data(file_path=self._file_path)
-        matches = re.findall(SECTION_FILE_SEPARATOR_REGEX, raw_file_data)
-
-        if not matches:
-            raise ValueError("No section in file found")
-        return raw_file_data
-
-    def get_sections_from_raw_data_content(self):
-        return re.findall(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)
-
-    @property
-    def default_section(self):
-        return self._sections[0]
-
-    @property
-    def sections(self):
-        return self._sections
-
-    def add_section(self, section_name):
-        self._sections.append(section_name)
-
-    def delete_all_sections(self):
-        self._sections = []
-
-    def delete_section(self, section_name):
-        self._sections.remove(section_name)
-
-    def set_section_content(self, section_name, section_content):
-        self._data_by_sections[section_name] = section_content
-
-    def get_section_content(self, section_name):
-        return self._data_by_sections[section_name]
-
-    def delete_all_sections_content(self):
-        self._data_by_sections = dict()
-
-    def delete_section_content(self, section_name):
-        self._data_by_sections.pop(section_name)
-
-    def transform_raw_data_content_to_data_by_sections(self):
-        dict_data = dict()
-        for item in zip(
-                self._sections,
-                re.split(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)[1:]
-        ):
-            dict_data[item[0]] = item[1]
-
-        return dict_data
-
-    def transform_data_by_sections_to_raw_data_content(self):
-        text_data = str()
-        for k, v in self._data_by_sections.items():
-            text_data += k
-            text_data += v
-
-        return text_data
 
 
 class MyScreenView(BoxLayout, MDScreen, Observer):
@@ -369,7 +300,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         section_name = args[0]
         section_file_separator = SECTION_FILE_SEPARATOR.format(name=section_name)
 
-        if section_name in self.file.sections:
+        if section_file_separator in self.file.sections:
             self.popup.content.add_section_result_message = "Name already exists"
             return
 
