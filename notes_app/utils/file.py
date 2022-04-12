@@ -12,20 +12,24 @@ class File:
     def __init__(self, file_path, controller):
         self._file_path = file_path
         self._controller = controller
-        self._raw_data_content: AnyStr = self.get_raw_data_content()
-        self._sections: List[AnyStr] = self.get_sections_from_raw_data_content()
+        self._raw_data_content: AnyStr = File._get_validated_raw_data(
+            raw_data=self.get_raw_data_content()
+        )
+        self._sections: List[AnyStr] = self._get_sections_from_raw_data_content()
         self._data_by_sections: Dict[AnyStr, AnyStr] = \
-            self.transform_raw_data_content_to_data_by_sections()
+            self._transform_raw_data_content_to_data_by_sections()
 
-    def get_raw_data_content(self):
-        raw_file_data = self._controller.read_file_data(file_path=self._file_path)
-        matches = re.findall(SECTION_FILE_SEPARATOR_REGEX, raw_file_data)
-
+    @staticmethod
+    def _get_validated_raw_data(raw_data):
+        matches = re.findall(SECTION_FILE_SEPARATOR_REGEX, raw_data)
         if not matches:
             raise ValueError("No section in file found")
-        return raw_file_data
+        return raw_data
 
-    def get_sections_from_raw_data_content(self):
+    def get_raw_data_content(self):
+        return self._controller.read_file_data(file_path=self._file_path)
+
+    def _get_sections_from_raw_data_content(self):
         return re.findall(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)
 
     @property
@@ -57,7 +61,7 @@ class File:
     def delete_section_content(self, section_name):
         self._data_by_sections.pop(section_name)
 
-    def transform_raw_data_content_to_data_by_sections(self):
+    def _transform_raw_data_content_to_data_by_sections(self):
         dict_data = dict()
         for item in zip(
                 self._sections,

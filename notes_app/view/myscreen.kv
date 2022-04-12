@@ -160,20 +160,27 @@
                 markup: True
                 id: scroll
 
-        MyToggleButton:
-            text: "Search in all sections"
+        MDBoxLayout:
+            orientation: "horizontal"
 
-        MyToggleButton:
-            text: "Search in current section"
+            MDLabel:
+                text: "Search in all sections"
 
-        MyToggleButton:
-            text: "Search case sensitive"
+            MDSwitch:
+                id: search_all_sections_switch
+                active: False
+                on_active: root.switch_callback("search_all_sections_switch", self.active)
 
-        MyToggleButton:
-            text: "Search case in-sensitive"
+        MDBoxLayout:
+            orientation: "horizontal"
 
-        MyToggleButton:
-            text: "Search for full words"
+            MDLabel:
+                text: "Search case sensitive"
+
+            MDSwitch:
+                id: search_case_sensitive_switch
+                active: False
+                on_active: root.switch_callback("search_case_sensitive_switch", self.active)
 
         MDTextField:
             id: search_string_input_value

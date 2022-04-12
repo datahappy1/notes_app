@@ -84,6 +84,7 @@ class MyToggleButton(MDFlatButton, MDToggleButton):
 
 
 class SearchPopup(FloatLayout):
+    switch_callback = ObjectProperty(None)
     search_string_placeholder = StringProperty(None)
     search_results_message = StringProperty(None)
     execute_search = ObjectProperty(None)
@@ -248,6 +249,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.cancel_popup()
 
+    def switch_callback(self, switch_id, state, *args):
+        print(switch_id, state)
+        pass
+
     def execute_search(self, *args):
         if not args[0] or len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
             self.popup.content.search_results_message = "Invalid search"
@@ -367,6 +372,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def press_icon_search(self, *args):
         content = SearchPopup(
+            switch_callback=self.switch_callback,
             search_string_placeholder=self.last_searched_string,
             search_results_message="",
             execute_search=self.execute_search,
