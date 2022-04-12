@@ -20,6 +20,7 @@ from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.utils.file import File, SECTION_FILE_NEW_SECTION_PLACEHOLDER, SECTION_FILE_SEPARATOR, \
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+from notes_app.utils.search import Search
 from notes_app.observer.observer import Observer
 
 APP_TITLE = "Notes"
@@ -128,6 +129,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu = self.get_menu()
         self.popup = None
         self.last_searched_string = str()
+        self.current_section = str()
 
         # self.text_section_view = ???
         self.file = File(
@@ -135,13 +137,15 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             controller=self.controller
         )
 
+        self.search = Search(False, False)
+
         self.filter_data_split_by_section(section_name=self.file.default_section)
         self.set_drawer_items(sections=self.file.sections)
 
-    def filter_data_split_by_section(self, section_name):
-        self.text_section_view.section_name = section_name
-        self.text_section_view.text = self.file.get_section_content(section_name)
-        self.ids.toolbar.title = f"{APP_TITLE} {section_name}"
+    def filter_data_split_by_section(self, section_name=None):
+        self.text_section_view.section_name = section_name or self.current_section
+        self.text_section_view.text = self.file.get_section_content(section_name or self.current_section)
+        self.ids.toolbar.title = f"{APP_TITLE} {section_name or self.current_section}"
 
     def set_drawer_items(self, sections):
         self.ids.md_list.clear_widgets()
@@ -157,7 +161,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
 
     def press_drawer_item_callback(self, text_item):
-        self.filter_data_split_by_section(section_name=text_item.text)
+        self.current_section = text_item.text
+        self.filter_data_split_by_section()
 
     def get_menu(self):
         menu_items = [
@@ -251,7 +256,18 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def switch_callback(self, switch_id, state, *args):
         print(switch_id, state)
-        pass
+
+        search_case_sensitive, search_all_sections = False, False
+
+        if switch_id == "search_case_sensitive_switch":
+            search_case_sensitive = state
+        elif switch_id == "search_all_sections_switch":
+            search_all_sections = state
+
+        self.search = Search(
+            search_case_sensitive=search_case_sensitive,
+            search_all_sections=search_all_sections
+        )
 
     def execute_search(self, *args):
         if not args[0] or len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
@@ -263,15 +279,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.content.results_list.clear_widgets()
 
         # TODO
-        # searchFacade = SearchFacade(
-        #     search_case_sensitive=False,
-        #     search_all_sections=False
-        # )
-        # found_occurences = searchFacade.search_for_occurrences(
-        #     pattern=self.last_searched_string,
-        #     file=self.file,
-        #     section_name=section
-        # )
+        _found_occurrences = self.search.search_for_occurrences(
+            pattern=self.last_searched_string,
+            file=self.file,
+            section_name=self.current_section
+        )
+        print(_found_occurrences)
+        # TODO
+
 
         text_data = self.text_section_view.text
         found_occurrences = [

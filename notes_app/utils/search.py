@@ -3,7 +3,7 @@ import re
 from notes_app.utils.file import File
 
 
-class SearchFacade:
+class Search:
     def __init__(self, search_case_sensitive, search_all_sections):
         self.search_case_sensitive = search_case_sensitive
         self.search_all_sections = search_all_sections
