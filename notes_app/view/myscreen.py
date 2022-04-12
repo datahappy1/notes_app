@@ -262,6 +262,17 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.popup.content.results_list.clear_widgets()
 
+        # TODO
+        # searchFacade = SearchFacade(
+        #     search_case_sensitive=False,
+        #     search_all_sections=False
+        # )
+        # found_occurences = searchFacade.search_for_occurrences(
+        #     pattern=self.last_searched_string,
+        #     file=self.file,
+        #     section_name=section
+        # )
+
         text_data = self.text_section_view.text
         found_occurrences = [
             m.start() for m in re.finditer(self.last_searched_string.lower(), text_data.lower())
