@@ -85,6 +85,7 @@ class MyToggleButton(MDFlatButton, MDToggleButton):
 
 
 class SearchPopup(FloatLayout):
+    get_search_switch_state = ObjectProperty(None)
     switch_callback = ObjectProperty(None)
     search_string_placeholder = StringProperty(None)
     search_results_message = StringProperty(None)
@@ -260,6 +261,12 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.cancel_popup()
 
+    def get_search_switch_state(self, switch_id):
+        if switch_id == "search_case_sensitive_switch":
+            return self.search.search_case_sensitive
+        elif switch_id == "search_all_sections_switch":
+            return self.search.search_all_sections
+
     def switch_callback(self, switch_id, state, *args):
         if switch_id == "search_case_sensitive_switch":
             self.search.search_case_sensitive = state
@@ -392,6 +399,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def press_icon_search(self, *args):
         content = SearchPopup(
+            get_search_switch_state=self.get_search_switch_state,
             switch_callback=self.switch_callback,
             search_string_placeholder=self.last_searched_string,
             search_results_message="",

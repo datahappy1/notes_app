@@ -168,7 +168,7 @@
 
             MDSwitch:
                 id: search_all_sections_switch
-                active: False
+                active: root.get_search_switch_state("search_all_sections_switch")
                 on_active: root.switch_callback("search_all_sections_switch", self.active)
 
         MDBoxLayout:
@@ -179,7 +179,7 @@
 
             MDSwitch:
                 id: search_case_sensitive_switch
-                active: False
+                active: root.get_search_switch_state("search_case_sensitive_switch")
                 on_active: root.switch_callback("search_case_sensitive_switch", self.active)
 
         MDTextField:

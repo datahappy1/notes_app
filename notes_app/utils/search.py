@@ -30,7 +30,7 @@ class Search:
         return [m.start() for m in re.finditer(pattern, text)]
 
     @staticmethod
-    def _search(pattern, text):
+    def _case_insensitive_search(pattern, text):
         pattern_lowered = pattern.lower()
         text_lowered = text.lower()
         return Search._case_sensitive_search(pattern=pattern_lowered, text=text_lowered)
@@ -41,7 +41,7 @@ class Search:
         if self.search_case_sensitive:
             search_function = Search._case_sensitive_search
         else:
-            search_function = Search._search
+            search_function = Search._case_insensitive_search
 
         if self.search_all_sections:
             for section_name in file.sections:
