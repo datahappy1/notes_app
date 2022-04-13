@@ -107,12 +107,16 @@ class CustomSnackbar(BaseSnackbar):
     font_size = NumericProperty("15sp")
 
 
-class MenuItems(Enum):
+class MenuStorageItems(Enum):
     ChooseFile = "Choose storage file"
     ShowFileInfo = "Show storage file info"
     Save = "Save storage file"
+
+
+class MenuSettingsItems(Enum):
     IncreaseFontSize = "Increase font size"
     DecreaseFontSize = "Decrease font size"
+    SaveSettings = "Save settings"
     ShowAppInfo = "Show application info"
 
 
@@ -127,7 +131,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def __init__(self, **kw):
         super().__init__(**kw)
         self.model.add_observer(self)  # register the view as an observer
-        self.menu = self.get_menu()
+
+        self.menu_storage = self.get_menu_storage()
+        self.menu_settings = self.get_menu_settings()
         self.popup = None
         self.last_searched_string = str()
 
@@ -167,14 +173,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.current_section = text_item.text
         self.filter_data_split_by_section()
 
-    def get_menu(self):
+    def get_menu_storage(self):
         menu_items = [
             {
                 "text": f"{i.value}",
                 "viewclass": "OneLineListItem",
                 "height": dp(40),
-                "on_release": lambda x=f"{i.value}": self.press_menu_item_callback(x),
-            } for i in MenuItems
+                "on_release": lambda x=f"{i.value}": self.press_menu_storage_item_callback(x),
+            } for i in MenuStorageItems
         ]
         return MDDropdownMenu(
             caller=self.ids.toolbar,
@@ -182,21 +188,40 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             width_mult=5,
         )
 
-    def press_menu_item_callback(self, text_item):
-        if text_item == MenuItems.ChooseFile.value:
+    def get_menu_settings(self):
+        menu_items = [
+            {
+                "text": f"{i.value}",
+                "viewclass": "OneLineListItem",
+                "height": dp(40),
+                "on_release": lambda x=f"{i.value}": self.press_menu_settings_item_callback(x),
+            } for i in MenuSettingsItems
+        ]
+        return MDDropdownMenu(
+            caller=self.ids.toolbar,
+            items=menu_items,
+            width_mult=5,
+        )
+
+    def press_menu_storage_item_callback(self, text_item):
+        if text_item == MenuStorageItems.ChooseFile.value:
             self.press_menu_item_open_file()
-        elif text_item == MenuItems.ShowFileInfo.value:
+        elif text_item == MenuStorageItems.ShowFileInfo.value:
             self.press_menu_item_show_file_metadata()
-        elif text_item == MenuItems.Save.value:
+        elif text_item == MenuStorageItems.Save.value:
             self.press_menu_item_save_file()
-        elif text_item == MenuItems.IncreaseFontSize.value:
+
+        self.menu_storage.dismiss()
+
+    def press_menu_settings_item_callback(self, text_item):
+        if text_item == MenuSettingsItems.IncreaseFontSize.value:
             self.text_section_view.font_size += 1
-        elif text_item == MenuItems.DecreaseFontSize.value:
+        elif text_item == MenuSettingsItems.DecreaseFontSize.value:
             self.text_section_view.font_size -= 1
-        elif text_item == MenuItems.ShowAppInfo.value:
+        elif text_item == MenuSettingsItems.ShowAppInfo.value:
             self.press_menu_item_show_app_metadata()
 
-        self.menu.dismiss()
+        self.menu_settings.dismiss()
 
     def notify_model_is_changed(self):
         """
@@ -266,16 +291,12 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             return self.search.search_case_sensitive
         elif switch_id == "search_all_sections_switch":
             return self.search.search_all_sections
-        elif switch_id == "search_full_words_switch":
-            return self.search.search_full_words
 
     def switch_callback(self, switch_id, state, *args):
         if switch_id == "search_case_sensitive_switch":
             self.search.search_case_sensitive = state
         elif switch_id == "search_all_sections_switch":
             self.search.search_all_sections = state
-        elif switch_id == "search_full_words_switch":
-            self.search.search_full_words = state
 
     def execute_search(self, *args):
         if not args[0] or len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
