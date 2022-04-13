@@ -266,12 +266,16 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             return self.search.search_case_sensitive
         elif switch_id == "search_all_sections_switch":
             return self.search.search_all_sections
+        elif switch_id == "search_full_words_switch":
+            return self.search.search_full_words
 
     def switch_callback(self, switch_id, state, *args):
         if switch_id == "search_case_sensitive_switch":
             self.search.search_case_sensitive = state
         elif switch_id == "search_all_sections_switch":
             self.search.search_all_sections = state
+        elif switch_id == "search_full_words_switch":
+            self.search.search_full_words = state
 
     def execute_search(self, *args):
         if not args[0] or len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():

@@ -182,6 +182,17 @@
                 active: root.get_search_switch_state("search_case_sensitive_switch")
                 on_active: root.switch_callback("search_case_sensitive_switch", self.active)
 
+        MDBoxLayout:
+            orientation: "horizontal"
+
+            MDLabel:
+                text: "Search full words"
+
+            MDSwitch:
+                id: search_full_words
+                active: root.get_search_switch_state("search_full_words_switch")
+                on_active: root.switch_callback("search_full_words_switch", self.active)
+
         MDTextField:
             id: search_string_input_value
             text: root.search_string_placeholder
