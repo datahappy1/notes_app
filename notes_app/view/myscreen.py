@@ -13,7 +13,7 @@ from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
 from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
 from kivymd.uix.button import MDFlatButton
-from kivymd.uix.list import TwoLineListItem, MDList, OneLineAvatarIconListItem
+from kivymd.uix.list import MDList, OneLineAvatarIconListItem, ThreeLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -96,7 +96,7 @@ class ScrollableLabel(ScrollView):
     pass
 
 
-class CustomListItem(TwoLineListItem):
+class CustomListItem(ThreeLineListItem):
     pass
 
 
@@ -129,7 +129,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu = self.get_menu()
         self.popup = None
         self.last_searched_string = str()
-        self.current_section = str()
 
         # self.text_section_view = ???
         self.file = File(
@@ -137,15 +136,18 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             controller=self.controller
         )
 
-        self.search = Search(False, False)
+        self.current_section = self.file.default_section
+        self.search = Search()
 
-        self.filter_data_split_by_section(section_name=self.file.default_section)
+        self.filter_data_split_by_section()
         self.set_drawer_items(sections=self.file.sections)
 
     def filter_data_split_by_section(self, section_name=None):
-        self.text_section_view.section_name = section_name or self.current_section
-        self.text_section_view.text = self.file.get_section_content(section_name or self.current_section)
-        self.ids.toolbar.title = f"{APP_TITLE} {section_name or self.current_section}"
+        section_name = section_name or self.current_section
+
+        self.text_section_view.section_name = section_name
+        self.text_section_view.text = self.file.get_section_content(section_name)
+        self.ids.toolbar.title = f"{APP_TITLE} {section_name}"
 
     def set_drawer_items(self, sections):
         self.ids.md_list.clear_widgets()
@@ -246,7 +248,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             self.press_add_section()
 
     def execute_goto_search_result(self, custom_list_item):
-        position = int(custom_list_item.secondary_text.replace(SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE, ""))
+        position = int(custom_list_item.tertiary_text.replace(SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE, ""))
+
+        self.current_section = custom_list_item.secondary_text
+        self.filter_data_split_by_section()
+
         self.text_section_view.select_text(position, position + len(self.last_searched_string))
 
         cursor_position = self.text_section_view.get_cursor_from_index(position)
@@ -255,19 +261,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.cancel_popup()
 
     def switch_callback(self, switch_id, state, *args):
-        print(switch_id, state)
-
-        search_case_sensitive, search_all_sections = False, False
-
         if switch_id == "search_case_sensitive_switch":
-            search_case_sensitive = state
+            self.search.search_case_sensitive = state
         elif switch_id == "search_all_sections_switch":
-            search_all_sections = state
-
-        self.search = Search(
-            search_case_sensitive=search_case_sensitive,
-            search_all_sections=search_all_sections
-        )
+            self.search.search_all_sections = state
 
     def execute_search(self, *args):
         if not args[0] or len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
@@ -278,50 +275,47 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.popup.content.results_list.clear_widgets()
 
-        # TODO
-        _found_occurrences = self.search.search_for_occurrences(
+        found_occurrences = self.search.search_for_occurrences(
             pattern=self.last_searched_string,
             file=self.file,
-            section_name=self.current_section
+            current_section_name=self.current_section
         )
-        print(_found_occurrences)
-        # TODO
-
-
-        text_data = self.text_section_view.text
-        found_occurrences = [
-            m.start() for m in re.finditer(self.last_searched_string.lower(), text_data.lower())
-        ]
 
         if not found_occurrences:
             self.popup.content.search_results_message = "No match found"
             return
 
-        found_occurrences_count = len(found_occurrences)
+        found_occurrences_count = 0
+
+        for section_name, section_found_occurrences in found_occurrences.items():
+            found_occurrences_count += len(section_found_occurrences)
+            text_data = self.file.get_section_content(section_name)
+
+            for position_start in section_found_occurrences:
+                position_end = position_start + len(self.last_searched_string)
+
+                found_string = text_data[position_start:position_end]
+
+                found_string_marked = f"[{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]" \
+                                      f"[color={SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR}]" \
+                                      f"{found_string}" \
+                                      f"[/color]" \
+                                      f"[/{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
+
+                found_string_extra_chars = \
+                    text_data[position_end:position_end + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT]
+
+                self.popup.content.results_list.add_widget(
+                    CustomListItem(
+                        text=f"{found_string_marked}{found_string_extra_chars}...",
+                        secondary_text=section_name,
+                        tertiary_text=f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}",
+                        on_release=self.execute_goto_search_result,
+                    )
+                )
+
         self.popup.content.search_results_message = f"Matches on {found_occurrences_count} positions found" \
             if found_occurrences_count > 1 else f"Match on {found_occurrences_count} position found"
-
-        for position_start in found_occurrences:
-            position_end = position_start + len(self.last_searched_string)
-
-            found_string = text_data[position_start:position_end]
-
-            found_string_marked = f"[{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]" \
-                                  f"[color={SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR}]" \
-                                  f"{found_string}" \
-                                  f"[/color]" \
-                                  f"[/{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
-
-            found_string_extra_chars = \
-                text_data[position_end:position_end + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT]
-
-            self.popup.content.results_list.add_widget(
-                CustomListItem(
-                    text=f"{found_string_marked}{found_string_extra_chars}...",
-                    secondary_text=f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}",
-                    on_release=self.execute_goto_search_result,
-                )
-            )
 
     def execute_add_section(self, *args):
         if not args[0] or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT or args[0].isspace():
@@ -425,10 +419,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.ids.md_list.remove_widget(section_item)
 
-        self.filter_data_split_by_section(section_name=self.file.default_section)
-
         self.file.delete_section(section_name=section_item.text)
         self.file.delete_section_content(section_name=section_item.text)
+
+        self.filter_data_split_by_section(section_name=self.file.default_section)
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))
