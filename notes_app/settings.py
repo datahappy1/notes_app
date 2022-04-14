@@ -23,11 +23,11 @@ class Settings:
 
     @property
     def font_size(self):
-        return self.parsed['font_size']
+        return self.parsed["font_size"]
 
     @font_size.setter
     def font_size(self, value):
-        self.parsed['font_size'] = value
+        self.parsed["font_size"] = value
 
     def _transform_settings_to_lines(self):
         lines = []

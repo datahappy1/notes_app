@@ -27,13 +27,13 @@ class MyScreenController:
         self.model.last_updated_on = path.getmtime(file_path)
 
     def read_file_data(self, file_path=None):
-        f = open(file_path or self.model.file_path, 'r')
+        f = open(file_path or self.model.file_path, "r")
         s = f.read()
         f.close()
         return s
 
     def save_file_data(self, data):
-        f = open(self.model.file_path, 'w')
+        f = open(self.model.file_path, "w")
         f.write(data)
         f.close()
 

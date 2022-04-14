@@ -1,6 +1,6 @@
 from kivy.config import Config
 
-Config.set('graphics', 'window_state', 'maximized')
+Config.set("graphics", "window_state", "maximized")
 
 from kivymd.app import MDApp
 

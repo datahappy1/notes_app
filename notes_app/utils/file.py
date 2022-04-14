@@ -16,8 +16,9 @@ class File:
             raw_data=self.get_raw_data_content()
         )
         self._sections: List[AnyStr] = self._get_sections_from_raw_data_content()
-        self._data_by_sections: Dict[AnyStr, AnyStr] = \
-            self._transform_raw_data_content_to_data_by_sections()
+        self._data_by_sections: Dict[
+            AnyStr, AnyStr
+        ] = self._transform_raw_data_content_to_data_by_sections()
 
     @staticmethod
     def _get_validated_raw_data(raw_data):
@@ -64,8 +65,8 @@ class File:
     def _transform_raw_data_content_to_data_by_sections(self):
         dict_data = dict()
         for item in zip(
-                self._sections,
-                re.split(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)[1:]
+            self._sections,
+            re.split(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)[1:],
         ):
             dict_data[item[0]] = item[1]
 

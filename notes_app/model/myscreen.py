@@ -27,7 +27,9 @@ class MyScreenModel:
     def __init__(self):
         self._file_path = StaticSettings.APP_STARTUP_FILE_PATH
         self._file_size = path.getsize(self._file_path)
-        self._last_updated_on = MyScreenModel.format_epoch(path.getmtime(self._file_path))
+        self._last_updated_on = MyScreenModel.format_epoch(
+            path.getmtime(self._file_path)
+        )
         self.observers = []
 
     @staticmethod
@@ -67,13 +69,15 @@ class MyScreenModel:
         attribute_to_formatted_name_map = {
             "_file_path": "File path",
             "_file_size": "File size (bytes)",
-            "_last_updated_on": "Last updated on"
+            "_last_updated_on": "Last updated on",
         }
 
         return linesep.join(
-            [f"{attribute_to_formatted_name_map[map_item[0]]} : {map_item[1]}"
-             for map_item in all_instance_attributes
-             if map_item[0] in attribute_to_formatted_name_map]
+            [
+                f"{attribute_to_formatted_name_map[map_item[0]]} : {map_item[1]}"
+                for map_item in all_instance_attributes
+                if map_item[0] in attribute_to_formatted_name_map
+            ]
         )
 
     def add_observer(self, observer):
