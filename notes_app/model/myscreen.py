@@ -8,7 +8,7 @@
 import time
 from os import path, linesep
 
-from notes_app.settings import APP_STARTUP_FILE_PATH
+from notes_app.settings import StaticSettings
 
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -25,7 +25,7 @@ class MyScreenModel:
     """
 
     def __init__(self):
-        self._file_path = APP_STARTUP_FILE_PATH
+        self._file_path = StaticSettings.APP_STARTUP_FILE_PATH
         self._file_size = path.getsize(self._file_path)
         self._last_updated_on = MyScreenModel.format_epoch(path.getmtime(self._file_path))
         self.observers = []

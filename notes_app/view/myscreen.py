@@ -18,6 +18,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
+from notes_app.settings import Settings
 from notes_app.utils.file import File, SECTION_FILE_NEW_SECTION_PLACEHOLDER, SECTION_FILE_SEPARATOR, \
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
 from notes_app.utils.search import Search
@@ -132,6 +133,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         super().__init__(**kw)
         self.model.add_observer(self)  # register the view as an observer
 
+        self.settings = Settings()
+
         self.menu_storage = self.get_menu_storage()
         self.menu_settings = self.get_menu_settings()
         self.popup = None
@@ -148,6 +151,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.filter_data_split_by_section()
         self.set_drawer_items(sections=self.file.sections)
+
+        self.set_properties_from_settings()
+
+    def set_properties_from_settings(self):
+        self.text_section_view.font_size = self.settings.font_size
 
     def filter_data_split_by_section(self, section_name=None):
         section_name = section_name or self.current_section
@@ -216,8 +224,12 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def press_menu_settings_item_callback(self, text_item):
         if text_item == MenuSettingsItems.IncreaseFontSize.value:
             self.text_section_view.font_size += 1
+            self.settings.font_size = self.text_section_view.font_size
         elif text_item == MenuSettingsItems.DecreaseFontSize.value:
             self.text_section_view.font_size -= 1
+            self.settings.font_size = self.text_section_view.font_size
+        elif text_item == MenuSettingsItems.SaveSettings.value:
+            self.settings.dump()
         elif text_item == MenuSettingsItems.ShowAppInfo.value:
             self.press_menu_item_show_app_metadata()
 
