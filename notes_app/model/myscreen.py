@@ -8,7 +8,7 @@
 import time
 from os import path, linesep
 
-from notes_app.settings import StaticSettings
+from notes_app.settings import FALLBACK_NOTES_FILE_PATH
 
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -24,8 +24,8 @@ class MyScreenModel:
     MyScreenModel class task is to add two numbers.
     """
 
-    def __init__(self):
-        self._file_path = StaticSettings.APP_STARTUP_FILE_PATH
+    def __init__(self, settings):
+        self._file_path = settings.notes_file_path or FALLBACK_NOTES_FILE_PATH
         self._file_size = path.getsize(self._file_path)
         self._last_updated_on = MyScreenModel.format_epoch(
             path.getmtime(self._file_path)

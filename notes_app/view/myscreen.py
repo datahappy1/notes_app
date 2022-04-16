@@ -1,6 +1,6 @@
-import re
 from enum import Enum
 from os import path, linesep
+import webbrowser
 
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -18,7 +18,6 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
-from notes_app.settings import Settings
 from notes_app.utils.file import (
     File,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
@@ -26,6 +25,8 @@ from notes_app.utils.file import (
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
 from notes_app.utils.search import Search
+from notes_app.utils.fonts import get_next_font
+from notes_app.utils.colors import get_color_by_name, get_next_color_by_rgba
 from notes_app.observer.observer import Observer
 
 APP_TITLE = "Notes"
@@ -36,6 +37,7 @@ SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 
+EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
 # class Text(TextInput):
 #     pass
@@ -77,6 +79,7 @@ class ShowFileMetadataPopup(FloatLayout):
 
 class ShowAppMetadataPopup(FloatLayout):
     show_app_metadata_label = ObjectProperty(None)
+    execute_goto_external_url = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
@@ -120,8 +123,11 @@ class MenuStorageItems(Enum):
 
 
 class MenuSettingsItems(Enum):
+    SetNextFont = "Set next font"
     IncreaseFontSize = "Increase font size"
     DecreaseFontSize = "Decrease font size"
+    SetNextBackgroundColor = "Set next background color"
+    SetNextForegroundColor = "Set next foreground color"
     SaveSettings = "Save settings"
     ShowAppInfo = "Show application info"
 
@@ -132,14 +138,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     """
 
+    settings = ObjectProperty()
+
     controller = ObjectProperty()
     model = ObjectProperty()
 
     def __init__(self, **kw):
         super().__init__(**kw)
         self.model.add_observer(self)  # register the view as an observer
-
-        self.settings = Settings()
 
         self.menu_storage = self.get_menu_storage()
         self.menu_settings = self.get_menu_settings()
@@ -158,7 +164,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.set_properties_from_settings()
 
     def set_properties_from_settings(self):
+        self.text_section_view.font_name = self.settings.font_name
         self.text_section_view.font_size = self.settings.font_size
+        self.text_section_view.background_color = get_color_by_name(
+            self.settings.background_color
+        ).rgba_value
+        self.text_section_view.foreground_color = get_color_by_name(
+            self.settings.foreground_color
+        ).rgba_value
 
     def filter_data_split_by_section(self, section_name=None):
         section_name = section_name or self.current_section
@@ -225,18 +238,36 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu_storage.dismiss()
 
     def press_menu_settings_item_callback(self, text_item):
-        if text_item == MenuSettingsItems.IncreaseFontSize.value:
+        if text_item == MenuSettingsItems.SetNextFont.value:
+            next_font = get_next_font(
+                font_name=self.text_section_view.font_name
+            )
+            self.text_section_view.font_name = next_font
+            self.settings.font_name = next_font
+        elif text_item == MenuSettingsItems.IncreaseFontSize.value:
             self.text_section_view.font_size += 1
             self.settings.font_size = self.text_section_view.font_size
         elif text_item == MenuSettingsItems.DecreaseFontSize.value:
             self.text_section_view.font_size -= 1
             self.settings.font_size = self.text_section_view.font_size
+        elif text_item == MenuSettingsItems.SetNextBackgroundColor.value:
+            next_background_color = get_next_color_by_rgba(
+                rgba_value=self.text_section_view.background_color
+            )
+            self.text_section_view.background_color = next_background_color.rgba_value
+            self.settings.background_color = next_background_color.name
+        elif text_item == MenuSettingsItems.SetNextForegroundColor.value:
+            next_foreground_color = get_next_color_by_rgba(
+                rgba_value=self.text_section_view.foreground_color
+            )
+            self.text_section_view.foreground_color = next_foreground_color.rgba_value
+            self.settings.foreground_color = next_foreground_color.name
         elif text_item == MenuSettingsItems.SaveSettings.value:
             self.settings.dump()
+            self.menu_settings.dismiss()
         elif text_item == MenuSettingsItems.ShowAppInfo.value:
             self.press_menu_item_show_app_metadata()
-
-        self.menu_settings.dismiss()
+            self.menu_settings.dismiss()
 
     def notify_model_is_changed(self):
         """
@@ -269,6 +300,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         file_path = filename[0]
         self.controller.set_file_path(file_path)
+        self.settings.notes_file_path = file_path
 
         try:
             self.file = File(file_path=file_path, controller=self.controller)
@@ -399,6 +431,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.cancel_popup()
 
+    def execute_goto_external_url(self):
+        webbrowser.open(EXTERNAL_REPOSITORY_URL)
+
     def cancel_popup(self):
         self.popup.dismiss()
 
@@ -432,16 +467,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         app_info = linesep.join(
             [
                 "A simple notes application",
-                "- version: TBD",
-                "- user can save notes to a local text file",
-                "- user can load notes from a local text file",
-                "- user can change font size",
-                "- user can search in notes",
+                "built with Python 3.7 & KivyMD"
             ]
         )
 
         content = ShowAppMetadataPopup(
-            show_app_metadata_label=app_info, cancel=self.cancel_popup
+            show_app_metadata_label=app_info,
+            execute_goto_external_url=self.execute_goto_external_url,
+            cancel=self.cancel_popup
         )
         self.popup = Popup(
             title="Show App metadata", content=content, size_hint=(0.9, 0.9)

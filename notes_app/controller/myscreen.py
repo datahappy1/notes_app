@@ -13,13 +13,13 @@ class MyScreenController:
     the view to control its actions.
     """
 
-    def __init__(self, model):
+    def __init__(self, settings, model):
         """
         The constructor takes a reference to the model.
         The constructor creates the view.
         """
         self.model = model
-        self.view = MyScreenView(controller=self, model=self.model)
+        self.view = MyScreenView(settings=settings, controller=self, model=self.model)
 
     def set_file_path(self, file_path):
         self.model.file_path = file_path

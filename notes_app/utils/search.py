@@ -48,15 +48,14 @@ class Search:
             search_function = Search._case_insensitive_search
 
         if self.search_all_sections:
-            for section_name in file.sections:
-                section_text = file.get_section_content(section_name=section_name)
-                search_result = search_function(pattern=pattern, text=section_text)
-                if search_result:
-                    found_occurrences[section_name] = search_result
+            sections_to_search_in = file.sections
         else:
-            text = file.get_section_content(section_name=current_section_name)
+            sections_to_search_in = [current_section_name]
+
+        for section_name in sections_to_search_in:
+            text = file.get_section_content(section_name=section_name)
             search_result = search_function(pattern=pattern, text=text)
             if search_result:
-                found_occurrences[current_section_name] = search_result
+                found_occurrences[section_name] = search_result
 
         return found_occurrences

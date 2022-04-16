@@ -54,6 +54,10 @@
                     multiline: True
                     do_wrap: True
 
+                    font_name: "Roboto-Bold"
+                    background_color: (1,0,0,1) #if self.focus else (0,0,1,1)
+                    foreground_color: (1,1,0,1)
+
             MDNavigationDrawer:
                 id: nav_drawer
 
@@ -132,11 +136,17 @@
             markup: True
             text: root.show_app_metadata_label
 
+        MDIconButton:
+            icon: "github"
+            pos_hint: {"center_x": .5, "center_y": .2}
+            on_release:
+                root.execute_goto_external_url()
+
         BoxLayout:
             size_hint_y: None
             height: 30
             Button:
-                text: "Cancel"
+                text: "Close"
                 on_release: root.cancel()
 
 <SearchPopup>
