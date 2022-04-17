@@ -1,7 +1,6 @@
 from configparser import ConfigParser
 from os import getcwd
 
-FALLBACK_NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
 SETTINGS_FILE_PATH = f"{getcwd()}/settings.conf"
 GENERAL_SETTINGS_SECTION_NAME = "general_settings"
 
@@ -10,14 +9,6 @@ class Settings:
     def __init__(self):
         self._parser = ConfigParser()
         self._parser.read(SETTINGS_FILE_PATH)
-
-    @property
-    def notes_file_path(self):
-        return self._parser[GENERAL_SETTINGS_SECTION_NAME]["notes_file_path"]
-
-    @notes_file_path.setter
-    def notes_file_path(self, value):
-        self._parser[GENERAL_SETTINGS_SECTION_NAME]["notes_file_path"] = str(value)
 
     @property
     def font_name(self):

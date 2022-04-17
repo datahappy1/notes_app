@@ -13,7 +13,7 @@ settings = Settings()
 class NotesApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.model = MyScreenModel(settings=settings)
+        self.model = MyScreenModel()
         self.controller = MyScreenController(settings=settings, model=self.model)
 
         # 'Red', 'Pink', 'Purple', 'DeepPurple', 'Indigo', 'Blue', 'LightBlue',

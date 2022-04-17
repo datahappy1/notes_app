@@ -4,6 +4,7 @@ from typing import AnyStr, List, Dict
 SECTION_FILE_SEPARATOR = "<section={name}> "
 SECTION_FILE_SEPARATOR_DEFAULT_VALUE = "<section=default> "
 SECTION_FILE_SEPARATOR_REGEX = "<section=[a-zA-Z]+> "
+SECTION_FILE_SEPARATOR_SUBSTR_REGEX = "<section=(.+?)> "
 SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
 SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
 
@@ -42,7 +43,7 @@ class File:
         return self._sections
 
     def format_section_name(self, section_name):
-        return
+        return f"section: {re.search(SECTION_FILE_SEPARATOR_SUBSTR_REGEX, section_name).group(1)}"
 
     def add_section(self, section_name):
         self._sections.append(section_name)

@@ -5,11 +5,14 @@
 # model when they are notified (in this case, it is the `notify_model_is_changed`
 # method). For this, observers must be descendants of an abstract class,
 # inheriting which, the `notify_model_is_changed` method must be overridden.
-import time
-from os import path, linesep
+import base64
+import json
+from os import path, linesep, getcwd
 
-from notes_app.settings import FALLBACK_NOTES_FILE_PATH
+from notes_app.utils.time import format_epoch
 
+MODEL_STORAGE_FILE_PATH = f"{getcwd()}/model/myscreen.model"
+FALLBACK_NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -24,17 +27,29 @@ class MyScreenModel:
     MyScreenModel class task is to add two numbers.
     """
 
-    def __init__(self, settings):
-        self._file_path = settings.notes_file_path or FALLBACK_NOTES_FILE_PATH
+    def __init__(self):
+        self._file_path = self.safe_load().get("file_path") or FALLBACK_NOTES_FILE_PATH
         self._file_size = path.getsize(self._file_path)
-        self._last_updated_on = MyScreenModel.format_epoch(
-            path.getmtime(self._file_path)
+        self._last_updated_on = format_epoch(
+            format=LAST_UPDATED_ON_TIME_FORMAT,
+            epoch_time=path.getmtime(self._file_path)
         )
         self.observers = []
 
+    def __repr__(self):
+        return {
+            "_file_path": self.file_path,
+            "_file_size": self._file_size,
+            "_last_updated_on": self._last_updated_on
+        }
+
     @staticmethod
-    def format_epoch(epoch_time):
-        return time.strftime(LAST_UPDATED_ON_TIME_FORMAT, time.localtime(epoch_time))
+    def _get_attribute_to_formatted_name_map():
+        return {
+            "_file_path": "File path",
+            "_file_size": "File size (bytes)",
+            "_last_updated_on": "Last updated on",
+        }
 
     @property
     def file_path(self):
@@ -60,17 +75,16 @@ class MyScreenModel:
 
     @last_updated_on.setter
     def last_updated_on(self, value):
-        self._last_updated_on = MyScreenModel.format_epoch(value)
+        self._last_updated_on = format_epoch(
+            format=LAST_UPDATED_ON_TIME_FORMAT,
+            epoch_time=value
+        )
         self.notify_observers()
 
     @property
     def formatted(self):
         all_instance_attributes = list(self.__dict__.items())
-        attribute_to_formatted_name_map = {
-            "_file_path": "File path",
-            "_file_size": "File size (bytes)",
-            "_last_updated_on": "Last updated on",
-        }
+        attribute_to_formatted_name_map = MyScreenModel._get_attribute_to_formatted_name_map()
 
         return linesep.join(
             [
@@ -89,3 +103,19 @@ class MyScreenModel:
     def notify_observers(self):
         for o in self.observers:
             o.notify_model_is_changed()
+
+    def dump_encoded(self):
+        json_data = json.dumps(self.__repr__()).encode()
+        encoded_data = base64.encodebytes(json_data)
+
+        with open(MODEL_STORAGE_FILE_PATH, 'wb') as model_file:
+            model_file.write(encoded_data)
+
+    def safe_load(self):
+        try:
+            with open(MODEL_STORAGE_FILE_PATH, 'rb') as model_file:
+                decoded_data = base64.decodebytes(model_file.read())
+                json_data = json.loads(decoded_data)
+                return json_data
+        except (FileNotFoundError, json.JSONDecodeError):
+            return dict()

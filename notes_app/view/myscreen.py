@@ -45,7 +45,7 @@ EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
 class ItemDrawer(OneLineAvatarIconListItem):
     icon = StringProperty()
-    right_text = StringProperty()
+    id = StringProperty()
     text = StringProperty()
     delete = ObjectProperty()
 
@@ -178,7 +178,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.text_section_view.section_name = section_name
         self.text_section_view.text = self.file.get_section_content(section_name)
-        self.ids.toolbar.title = f"{APP_TITLE} {section_name}"
+        self.ids.toolbar.title = f"{APP_TITLE} {self.file.format_section_name(section_name)}"
 
     def set_drawer_items(self, sections):
         self.ids.md_list.clear_widgets()
@@ -187,16 +187,17 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             self.ids.md_list.add_widget(
                 ItemDrawer(
                     icon="bookmark",
-                    text=section_name,
+                    id=section_name,
+                    text=self.file.format_section_name(section_name),
                     on_release=lambda x=f"{section_name}": self.press_drawer_item_callback(
                         x
                     ),
-                    delete=self.press_delete_section,
+                    delete=self.press_delete_section
                 )
             )
 
     def press_drawer_item_callback(self, text_item):
-        self.current_section = text_item.text
+        self.current_section = text_item.id
         self.filter_data_split_by_section()
 
     def get_menu_storage(self):
@@ -300,7 +301,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         file_path = filename[0]
         self.controller.set_file_path(file_path)
-        self.settings.notes_file_path = file_path
 
         try:
             self.file = File(file_path=file_path, controller=self.controller)
@@ -509,8 +509,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.ids.md_list.remove_widget(section_item)
 
-        self.file.delete_section(section_name=section_item.text)
-        self.file.delete_section_content(section_name=section_item.text)
+        self.file.delete_section(section_name=section_item.id)
+        self.file.delete_section_content(section_name=section_item.id)
 
         self.filter_data_split_by_section(section_name=self.file.default_section)
 
