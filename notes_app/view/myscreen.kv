@@ -11,8 +11,8 @@
         height: self.texture_size[1]
         text: root.text
         font_size: root.font_size
-        theme_text_color: 'Custom'
-        text_color: get_color_from_hex('ffffff')
+        # theme_text_color: 'Custom'
+        # text_color: get_color_from_hex('ffffff')
         shorten: True
         shorten_from: 'right'
         pos_hint: {'center_y': .5}
@@ -56,8 +56,8 @@
                     do_wrap: True
 
                     font_name: "Roboto-Bold"
-                    background_color: (1,0,0,1) #if self.focus else (0,0,1,1)
-                    foreground_color: (1,1,0,1)
+                    # background_color: (1,0,0,1) #if self.focus else (0,0,1,1)
+                    # foreground_color: (1,1,0,1)
 
             MDNavigationDrawer:
                 id: nav_drawer
@@ -82,7 +82,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: app.theme_cls.primary_light
+        # md_bg_color: app.theme_cls.primary_light
         padding: [dp(20),dp(10),dp(20),dp(10)]
 
         FileChooserListView:
@@ -105,7 +105,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: app.theme_cls.primary_light
+        # md_bg_color: app.theme_cls.primary_light
         padding: [dp(20),dp(10),dp(20),dp(10)]
 
         MDLabel:
@@ -127,7 +127,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: app.theme_cls.primary_light
+        # md_bg_color: app.theme_cls.primary_light
         padding: [dp(20),dp(10),dp(20),dp(10)]
 
         MDLabel:
@@ -157,7 +157,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: app.theme_cls.primary_light
+        # md_bg_color: app.theme_cls.primary_light
         padding: [dp(20),dp(10),dp(20),dp(10)]
 
         MDLabel:
@@ -214,7 +214,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: app.theme_cls.primary_light
+        # md_bg_color: app.theme_cls.primary_light
         padding: [dp(20),dp(10),dp(20),dp(10)]
 
         MDLabel:

@@ -39,7 +39,7 @@ class Search:
         text_lowered = text.lower()
         return Search._search(pattern=pattern_lowered, text=text_lowered)
 
-    def search_for_occurrences(self, pattern, file, current_section_name):
+    def search_for_occurrences(self, pattern, file, current_section_identifier):
         found_occurrences = dict()
 
         if self.search_case_sensitive:
@@ -48,14 +48,14 @@ class Search:
             search_function = Search._case_insensitive_search
 
         if self.search_all_sections:
-            sections_to_search_in = file.sections
+            sections_to_search_in = file.section_identifiers
         else:
-            sections_to_search_in = [current_section_name]
+            sections_to_search_in = [current_section_identifier]
 
-        for section_name in sections_to_search_in:
-            text = file.get_section_content(section_name=section_name)
+        for section in sections_to_search_in:
+            text = file.get_section_content(section_file_separator=section.section_file_separator)
             search_result = search_function(pattern=pattern, text=text)
             if search_result:
-                found_occurrences[section_name] = search_result
+                found_occurrences[section.section_file_separator] = search_result
 
         return found_occurrences

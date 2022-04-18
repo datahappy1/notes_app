@@ -20,8 +20,8 @@ from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.utils.file import (
     File,
+    SectionIdentifier,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
-    SECTION_FILE_SEPARATOR,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
 from notes_app.utils.search import Search
@@ -32,7 +32,7 @@ from notes_app.observer.observer import Observer
 APP_TITLE = "Notes"
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
-SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "Position "
+SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
 SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
@@ -113,7 +113,7 @@ class CustomListItem(ThreeLineListItem):
 class CustomSnackbar(BaseSnackbar):
     text = StringProperty(None)
     icon = StringProperty(None)
-    font_size = NumericProperty("15sp")
+    # font_size = NumericProperty("15sp")
 
 
 class MenuStorageItems(Enum):
@@ -155,11 +155,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         # self.text_section_view = ???
         self.file = File(file_path=None, controller=self.controller)
 
-        self.current_section = self.file.default_section
+        self.current_section_identifier = self.file.default_section_identifier
         self.search = Search()
 
         self.filter_data_split_by_section()
-        self.set_drawer_items(sections=self.file.sections)
+        self.set_drawer_items(section_identifiers=self.file.section_identifiers)
 
         self.set_properties_from_settings()
 
@@ -173,23 +173,25 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             self.settings.foreground_color
         ).rgba_value
 
-    def filter_data_split_by_section(self, section_name=None):
-        section_name = section_name or self.current_section
+    def filter_data_split_by_section(self, section_identifier=None):
+        section_identifier = section_identifier or self.current_section_identifier
 
-        self.text_section_view.section_name = section_name
-        self.text_section_view.text = self.file.get_section_content(section_name)
-        self.ids.toolbar.title = f"{APP_TITLE} {self.file.format_section_name(section_name)}"
+        self.text_section_view.section_file_separator = section_identifier.section_file_separator
+        self.text_section_view.text = self.file.get_section_content(
+            section_file_separator=section_identifier.section_file_separator
+        )
+        self.ids.toolbar.title = f"{APP_TITLE} section: {section_identifier.section_name}"
 
-    def set_drawer_items(self, sections):
+    def set_drawer_items(self, section_identifiers):
         self.ids.md_list.clear_widgets()
 
-        for section_name in sections:
+        for section_identifier in section_identifiers:
             self.ids.md_list.add_widget(
                 ItemDrawer(
                     icon="bookmark",
-                    id=section_name,
-                    text=self.file.format_section_name(section_name),
-                    on_release=lambda x=f"{section_name}": self.press_drawer_item_callback(
+                    id=section_identifier.section_file_separator,
+                    text=f"section: {section_identifier.section_name}",
+                    on_release=lambda x=f"{section_identifier.section_file_separator}": self.press_drawer_item_callback(
                         x
                     ),
                     delete=self.press_delete_section
@@ -197,7 +199,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
 
     def press_drawer_item_callback(self, text_item):
-        self.current_section = text_item.id
+        section_identifier = SectionIdentifier(section_file_separator=text_item.id)
+        self.current_section_identifier = section_identifier
         self.filter_data_split_by_section()
 
     def get_menu_storage(self):
@@ -205,7 +208,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             {
                 "text": f"{i.value}",
                 "viewclass": "OneLineListItem",
-                "height": dp(40),
+                # "height": dp(40),
                 "on_release": lambda x=f"{i.value}": self.press_menu_storage_item_callback(
                     x
                 ),
@@ -219,7 +222,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             {
                 "text": f"{i.value}",
                 "viewclass": "OneLineListItem",
-                "height": dp(40),
+                # "height": dp(40),
                 "on_release": lambda x=f"{i.value}": self.press_menu_settings_item_callback(
                     x
                 ),
@@ -276,7 +279,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         Requests and displays the value of the sum.
         """
         snackbar = CustomSnackbar(
-            text="success!", icon="information", snackbar_x="10dp", snackbar_y="10dp"
+            text="success!",
+            icon="information",
+            # snackbar_x="10dp",
+            # snackbar_y="10dp"
         )
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
@@ -288,9 +294,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         """
         snackbar = CustomSnackbar(
             text=error_message,
-            icon="information",  # TODO error icon
-            snackbar_x="10dp",
-            snackbar_y="10dp",
+            icon="alert-circle",
+            # snackbar_x="10dp",
+            # snackbar_y="10dp",
         )
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
@@ -304,12 +310,12 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         try:
             self.file = File(file_path=file_path, controller=self.controller)
-            self.set_drawer_items(self.file.sections)
-            self.filter_data_split_by_section(section_name=self.file.default_section)
+            self.set_drawer_items(section_identifiers=self.file.section_identifiers)
+            self.filter_data_split_by_section(section_identifier=self.file.default_section_identifier)
             self.cancel_popup()
 
         except ValueError:
-            self.file.delete_all_sections()
+            self.file.delete_all_section_identifiers()
             self.file.delete_all_sections_content()
             self.cancel_popup()
             self.press_add_section()
@@ -321,7 +327,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
         )
 
-        self.current_section = custom_list_item.secondary_text
+        self.current_section_identifier = SectionIdentifier(
+            section_name=custom_list_item.secondary_text
+        )
         self.filter_data_split_by_section()
 
         self.text_section_view.select_text(
@@ -357,7 +365,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         found_occurrences = self.search.search_for_occurrences(
             pattern=self.last_searched_string,
             file=self.file,
-            current_section_name=self.current_section,
+            current_section_identifier=self.current_section_identifier,
         )
 
         if not found_occurrences:
@@ -366,9 +374,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         found_occurrences_count = 0
 
-        for section_name, section_found_occurrences in found_occurrences.items():
+        for section_file_separator, section_found_occurrences in found_occurrences.items():
             found_occurrences_count += len(section_found_occurrences)
-            text_data = self.file.get_section_content(section_name)
+            text_data = self.file.get_section_content(section_file_separator)
 
             for position_start in section_found_occurrences:
                 position_end = position_start + len(self.last_searched_string)
@@ -388,10 +396,12 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                     + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
                 ]
 
+                section_identifier = SectionIdentifier(section_file_separator=section_file_separator)
+
                 self.popup.content.results_list.add_widget(
                     CustomListItem(
                         text=f"{found_string_marked}{found_string_extra_chars}...",
-                        secondary_text=section_name,
+                        secondary_text=section_identifier.section_name,
                         tertiary_text=f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}",
                         on_release=self.execute_goto_search_result,
                     )
@@ -413,21 +423,21 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             return
 
         section_name = args[0]
-        section_file_separator = SECTION_FILE_SEPARATOR.format(name=section_name)
+        section_identifier = SectionIdentifier(section_name=section_name)
 
-        if section_file_separator in self.file.sections:
+        if section_identifier.section_file_separator in self.file.section_identifiers:
             self.popup.content.add_section_result_message = "Name already exists"
             return
 
-        self.file.add_section(section_name=section_file_separator)
+        self.file.add_section_identifier(section_file_separator=section_identifier.section_file_separator)
         self.file.set_section_content(
-            section_name=section_file_separator,
+            section_file_separator=section_identifier.section_file_separator,
             section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
         )
 
-        self.filter_data_split_by_section(section_name=section_file_separator)
+        self.filter_data_split_by_section(section_identifier=section_identifier)
 
-        self.set_drawer_items(sections=self.file.sections)
+        self.set_drawer_items(section_identifiers=self.file.section_identifiers)
 
         self.cancel_popup()
 
@@ -441,12 +451,16 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         content = OpenFilePopup(
             open_file=self.execute_open_file, cancel=self.cancel_popup
         )
-        self.popup = Popup(title="Open File", content=content, size_hint=(0.9, 0.9))
+        self.popup = Popup(
+            title="Open File",
+            content=content,
+            # size_hint=(0.9, 0.9)
+        )
         self.popup.open()
 
     def press_menu_item_save_file(self, *args):
         self.file.set_section_content(
-            section_name=self.text_section_view.section_name,
+            section_file_separator=self.text_section_view.section_file_separator,
             section_content=self.text_section_view.text,
         )
 
@@ -459,7 +473,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             show_file_metadata_label=self.model.formatted, cancel=self.cancel_popup
         )
         self.popup = Popup(
-            title="Show File metadata", content=content, size_hint=(0.9, 0.9)
+            title="Show File metadata",
+            content=content,
+            # size_hint=(0.9, 0.9)
         )
         self.popup.open()
 
@@ -477,7 +493,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             cancel=self.cancel_popup
         )
         self.popup = Popup(
-            title="Show App metadata", content=content, size_hint=(0.9, 0.9)
+            title="Show App metadata",
+            content=content,
+            # size_hint=(0.9, 0.9)
         )
         self.popup.open()
 
@@ -490,7 +508,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             execute_search=self.execute_search,
             cancel=self.cancel_popup,
         )
-        self.popup = Popup(title="Search", content=content, size_hint=(0.9, 0.9))
+        self.popup = Popup(
+            title="Search",
+            content=content,
+            # size_hint=(0.9, 0.9)
+        )
         self.popup.open()
 
     def press_add_section(self, *args):
@@ -499,20 +521,26 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             execute_add_section=self.execute_add_section,
             cancel=self.cancel_popup,
         )
-        self.popup = Popup(title="Add section", content=content, size_hint=(0.9, 0.9))
+        self.popup = Popup(
+            title="Add section",
+            content=content,
+            # size_hint=(0.9, 0.9)
+        )
         self.popup.open()
 
     def press_delete_section(self, section_item):
-        if len(self.file.sections) == 1:
+        if len(self.file.section_identifiers) == 1:
             self.show_error_bar(error_message="Cannot delete last section")
             return
 
         self.ids.md_list.remove_widget(section_item)
 
-        self.file.delete_section(section_name=section_item.id)
-        self.file.delete_section_content(section_name=section_item.id)
+        self.file.delete_section_identifier(section_file_separator=section_item.id)
+        self.file.delete_section_content(section_file_separator=section_item.id)
 
-        self.filter_data_split_by_section(section_name=self.file.default_section)
+        self.filter_data_split_by_section(
+            section_identifier=self.file.default_section_identifier
+        )
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

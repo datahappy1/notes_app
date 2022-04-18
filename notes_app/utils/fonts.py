@@ -1,3 +1,5 @@
+from typing import AnyStr
+
 AVAILABLE_FONTS = [
     "DejaVuSans",
     "Roboto-Bold",
@@ -8,7 +10,7 @@ AVAILABLE_FONTS = [
 ]
 
 
-def get_next_font(font_name):
+def get_next_font(font_name: AnyStr) -> AnyStr:
     iterable_available_fonts = iter(AVAILABLE_FONTS)
 
     for font in iterable_available_fonts:

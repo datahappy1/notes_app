@@ -1,3 +1,5 @@
+from typing import AnyStr, List
+
 # https://qconv.com/en/color_names-rgba
 class Color:
     def __init__(self, name, rgba_value):
@@ -25,13 +27,13 @@ AVAILABLE_COLORS = [
 ]
 
 
-def get_color_by_name(color_name):
+def get_color_by_name(color_name: AnyStr) -> Color:
     for color in AVAILABLE_COLORS:
         if color.name == color_name:
             return color
 
 
-def get_next_color_by_rgba(rgba_value):
+def get_next_color_by_rgba(rgba_value: List[int]) -> Color:
     iterable_available_colors = iter(AVAILABLE_COLORS)
 
     for color in iterable_available_colors:
