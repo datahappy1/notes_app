@@ -1,15 +1,15 @@
+import webbrowser
 from enum import Enum
 from os import path, linesep
-import webbrowser
 
 from kivy.core.window import Window
 from kivy.lang import Builder
-from kivy.metrics import dp
-from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.properties import ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.textinput import TextInput
 from kivymd.theming import ThemableBehavior
 from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
 from kivymd.uix.button import MDFlatButton
@@ -18,16 +18,16 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
+from notes_app.observer.observer import Observer
+from notes_app.utils.colors import get_color_by_name, get_next_color_by_rgba
 from notes_app.utils.file import (
     File,
     SectionIdentifier,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
-from notes_app.utils.search import Search
 from notes_app.utils.fonts import get_next_font
-from notes_app.utils.colors import get_color_by_name, get_next_color_by_rgba
-from notes_app.observer.observer import Observer
+from notes_app.utils.search import Search
 
 APP_TITLE = "Notes"
 
@@ -39,8 +39,13 @@ SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
-# class Text(TextInput):
-#     pass
+
+class RightClickTextInput(TextInput):
+    def on_touch_down(self, touch):
+        super(RightClickTextInput, self).on_touch_down(touch)
+        if touch.button == 'right':
+            print("right mouse clicked")
+            # TODO
 
 
 class ItemDrawer(OneLineAvatarIconListItem):
@@ -230,6 +235,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             for i in MenuSettingsItems
         ]
         return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
+
+    def press_text_field_area(self, instance, touch):
+        print(instance, touch)
+        if touch.button == 'right':
+            print("right mouse clicked")
 
     def press_menu_storage_item_callback(self, text_item):
         if text_item == MenuStorageItems.ChooseFile.value:

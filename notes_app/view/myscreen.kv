@@ -33,6 +33,7 @@
         theme_text_color: "Custom"
         on_release: root.delete(section_item)
 
+
 <MyScreenView>:
     orientation: "vertical"
     nav_toolbar: toolbar
@@ -48,9 +49,9 @@
         MDScreen:
             MDBoxLayout:
                 orientation: "vertical"
-                text_section_view: textInput
+                # text_section_view: textInput
 
-                TextInput:
+                RightClickTextInput:
                     id: textInput
                     multiline: True
                     do_wrap: True
@@ -58,6 +59,8 @@
                     font_name: "Roboto-Bold"
                     # background_color: (1,0,0,1) #if self.focus else (0,0,1,1)
                     # foreground_color: (1,1,0,1)
+
+                    use_bubble: True
 
             MDNavigationDrawer:
                 id: nav_drawer
