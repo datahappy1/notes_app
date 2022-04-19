@@ -44,8 +44,8 @@ class RightClickTextInput(TextInput):
     def on_touch_down(self, touch):
         super(RightClickTextInput, self).on_touch_down(touch)
         if touch.button == "right":
-            print("right mouse clicked")
-            # TODO
+            print("right mouse clicked - saved file?")
+            # TODO save file on right-click ?
 
 
 class ItemDrawer(OneLineAvatarIconListItem):

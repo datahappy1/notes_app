@@ -1,10 +1,15 @@
+from os import getcwd
+
 import pytest
 
+from notes_app.controller.myscreen import MyScreenController
+from notes_app.model.myscreen import MyScreenModel
+from notes_app.settings import Settings
 from notes_app.utils.colors import Color, get_color_by_name, get_next_color_by_rgba
-from notes_app.utils.fonts import get_next_font
-from notes_app.utils.time import format_epoch
-from notes_app.utils.search import Search, DEFAULT_VALUE_SEARCH_CASE_SENSITIVE, DEFAULT_VALUE_SEARCH_ALL_SECTIONS
 from notes_app.utils.file import SectionIdentifier, File
+from notes_app.utils.fonts import get_next_font
+from notes_app.utils.search import Search, DEFAULT_VALUE_SEARCH_CASE_SENSITIVE, DEFAULT_VALUE_SEARCH_ALL_SECTIONS
+from notes_app.utils.time import format_epoch
 
 
 def test_color():
@@ -50,10 +55,28 @@ def test_search__case_sensitive():
     assert search._case_sensitive_search(pattern="A", text="dACb") == [1]
 
 
-# TODO
 def test_search_for_occurrences():
+    settings = Settings()
+
     search = Search()
-    assert search.search_for_occurrences(pattern="A", file="", current_section_identifier="")
+
+    controller = MyScreenController(
+        settings=settings,
+        model=MyScreenModel()
+    )
+
+    file = File(
+        file_path=f"{getcwd()}/assets/sample.txt",
+        controller=controller
+    )
+
+    current_section_identifier = SectionIdentifier(
+        section_file_separator="<section=first> "
+    )
+
+    assert search.search_for_occurrences(
+        pattern="Ad", file=file, current_section_identifier=current_section_identifier
+    ) == {'<section=first> ': [69, 205, 444]}
 
 
 def test_section_identifier():
@@ -70,4 +93,3 @@ def test_section_identifier():
 # TODO
 def test_file():
     assert File(file_path="", controller="")
-
