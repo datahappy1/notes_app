@@ -1,12 +1,13 @@
 from typing import AnyStr, List
 
-# https://qconv.com/en/color_names-rgba
+
 class Color:
     def __init__(self, name, rgba_value):
         self.name = name
         self.rgba_value = rgba_value
 
 
+# https://qconv.com/en/color_names-rgba
 AVAILABLE_COLORS = [
     Color("black", (0, 0, 0, 1)),
     Color("navy", (0, 0, 0.5, 1)),
@@ -23,7 +24,7 @@ AVAILABLE_COLORS = [
     Color("red", (1, 0, 0, 1)),
     Color("fuchsia", (1, 0, 1, 1)),
     Color("yellow", (1, 1, 0, 1)),
-    Color("white", (1, 1, 1, 1))
+    Color("white", (1, 1, 1, 1)),
 ]
 
 
@@ -38,7 +39,4 @@ def get_next_color_by_rgba(rgba_value: List[int]) -> Color:
 
     for color in iterable_available_colors:
         if color.rgba_value == tuple(rgba_value):
-            return next(
-                iterable_available_colors,
-                next(iter(AVAILABLE_COLORS))
-            )
+            return next(iterable_available_colors, next(iter(AVAILABLE_COLORS)))

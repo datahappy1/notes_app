@@ -11,6 +11,7 @@ from notes_app.model.myscreen import MyScreenModel
 
 settings = Settings()
 
+
 class NotesApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

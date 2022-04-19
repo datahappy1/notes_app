@@ -43,7 +43,7 @@ EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 class RightClickTextInput(TextInput):
     def on_touch_down(self, touch):
         super(RightClickTextInput, self).on_touch_down(touch)
-        if touch.button == 'right':
+        if touch.button == "right":
             print("right mouse clicked")
             # TODO
 
@@ -181,11 +181,15 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def filter_data_split_by_section(self, section_identifier=None):
         section_identifier = section_identifier or self.current_section_identifier
 
-        self.text_section_view.section_file_separator = section_identifier.section_file_separator
+        self.text_section_view.section_file_separator = (
+            section_identifier.section_file_separator
+        )
         self.text_section_view.text = self.file.get_section_content(
             section_file_separator=section_identifier.section_file_separator
         )
-        self.ids.toolbar.title = f"{APP_TITLE} section: {section_identifier.section_name}"
+        self.ids.toolbar.title = (
+            f"{APP_TITLE} section: {section_identifier.section_name}"
+        )
 
     def set_drawer_items(self, section_identifiers):
         self.ids.md_list.clear_widgets()
@@ -199,7 +203,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                     on_release=lambda x=f"{section_identifier.section_file_separator}": self.press_drawer_item_callback(
                         x
                     ),
-                    delete=self.press_delete_section
+                    delete=self.press_delete_section,
                 )
             )
 
@@ -236,11 +240,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         ]
         return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
 
-    def press_text_field_area(self, instance, touch):
-        print(instance, touch)
-        if touch.button == 'right':
-            print("right mouse clicked")
-
     def press_menu_storage_item_callback(self, text_item):
         if text_item == MenuStorageItems.ChooseFile.value:
             self.press_menu_item_open_file()
@@ -253,9 +252,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def press_menu_settings_item_callback(self, text_item):
         if text_item == MenuSettingsItems.SetNextFont.value:
-            next_font = get_next_font(
-                font_name=self.text_section_view.font_name
-            )
+            next_font = get_next_font(font_name=self.text_section_view.font_name)
             self.text_section_view.font_name = next_font
             self.settings.font_name = next_font
         elif text_item == MenuSettingsItems.IncreaseFontSize.value:
@@ -289,10 +286,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         Requests and displays the value of the sum.
         """
         snackbar = CustomSnackbar(
-            text="success!",
-            icon="information",
-            # snackbar_x="10dp",
-            # snackbar_y="10dp"
+            text="success!", icon="information", snackbar_x="10dp", snackbar_y="10dp"
         )
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
@@ -305,8 +299,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         snackbar = CustomSnackbar(
             text=error_message,
             icon="alert-circle",
-            # snackbar_x="10dp",
-            # snackbar_y="10dp",
+            snackbar_x="10dp",
+            snackbar_y="10dp",
         )
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
@@ -321,7 +315,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         try:
             self.file = File(file_path=file_path, controller=self.controller)
             self.set_drawer_items(section_identifiers=self.file.section_identifiers)
-            self.filter_data_split_by_section(section_identifier=self.file.default_section_identifier)
+            self.filter_data_split_by_section(
+                section_identifier=self.file.default_section_identifier
+            )
             self.cancel_popup()
 
         except ValueError:
@@ -384,7 +380,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         found_occurrences_count = 0
 
-        for section_file_separator, section_found_occurrences in found_occurrences.items():
+        for (
+            section_file_separator,
+            section_found_occurrences,
+        ) in found_occurrences.items():
             found_occurrences_count += len(section_found_occurrences)
             text_data = self.file.get_section_content(section_file_separator)
 
@@ -406,7 +405,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                     + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
                 ]
 
-                section_identifier = SectionIdentifier(section_file_separator=section_file_separator)
+                section_identifier = SectionIdentifier(
+                    section_file_separator=section_file_separator
+                )
 
                 self.popup.content.results_list.add_widget(
                     CustomListItem(
@@ -439,7 +440,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             self.popup.content.add_section_result_message = "Name already exists"
             return
 
-        self.file.add_section_identifier(section_file_separator=section_identifier.section_file_separator)
+        self.file.add_section_identifier(
+            section_file_separator=section_identifier.section_file_separator
+        )
         self.file.set_section_content(
             section_file_separator=section_identifier.section_file_separator,
             section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
@@ -491,16 +494,13 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def press_menu_item_show_app_metadata(self, *args):
         app_info = linesep.join(
-            [
-                "A simple notes application",
-                "built with Python 3.7 & KivyMD"
-            ]
+            ["A simple notes application", "built with Python 3.7 & KivyMD"]
         )
 
         content = ShowAppMetadataPopup(
             show_app_metadata_label=app_info,
             execute_goto_external_url=self.execute_goto_external_url,
-            cancel=self.cancel_popup
+            cancel=self.cancel_popup,
         )
         self.popup = Popup(
             title="Show App metadata",

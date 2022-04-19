@@ -32,7 +32,7 @@ class MyScreenModel:
         self._file_size = path.getsize(self._file_path)
         self._last_updated_on = format_epoch(
             format=LAST_UPDATED_ON_TIME_FORMAT,
-            epoch_time=path.getmtime(self._file_path)
+            epoch_time=path.getmtime(self._file_path),
         )
         self.observers = []
 
@@ -40,7 +40,7 @@ class MyScreenModel:
         return {
             "_file_path": self.file_path,
             "_file_size": self._file_size,
-            "_last_updated_on": self._last_updated_on
+            "_last_updated_on": self._last_updated_on,
         }
 
     @staticmethod
@@ -76,15 +76,16 @@ class MyScreenModel:
     @last_updated_on.setter
     def last_updated_on(self, value):
         self._last_updated_on = format_epoch(
-            format=LAST_UPDATED_ON_TIME_FORMAT,
-            epoch_time=value
+            format=LAST_UPDATED_ON_TIME_FORMAT, epoch_time=value
         )
         self.notify_observers()
 
     @property
     def formatted(self):
         all_instance_attributes = list(self.__dict__.items())
-        attribute_to_formatted_name_map = MyScreenModel._get_attribute_to_formatted_name_map()
+        attribute_to_formatted_name_map = (
+            MyScreenModel._get_attribute_to_formatted_name_map()
+        )
 
         return linesep.join(
             [
@@ -108,12 +109,12 @@ class MyScreenModel:
         json_data = json.dumps(self.__repr__()).encode()
         encoded_data = base64.encodebytes(json_data)
 
-        with open(MODEL_STORAGE_FILE_PATH, 'wb') as model_file:
+        with open(MODEL_STORAGE_FILE_PATH, "wb") as model_file:
             model_file.write(encoded_data)
 
     def safe_load(self):
         try:
-            with open(MODEL_STORAGE_FILE_PATH, 'rb') as model_file:
+            with open(MODEL_STORAGE_FILE_PATH, "rb") as model_file:
                 decoded_data = base64.decodebytes(model_file.read())
                 json_data = json.loads(decoded_data)
                 return json_data

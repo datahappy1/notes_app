@@ -6,7 +6,7 @@ AVAILABLE_FONTS = [
     "Roboto-BoldItalic",
     "Roboto-Italic",
     "Roboto-Regular",
-    "RobotoMono-Regular"
+    "RobotoMono-Regular",
 ]
 
 
@@ -15,7 +15,4 @@ def get_next_font(font_name: AnyStr) -> AnyStr:
 
     for font in iterable_available_fonts:
         if font == font_name:
-            return next(
-                iterable_available_fonts,
-                next(iter(AVAILABLE_FONTS))
-            )
+            return next(iterable_available_fonts, next(iter(AVAILABLE_FONTS)))
