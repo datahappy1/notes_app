@@ -148,6 +148,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu_settings = self.get_menu_settings()
         self.popup = None
         self.last_searched_string = str()
+        self.text_input_change_counter = 0
 
         self.file = File(file_path=None, controller=self.controller)
 
@@ -542,6 +543,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.filter_data_split_by_section(
             section_identifier=self.file.default_section_identifier
         )
+
+    def text_input_changed_callback(self):
+        self.text_input_change_counter += 1
+        print(self.text_input_change_counter)
+
+        if divmod(self.text_input_change_counter, 10)[1] == 1:
+            self.press_menu_item_save_file()
+            print("saved")
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))
