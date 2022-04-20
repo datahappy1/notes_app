@@ -40,14 +40,6 @@ SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
 
-class RightClickTextInput(TextInput):
-    def on_touch_down(self, touch):
-        super(RightClickTextInput, self).on_touch_down(touch)
-        if touch.button == "right":
-            print("right mouse clicked - saved file?")
-            # TODO save file on right-click ?
-
-
 class ItemDrawer(OneLineAvatarIconListItem):
     icon = StringProperty()
     id = StringProperty()
@@ -157,7 +149,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = None
         self.last_searched_string = str()
 
-        # self.text_section_view = ???
         self.file = File(file_path=None, controller=self.controller)
 
         self.current_section_identifier = self.file.default_section_identifier
