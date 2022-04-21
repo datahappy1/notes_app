@@ -206,8 +206,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
 
     def press_drawer_item_callback(self, text_item):
-        if self.is_unsaved_change:
-            self.save_current_section_to_file()
+        self.save_current_section_to_file()
 
         section_identifier = SectionIdentifier(section_file_separator=text_item.id)
         self.current_section_identifier = section_identifier
