@@ -9,7 +9,6 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.textinput import TextInput
 from kivymd.theming import ThemableBehavior
 from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
 from kivymd.uix.button import MDFlatButton
@@ -32,6 +31,7 @@ from notes_app.utils.search import Search
 APP_TITLE = "Notes"
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
+SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE = "section "
 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
 SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
 SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
@@ -162,6 +162,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         self.set_properties_from_settings()
 
+    @property
+    def is_unsaved_change(self):
+        return self.auto_save_text_input_change_counter > 0
+
     def set_properties_from_settings(self):
         self.text_section_view.font_name = self.settings.font_name
         self.text_section_view.font_size = self.settings.font_size
@@ -202,7 +206,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
 
     def press_drawer_item_callback(self, text_item):
-        self.press_menu_item_save_file()
+        if self.is_unsaved_change:
+            self.save_current_section_to_file()
+
         section_identifier = SectionIdentifier(section_file_separator=text_item.id)
         self.current_section_identifier = section_identifier
         self.filter_data_split_by_section()
@@ -281,7 +287,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         Requests and displays the value of the sum.
         """
         snackbar = CustomSnackbar(
-            text="success!", icon="information", snackbar_x="10dp", snackbar_y="10dp"
+            text="changes saved",
+            icon="information",
+            snackbar_x="10dp",
+            snackbar_y="10dp"
         )
         snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
         snackbar.open()
@@ -322,16 +331,18 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             self.press_add_section()
 
     def execute_goto_search_result(self, custom_list_item):
+        section_name = custom_list_item.secondary_text.replace(
+            SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE, ""
+        )
+
+        self.current_section_identifier = SectionIdentifier(section_name=section_name)
+        self.filter_data_split_by_section()
+
         position = int(
             custom_list_item.tertiary_text.replace(
                 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE, ""
             )
         )
-
-        self.current_section_identifier = SectionIdentifier(
-            section_name=custom_list_item.secondary_text
-        )
-        self.filter_data_split_by_section()
 
         self.text_section_view.select_text(
             position, position + len(self.last_searched_string)
@@ -407,7 +418,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                 self.popup.content.results_list.add_widget(
                     CustomListItem(
                         text=f"{found_string_marked}{found_string_extra_chars}...",
-                        secondary_text=section_identifier.section_name,
+                        secondary_text=f"{SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE}{section_identifier.section_name}",
                         tertiary_text=f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}",
                         on_release=self.execute_goto_search_result,
                     )
@@ -466,7 +477,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         )
         self.popup.open()
 
-    def press_menu_item_save_file(self, *args):
+    def save_current_section_to_file(self):
         self.file.set_section_content(
             section_file_separator=self.text_section_view.section_file_separator,
             section_content=self.text_section_view.text,
@@ -475,6 +486,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         text_data = self.file.transform_data_by_sections_to_raw_data_content()
 
         self.controller.save_file_data(data=text_data)
+
+    def press_menu_item_save_file(self, *args):
+        self.save_current_section_to_file()
 
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataPopup(
@@ -550,8 +564,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def text_input_changed_callback(self):
         self.auto_save_text_input_change_counter += 1
 
-        if self.auto_save_text_input_change_counter == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT:
-            self.press_menu_item_save_file()
+        if (
+            self.auto_save_text_input_change_counter
+            == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
+        ):
+            self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
 
 

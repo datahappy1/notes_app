@@ -3,6 +3,7 @@ from kivy.config import Config
 Config.set("graphics", "window_state", "maximized")
 Config.set("input", "mouse", "mouse,multitouch_on_demand")
 
+from kivy.core.window import Window
 from kivymd.app import MDApp
 
 from notes_app.settings import Settings
@@ -18,6 +19,10 @@ class NotesApp(MDApp):
         self.model = MyScreenModel()
         self.controller = MyScreenController(settings=settings, model=self.model)
 
+    def _on_request_close(self, *args):
+        if self.controller.view.is_unsaved_change:
+            self.controller.view.save_current_section_to_file()
+
     def build(self):
         # 'Red', 'Pink', 'Purple', 'DeepPurple', 'Indigo', 'Blue', 'LightBlue',
         # 'Cyan', 'Teal', 'Green', 'LightGreen', 'Lime', 'Yellow', 'Amber',
@@ -31,6 +36,8 @@ class NotesApp(MDApp):
 
         # 'Light', 'Dark'
         self.theme_cls.theme_style = "Dark"
+
+        Window.bind(on_request_close=self._on_request_close)
 
         return self.controller.get_screen()
 
