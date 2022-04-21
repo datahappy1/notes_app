@@ -39,6 +39,8 @@ SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
+AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT = 5
+
 
 class ItemDrawer(OneLineAvatarIconListItem):
     icon = StringProperty()
@@ -148,7 +150,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu_settings = self.get_menu_settings()
         self.popup = None
         self.last_searched_string = str()
-        self.text_input_change_counter = 0
+        self.auto_save_text_input_change_counter = 0
 
         self.file = File(file_path=None, controller=self.controller)
 
@@ -200,6 +202,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
 
     def press_drawer_item_callback(self, text_item):
+        self.press_menu_item_save_file()
         section_identifier = SectionIdentifier(section_file_separator=text_item.id)
         self.current_section_identifier = section_identifier
         self.filter_data_split_by_section()
@@ -545,12 +548,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         )
 
     def text_input_changed_callback(self):
-        self.text_input_change_counter += 1
-        print(self.text_input_change_counter)
+        self.auto_save_text_input_change_counter += 1
 
-        if divmod(self.text_input_change_counter, 10)[1] == 1:
+        if self.auto_save_text_input_change_counter == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT:
             self.press_menu_item_save_file()
-            print("saved")
+            self.auto_save_text_input_change_counter = 0
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))
