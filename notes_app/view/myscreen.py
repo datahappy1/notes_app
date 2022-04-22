@@ -182,9 +182,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.text_section_view.section_file_separator = (
             section_identifier.section_file_separator
         )
+
         self.text_section_view.text = self.file.get_section_content(
             section_file_separator=section_identifier.section_file_separator
         )
+        # setting self.text_section_view.text invokes the on_text event method
+        # but changing the section without any actual typing is not an unsaved change
+        self.auto_save_text_input_change_counter = 0
+
         self.ids.toolbar.title = (
             f"{APP_TITLE} section: {section_identifier.section_name}"
         )
@@ -206,7 +211,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             )
 
     def press_drawer_item_callback(self, text_item):
-        self.save_current_section_to_file()
+        if self.is_unsaved_change:
+            self.save_current_section_to_file()
 
         section_identifier = SectionIdentifier(section_file_separator=text_item.id)
         self.current_section_identifier = section_identifier
