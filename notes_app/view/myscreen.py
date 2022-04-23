@@ -149,6 +149,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu_storage = self.get_menu_storage()
         self.menu_settings = self.get_menu_settings()
         self.popup = None
+        self.snackbar =None
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
 
@@ -291,28 +292,28 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         The method is called when the model changes.
         Requests and displays the value of the sum.
         """
-        snackbar = CustomSnackbar(
+        self.snackbar = CustomSnackbar(
             text="changes saved",
             icon="information",
             snackbar_x="10dp",
             snackbar_y="10dp"
         )
-        snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
-        snackbar.open()
+        self.snackbar.size_hint_x = (Window.width - (self.snackbar.snackbar_x * 2)) / Window.width
+        self.snackbar.open()
 
     def show_error_bar(self, error_message):
         """
         The method is called when the model changes.
         Requests and displays the value of the sum.
         """
-        snackbar = CustomSnackbar(
+        self.snackbar = CustomSnackbar(
             text=error_message,
             icon="alert-circle",
             snackbar_x="10dp",
             snackbar_y="10dp",
         )
-        snackbar.size_hint_x = (Window.width - (snackbar.snackbar_x * 2)) / Window.width
-        snackbar.open()
+        self.snackbar.size_hint_x = (Window.width - (self.snackbar.snackbar_x * 2)) / Window.width
+        self.snackbar.open()
 
     def execute_open_file(self, path, filename):
         if not filename:
@@ -470,6 +471,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def cancel_popup(self):
         self.popup.dismiss()
+        self.popup = Popup() # TODO check
 
     def press_menu_item_open_file(self, *args):
         content = OpenFilePopup(
