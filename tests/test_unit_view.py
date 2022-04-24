@@ -12,7 +12,7 @@ from notes_app.settings import Settings
 from notes_app.utils.file import File
 from notes_app.utils.search import Search
 from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageItems, ItemDrawer,\
-    ShowFileMetadataPopup, ShowAppMetadataPopup, CustomSnackbar
+    ShowFileMetadataPopup, ShowAppMetadataPopup, CustomSnackbar, CustomListItem
 
 settings = Settings()
 
@@ -42,6 +42,17 @@ def write_settings_file():
                           "background_color = black",
                           "foreground_color = silver"])
         )
+
+
+from kivy.properties import ObjectProperty, StringProperty
+from kivy.uix.floatlayout import FloatLayout
+class SearchPopup(FloatLayout):
+    get_search_switch_state = ObjectProperty(None)
+    switch_callback = ObjectProperty(None)
+    search_string_placeholder = StringProperty(None)
+    search_results_message = StringProperty(None)
+    execute_search = ObjectProperty(None)
+    cancel = ObjectProperty(None)
 
 
 class TestView:
@@ -331,6 +342,28 @@ class TestView:
     def test_execute_search(self, get_app):
         screen = get_app.controller.get_screen()
 
-        assert screen.execute_search() == ""
+        def _(*args):
+            return True
+
+        content = SearchPopup(
+            get_search_switch_state=_,
+            switch_callback=_,
+            search_string_placeholder="",
+            search_results_message="",
+            execute_search=_,
+            cancel=_
+        )
+
+        screen.popup = Popup(
+            title="test title",
+            content=content,
+        )
+        screen.popup.open()
+
+        assert screen.execute_search("lor") is None
+        assert screen.popup.content.results_list == []
+
+        assert screen.execute_search("no") is None
+        assert screen.popup.content.results_list == []
 
         assert 1==0
