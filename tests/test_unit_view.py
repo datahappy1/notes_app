@@ -2,6 +2,8 @@ from copy import copy
 from os import linesep, getcwd
 
 import pytest
+from kivy.properties import ObjectProperty, StringProperty
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivymd.app import MDApp
 from kivymd.uix.menu import MDDropdownMenu
@@ -11,7 +13,7 @@ from notes_app.model.myscreen import MyScreenModel
 from notes_app.settings import Settings
 from notes_app.utils.file import File
 from notes_app.utils.search import Search
-from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageItems, ItemDrawer,\
+from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageItems, ItemDrawer, \
     ShowFileMetadataPopup, ShowAppMetadataPopup, CustomSnackbar, CustomListItem
 
 settings = Settings()
@@ -42,17 +44,6 @@ def write_settings_file():
                           "background_color = black",
                           "foreground_color = silver"])
         )
-
-
-from kivy.properties import ObjectProperty, StringProperty
-from kivy.uix.floatlayout import FloatLayout
-class SearchPopup(FloatLayout):
-    get_search_switch_state = ObjectProperty(None)
-    switch_callback = ObjectProperty(None)
-    search_string_placeholder = StringProperty(None)
-    search_results_message = StringProperty(None)
-    execute_search = ObjectProperty(None)
-    cancel = ObjectProperty(None)
 
 
 class TestView:
@@ -182,7 +173,7 @@ class TestView:
         screen.press_menu_storage_item_callback(text_item=value)
         assert isinstance(screen.popup, Popup)
         model_change_ts_after = get_app.model.last_updated_on
-        assert model_change_ts_after > model_change_ts_before
+        assert model_change_ts_after >= model_change_ts_before
 
     def test_press_menu_settings_item_callback(self, get_app):
         screen = get_app.controller.get_screen()
@@ -342,6 +333,14 @@ class TestView:
     def test_execute_search(self, get_app):
         screen = get_app.controller.get_screen()
 
+        class SearchPopup(FloatLayout):
+            get_search_switch_state = ObjectProperty(None)
+            switch_callback = ObjectProperty(None)
+            search_string_placeholder = StringProperty(None)
+            search_results_message = StringProperty(None)
+            execute_search = ObjectProperty(None)
+            cancel = ObjectProperty(None)
+
         def _(*args):
             return True
 
@@ -360,10 +359,94 @@ class TestView:
         )
         screen.popup.open()
 
+        assert screen.execute_search("") is None
+        assert screen.popup.content.search_results_message == "Invalid search"
+        assert screen.popup.content.results_list.children == []
+
+        assert screen.execute_search(None) is None
+        assert screen.popup.content.search_results_message == "Invalid search"
+        assert screen.popup.content.results_list.children == []
+
+        screen.search.search_all_sections = False
         assert screen.execute_search("lor") is None
-        assert screen.popup.content.results_list == []
+        assert screen.popup.content.search_results_message == "No match found"
+        assert screen.popup.content.results_list.children == []
 
-        assert screen.execute_search("no") is None
-        assert screen.popup.content.results_list == []
+        screen.search.search_all_sections = True
+        assert screen.execute_search("lor") is None
+        assert screen.popup.content.search_results_message == "Match on 1 position found"
+        assert len(screen.popup.content.results_list.children) == 1
+        assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
+        assert screen.popup.content.results_list.children[0].text == f"[b][color=ff0000]lor[/color][/b]em timet\n..."
+        assert screen.popup.content.results_list.children[0].secondary_text == "section second"
+        assert screen.popup.content.results_list.children[0].tertiary_text == "position 13"
+        assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
+            "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+        )
 
+        screen.search.search_case_sensitive = False
+        assert screen.execute_search("Quod") is None
+        assert screen.popup.content.search_results_message == "Match on 1 position found"
+        assert len(screen.popup.content.results_list.children) == 1
+        assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
+        assert screen.popup.content.results_list.children[0].text == \
+               f"[b][color=ff0000]Quod[/color][/b] equidem non reprehendo\n..."
+        assert screen.popup.content.results_list.children[0].secondary_text == "section first"
+        assert screen.popup.content.results_list.children[0].tertiary_text == "position 0"
+        assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
+            "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+        )
+
+        screen.search.search_case_sensitive = True
+        assert screen.execute_search("Quod") is None
+        assert screen.popup.content.search_results_message == "Match on 1 position found"
+        assert len(screen.popup.content.results_list.children) == 1
+        assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
+        assert screen.popup.content.results_list.children[0].text == \
+               f"[b][color=ff0000]Quod[/color][/b] equidem non reprehendo\n..."
+        assert screen.popup.content.results_list.children[0].secondary_text == "section first"
+        assert screen.popup.content.results_list.children[0].tertiary_text == "position 0"
+        assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
+            "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+        )
+
+        screen.search.search_case_sensitive = False
+        assert screen.execute_search("Qu") is None
+        assert screen.popup.content.search_results_message == "Matches on 3 positions found"
+        assert len(screen.popup.content.results_list.children) == 3
+
+        assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
+        assert screen.popup.content.results_list.children[0].text == \
+               f"[b][color=ff0000]Qu[/color][/b]is istum dolorem timet\n..."
+        assert screen.popup.content.results_list.children[0].secondary_text == "section second"
+        assert screen.popup.content.results_list.children[0].tertiary_text == "position 0"
+        assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
+            "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+        )
+        assert isinstance(screen.popup.content.results_list.children[1], CustomListItem)
+        assert screen.popup.content.results_list.children[1].text == \
+               f"[b][color=ff0000]qu[/color][/b]idem non reprehendo\n..."
+        assert screen.popup.content.results_list.children[1].secondary_text == "section first"
+        assert screen.popup.content.results_list.children[1].tertiary_text == "position 6"
+        assert screen.popup.content.results_list.children[1].on_release.__str__().startswith(
+            "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+        )
+        assert isinstance(screen.popup.content.results_list.children[2], CustomListItem)
+        assert screen.popup.content.results_list.children[2].text == \
+               f"[b][color=ff0000]Qu[/color][/b]od equidem non reprehendo\n..."
+        assert screen.popup.content.results_list.children[2].secondary_text == "section first"
+        assert screen.popup.content.results_list.children[2].tertiary_text == "position 0"
+        assert screen.popup.content.results_list.children[2].on_release.__str__().startswith(
+            "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+        )
+
+    def test_execute_add_section(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        section_name = ""
+        assert screen.execute_add_section(section_name) == ""
+
+        section_name = "test section"
+
+        assert screen.execute_add_section(section_name) == ""
         assert 1==0

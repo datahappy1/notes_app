@@ -413,7 +413,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                 )
 
                 found_string_extra_chars = text_data[
-                    position_end : position_end
+                    position_end: position_end
                     + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
                 ]
 
