@@ -36,8 +36,7 @@ class TestController:
     def test_read_file_data(self, get_app):
         controller = get_app.controller
         assert controller.read_file_data() == """<section=first> Quod equidem non reprehendo
-<section=second> Quis istum dolorem timet
-"""
+<section=second> Quis istum dolorem timet"""
 
     def test_save_file_data(self, get_app):
         controller = get_app.controller

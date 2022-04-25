@@ -467,11 +467,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.cancel_popup()
 
     def execute_goto_external_url(self):
-        webbrowser.open(EXTERNAL_REPOSITORY_URL)
+        return webbrowser.open(EXTERNAL_REPOSITORY_URL)
 
     def cancel_popup(self):
         self.popup.dismiss()
-        self.popup = Popup() # TODO check
+        self.popup = Popup()  # TODO check
 
     def press_menu_item_open_file(self, *args):
         content = OpenFilePopup(

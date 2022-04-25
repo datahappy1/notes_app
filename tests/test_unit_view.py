@@ -1,5 +1,5 @@
 from copy import copy
-from os import linesep, getcwd
+from os import getcwd
 
 import pytest
 from kivy.properties import ObjectProperty, StringProperty
@@ -18,6 +18,29 @@ from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageIt
 
 settings = Settings()
 
+SETTINGS_FILE_PATH = f"{getcwd()}/settings.conf"
+NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
+EMPTY_NOTES_FILE_PATH = f"{getcwd()}/assets/sample_empty.txt"
+
+
+def write_settings_file():
+    with open(file=SETTINGS_FILE_PATH, mode="w") as settings_file:
+        settings_file.write(
+            "\n".join(["[general_settings]",
+                       "font_name = RobotoMono-Regular",
+                       "font_size = 11.0",
+                       "background_color = black",
+                       "foreground_color = silver"])
+        )
+
+
+def write_notes_file():
+    with open(file=NOTES_FILE_PATH, mode="w") as notes_file:
+        notes_file.write(
+            "\n".join(["<section=first> Quod equidem non reprehendo",
+                       "<section=second> Quis istum dolorem timet"])
+        )
+
 
 @pytest.fixture
 def get_app():
@@ -30,20 +53,11 @@ def get_app():
     return NotesApp()
 
 
-SETTINGS_FILE_PATH = f"{getcwd()}/settings.conf"
-NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
-EMPTY_NOTES_FILE_PATH = f"{getcwd()}/assets/sample_empty.txt"
-
-
-def write_settings_file():
-    with open(file=SETTINGS_FILE_PATH, mode="w") as settings_file:
-        settings_file.write(
-            linesep.join(["[general_settings]",
-                          "font_name = RobotoMono-Regular",
-                          "font_size = 11.0",
-                          "background_color = black",
-                          "foreground_color = silver"])
-        )
+@pytest.fixture(autouse=True)
+def get_fresh_notes_file_content():
+    write_notes_file()
+    yield
+    write_notes_file()
 
 
 class TestView:
@@ -93,6 +107,7 @@ class TestView:
 
         assert screen.text_section_view.section_file_separator == "<section=first> "
         assert screen.text_section_view.text == f"Quod equidem non reprehendo\n"
+        assert screen.ids.toolbar.title == "Notes section: first"
 
     def test_set_drawer_items(self, get_app):
         screen = get_app.controller.get_screen()
@@ -129,7 +144,7 @@ class TestView:
         screen.press_drawer_item_callback(text_item=text_item)
 
         assert screen.text_section_view.section_file_separator == "<section=second> "
-        assert screen.text_section_view.text == f"Quis istum dolorem timet\n"
+        assert screen.text_section_view.text == f"Quis istum dolorem timet"
         assert screen.auto_save_text_input_change_counter == 0
 
     def test_get_menu_storage(self, get_app):
@@ -377,7 +392,7 @@ class TestView:
         assert screen.popup.content.search_results_message == "Match on 1 position found"
         assert len(screen.popup.content.results_list.children) == 1
         assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
-        assert screen.popup.content.results_list.children[0].text == f"[b][color=ff0000]lor[/color][/b]em timet\n..."
+        assert screen.popup.content.results_list.children[0].text == f"[b][color=ff0000]lor[/color][/b]em timet..."
         assert screen.popup.content.results_list.children[0].secondary_text == "section second"
         assert screen.popup.content.results_list.children[0].tertiary_text == "position 13"
         assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
@@ -417,7 +432,7 @@ class TestView:
 
         assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
         assert screen.popup.content.results_list.children[0].text == \
-               f"[b][color=ff0000]Qu[/color][/b]is istum dolorem timet\n..."
+               f"[b][color=ff0000]Qu[/color][/b]is istum dolorem timet..."
         assert screen.popup.content.results_list.children[0].secondary_text == "section second"
         assert screen.popup.content.results_list.children[0].tertiary_text == "position 0"
         assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
@@ -443,10 +458,133 @@ class TestView:
     def test_execute_add_section(self, get_app):
         screen = get_app.controller.get_screen()
 
+        class _AddSectionPopup(FloatLayout):
+            add_section_result_message = StringProperty(None)
+            execute_add_section = ObjectProperty(None)
+            cancel = ObjectProperty(None)
+
+        def _(*args):
+            return True
+
+        content = _AddSectionPopup(
+            add_section_result_message="",
+            execute_add_section=_,
+            cancel=_
+        )
+
+        screen.popup = Popup(
+            title="test title",
+            content=content,
+        )
+        screen.popup.open()
+
         section_name = ""
-        assert screen.execute_add_section(section_name) == ""
+        assert screen.execute_add_section(section_name) is None
+        assert screen.popup.content.add_section_result_message == "Invalid name"
 
-        section_name = "test section"
+        section_name = None
+        assert screen.execute_add_section(section_name) is None
+        assert screen.popup.content.add_section_result_message == "Invalid name"
 
-        assert screen.execute_add_section(section_name) == ""
-        assert 1==0
+        section_name = "first"
+        assert screen.execute_add_section(section_name) is None
+        assert screen.popup.content is None
+
+        section_name = "new section"
+        assert len(screen.file.section_identifiers) == 3
+        assert screen.execute_add_section(section_name) is None
+        assert len(screen.file.section_identifiers) == 4
+        assert screen.file.section_identifiers[3].section_file_separator == "<section=new section> "
+        assert screen.file.section_identifiers[3].section_name == "new section"
+        assert screen.file.get_section_content(section_file_separator="<section=new section> ") == ""
+        assert screen.text_section_view.section_file_separator == "<section=new section> "
+        assert screen.text_section_view.text == f""
+        assert screen.ids.toolbar.title == "Notes section: new section"
+
+    def test_goto_external_url(self, get_app):
+        # opens browser
+        # screen = get_app.controller.get_screen()
+
+        # assert screen.execute_goto_external_url()
+        pass
+
+    def test_cancel_popup(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        class _AddSectionPopup(FloatLayout):
+            add_section_result_message = StringProperty(None)
+            execute_add_section = ObjectProperty(None)
+            cancel = ObjectProperty(None)
+
+        def _(*args):
+            return True
+
+        content = _AddSectionPopup(
+            add_section_result_message="test message",
+            execute_add_section=_,
+            cancel=_
+        )
+
+        screen.popup = Popup(
+            title="test title",
+            content=content,
+        )
+        screen.popup.open()
+
+        assert screen.popup.content.add_section_result_message == "test message"
+
+        assert screen.cancel_popup() is None
+        assert screen.popup.content is None
+
+    def test_press_menu_item_open_file(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        class _OpenFilePopup(FloatLayout):
+            open_file = ObjectProperty(None)
+            cancel = ObjectProperty(None)
+
+        def _(*args):
+            return True
+
+        content = _OpenFilePopup(
+            open_file=_, cancel=_
+        )
+        self.popup = Popup(
+            title="Open File",
+            content=content,
+        )
+
+        assert screen.press_menu_item_open_file() is None
+
+        assert screen.popup.content.open_file.__str__().startswith(
+            "<bound method MyScreenView.execute_open_file of <Screen name=''>>"
+        )
+
+    def test_save_current_section_to_file(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        assert screen.file.get_raw_data_content() \
+               == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
+        screen.text_section_view.text = "test text"
+
+        assert screen.save_current_section_to_file() is None
+        assert screen.file.get_raw_data_content() \
+               == """<section=first> test text<section=second> Quis istum dolorem timet"""
+
+    def test_press_menu_item_save_file(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        assert screen.file.get_raw_data_content() \
+               == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
+        screen.text_section_view.text = "test text"
+
+        assert screen.press_menu_item_save_file() is None
+        assert screen.file.get_raw_data_content() \
+               == """<section=first> test text<section=second> Quis istum dolorem timet"""
+
+    def test_press_menu_item_show_file_metadata(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        assert screen.press_menu_item_show_file_metadata() is None
+
+        assert 1 == 0
