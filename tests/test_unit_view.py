@@ -11,10 +11,11 @@ from kivymd.uix.menu import MDDropdownMenu
 from notes_app.controller.myscreen import MyScreenController
 from notes_app.model.myscreen import MyScreenModel
 from notes_app.settings import Settings
-from notes_app.utils.file import File
+from notes_app.utils.file import File, SectionIdentifier
 from notes_app.utils.search import Search
 from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageItems, ItemDrawer, \
-    ShowFileMetadataPopup, ShowAppMetadataPopup, CustomSnackbar, CustomListItem, APP_METADATA_ROWS
+    ShowFileMetadataPopup, ShowAppMetadataPopup, CustomSnackbar, CustomListItem, APP_METADATA_ROWS, \
+    AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
 
 settings = Settings()
 
@@ -603,5 +604,90 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=screen.model.last_upda
     def test_press_icon_search(self, get_app):
         screen = get_app.controller.get_screen()
 
-        assert 1 == 0
+        screen.last_searched_string = "test placeholder"
+        screen.press_icon_search()
 
+        assert screen.popup.content.get_search_switch_state.__str__().startswith(
+            "<bound method MyScreenView.get_search_switch_state of <Screen name=''>>"
+        )
+        assert screen.popup.content.switch_callback.__str__().startswith(
+            "<bound method MyScreenView.switch_callback of <Screen name=''>>"
+        )
+        assert screen.popup.content.search_string_placeholder == "test placeholder"
+        assert screen.popup.content.search_results_message == ""
+        assert screen.popup.content.execute_search.__str__().startswith(
+            "<bound method MyScreenView.execute_search of <Screen name=''>>"
+        )
+        assert screen.popup.content.cancel.__str__().startswith(
+            "<bound method MyScreenView.cancel_popup of <Screen name=''>>"
+        )
+
+    def test_press_add_section(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        screen.press_add_section()
+
+        assert screen.popup.content.add_section_result_message == ""
+        assert screen.popup.content.execute_add_section.__str__().startswith(
+            "<bound method MyScreenView.execute_add_section of <Screen name=''>>"
+        )
+        assert screen.popup.content.cancel.__str__().startswith(
+            "<bound method MyScreenView.cancel_popup of <Screen name=''>>"
+        )
+
+    def test_press_delete_section(self,get_app):
+        screen = get_app.controller.get_screen()
+
+        section_item = ItemDrawer(id="<section=second> ")
+
+        assert len(screen.ids.md_list.children) == 2
+
+        assert screen.file._data_by_sections == \
+               {'<section=first> ': 'Quod equidem non reprehendo\n',
+                '<section=second> ': 'Quis istum dolorem timet'}
+
+        screen.filter_data_split_by_section(
+            section_identifier=SectionIdentifier(section_name="second")
+        )
+
+        print(screen.ids.md_list.children)
+
+        assert screen.press_delete_section(section_item=section_item) is None
+
+        assert screen.file.section_identifiers[0].section_name == "first"
+        assert screen.file.section_identifiers[0].section_file_separator == "<section=first> "
+        assert screen.file._data_by_sections == {'<section=first> ': 'Quod equidem non reprehendo\n'}
+
+        with pytest.raises(IndexError):
+            assert screen.file.section_identifiers[1].section_name == "second"
+        with pytest.raises(IndexError):
+            assert screen.file.section_identifiers[1].section_file_separator == "<section=first> "
+
+        assert screen.file._data_by_sections == {'<section=first> ': 'Quod equidem non reprehendo\n'}
+        assert screen.current_section_identifier.section_name == "first"
+
+        # TODO fixme
+        assert len(screen.ids.md_list.children) == 1
+        print(screen.ids.md_list.children)
+        assert screen.ids.md_list.children[0].id == "<section=second> "
+
+        assert screen.press_delete_section(section_item=section_item) is None
+        assert screen.snackbar.text == "Cannot delete last section"
+
+    def test_text_input_changed_callback(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        screen.auto_save_text_input_change_counter = AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
+
+        assert screen.text_input_changed_callback() is None
+        assert screen.auto_save_text_input_change_counter == 0
+
+        screen.text_section_view.section_file_separator = "<section=test> "
+        assert screen.text_input_changed_callback() is None
+        assert screen.auto_save_text_input_change_counter == 1
+        assert screen.controller.read_file_data() == "<section=first dolorem timet"
+
+        assert screen.text_input_changed_callback() is None
+        assert screen.auto_save_text_input_change_counter == 2
+
+        assert 1==0
