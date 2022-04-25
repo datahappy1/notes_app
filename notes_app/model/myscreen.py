@@ -88,11 +88,9 @@ class MyScreenModel:
         )
 
         return linesep.join(
-            [
-                f"{attribute_to_formatted_name_map[map_item[0]]} : {map_item[1]}"
-                for map_item in all_instance_attributes
-                if map_item[0] in attribute_to_formatted_name_map
-            ]
+            f"{attribute_to_formatted_name_map[map_item[0]]} : {map_item[1]}"
+            for map_item in all_instance_attributes
+            if map_item[0] in attribute_to_formatted_name_map
         )
 
     def add_observer(self, observer):

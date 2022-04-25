@@ -1,5 +1,5 @@
 from copy import copy
-from os import getcwd
+from os import getcwd, linesep
 
 import pytest
 from kivy.properties import ObjectProperty, StringProperty
@@ -14,7 +14,7 @@ from notes_app.settings import Settings
 from notes_app.utils.file import File
 from notes_app.utils.search import Search
 from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageItems, ItemDrawer, \
-    ShowFileMetadataPopup, ShowAppMetadataPopup, CustomSnackbar, CustomListItem
+    ShowFileMetadataPopup, ShowAppMetadataPopup, CustomSnackbar, CustomListItem, APP_METADATA_ROWS
 
 settings = Settings()
 
@@ -587,4 +587,21 @@ class TestView:
 
         assert screen.press_menu_item_show_file_metadata() is None
 
+        assert screen.popup.content.show_file_metadata_label == \
+               """File path : {cwd}/assets/sample.txt\r
+File size (bytes) : 86\r
+Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=screen.model.last_updated_on)
+
+    def test_press_menu_item_show_app_metadata(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        assert screen.press_menu_item_show_app_metadata() is None
+
+        assert screen.popup.content.show_app_metadata_label == \
+               linesep.join(APP_METADATA_ROWS)
+
+    def test_press_icon_search(self, get_app):
+        screen = get_app.controller.get_screen()
+
         assert 1 == 0
+

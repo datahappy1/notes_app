@@ -39,6 +39,8 @@ SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
+APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.7 & KivyMD"]
+
 AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT = 5
 
 
@@ -509,9 +511,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.open()
 
     def press_menu_item_show_app_metadata(self, *args):
-        app_info = linesep.join(
-            ["A simple notes application", "built with Python 3.7 & KivyMD"]
-        )
+        app_info = linesep.join(APP_METADATA_ROWS)
 
         content = ShowAppMetadataPopup(
             show_app_metadata_label=app_info,
