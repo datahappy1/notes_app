@@ -635,10 +635,10 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=screen.model.last_upda
             "<bound method MyScreenView.cancel_popup of <Screen name=''>>"
         )
 
-    def test_press_delete_section(self,get_app):
+    def test_press_delete_section(self, get_app):
         screen = get_app.controller.get_screen()
 
-        section_item = ItemDrawer(id="<section=second> ")
+        section_item = screen.ids.md_list.children[0]
 
         assert len(screen.ids.md_list.children) == 2
 
@@ -650,27 +650,15 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=screen.model.last_upda
             section_identifier=SectionIdentifier(section_name="second")
         )
 
-        print(screen.ids.md_list.children)
-
         assert screen.press_delete_section(section_item=section_item) is None
+
+        assert len(screen.ids.md_list.children) == 1
 
         assert screen.file.section_identifiers[0].section_name == "first"
         assert screen.file.section_identifiers[0].section_file_separator == "<section=first> "
         assert screen.file._data_by_sections == {'<section=first> ': 'Quod equidem non reprehendo\n'}
 
-        with pytest.raises(IndexError):
-            assert screen.file.section_identifiers[1].section_name == "second"
-        with pytest.raises(IndexError):
-            assert screen.file.section_identifiers[1].section_file_separator == "<section=first> "
-
-        assert screen.file._data_by_sections == {'<section=first> ': 'Quod equidem non reprehendo\n'}
-        assert screen.current_section_identifier.section_name == "first"
-
-        # TODO fixme
-        assert len(screen.ids.md_list.children) == 1
-        print(screen.ids.md_list.children)
-        assert screen.ids.md_list.children[0].id == "<section=second> "
-
+        section_item = screen.ids.md_list.children[0]
         assert screen.press_delete_section(section_item=section_item) is None
         assert screen.snackbar.text == "Cannot delete last section"
 
@@ -679,15 +667,11 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=screen.model.last_upda
 
         screen.auto_save_text_input_change_counter = AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
 
+        screen.file._data_by_sections = {"<section=test> ": "test data"}
         assert screen.text_input_changed_callback() is None
         assert screen.auto_save_text_input_change_counter == 0
+        assert screen.controller.read_file_data() == \
+               "<section=test> test data<section=first> Quod equidem non reprehendo\n"
 
-        screen.text_section_view.section_file_separator = "<section=test> "
         assert screen.text_input_changed_callback() is None
         assert screen.auto_save_text_input_change_counter == 1
-        assert screen.controller.read_file_data() == "<section=first dolorem timet"
-
-        assert screen.text_input_changed_callback() is None
-        assert screen.auto_save_text_input_change_counter == 2
-
-        assert 1==0
