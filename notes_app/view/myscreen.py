@@ -151,7 +151,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu_storage = self.get_menu_storage()
         self.menu_settings = self.get_menu_settings()
         self.popup = None
-        self.snackbar =None
+        self.snackbar = None
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
 

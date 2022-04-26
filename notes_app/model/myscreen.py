@@ -28,7 +28,7 @@ class MyScreenModel:
     """
 
     def __init__(self):
-        self._file_path = self.safe_load().get("file_path") or FALLBACK_NOTES_FILE_PATH
+        self._file_path = self.safe_load().get("_file_path") or FALLBACK_NOTES_FILE_PATH
         self._file_size = path.getsize(self._file_path)
         self._last_updated_on = format_epoch(
             format=LAST_UPDATED_ON_TIME_FORMAT,

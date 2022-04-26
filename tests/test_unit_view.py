@@ -20,27 +20,43 @@ from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageIt
 settings = Settings()
 
 SETTINGS_FILE_PATH = f"{getcwd()}/settings.conf"
+MODEL_FILE_PATH = f"{getcwd()}/model/myscreen.model"
 NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
 EMPTY_NOTES_FILE_PATH = f"{getcwd()}/assets/sample_empty.txt"
 
 
-def write_settings_file():
-    with open(file=SETTINGS_FILE_PATH, mode="w") as settings_file:
-        settings_file.write(
-            "\n".join(["[general_settings]",
-                       "font_name = RobotoMono-Regular",
-                       "font_size = 11.0",
-                       "background_color = black",
-                       "foreground_color = silver"])
-        )
+def set_clean_test_class_state():
+    def _write_settings_file():
+        with open(file=SETTINGS_FILE_PATH, mode="w") as settings_file:
+            settings_file.write(
+                "\n".join(["[general_settings]",
+                           "font_name = RobotoMono-Regular",
+                           "font_size = 11.0",
+                           "background_color = black",
+                           "foreground_color = silver"])
+            )
+
+    _write_settings_file()
 
 
-def write_notes_file():
-    with open(file=NOTES_FILE_PATH, mode="w") as notes_file:
-        notes_file.write(
-            "\n".join(["<section=first> Quod equidem non reprehendo",
-                       "<section=second> Quis istum dolorem timet"])
-        )
+def set_clean_test_state():
+    def _write_notes_file():
+        with open(file=NOTES_FILE_PATH, mode="w") as notes_file:
+            notes_file.write(
+                "\n".join(["<section=first> Quod equidem non reprehendo",
+                           "<section=second> Quis istum dolorem timet"])
+            )
+
+    def _write_model_file():
+        with open(file=MODEL_FILE_PATH, mode="wb") as model_file:
+            model_file.write(
+                b"""eyJfZmlsZV9wYXRoIjogIkM6XFxVc2Vyc1xccGF2ZWwucHJ1ZGt5XFxQeWNoYXJtUHJvamVjdHNc
+    XG5vdGVzX2FwcFxcdGVzdHMvYXNzZXRzL3NhbXBsZS50eHQiLCAiX2ZpbGVfc2l6ZSI6IDY5LCAi
+    X2xhc3RfdXBkYXRlZF9vbiI6ICIyMDIyLTA0LTI2IDEwOjQ1OjU3In0="""
+            )
+
+    _write_notes_file()
+    _write_model_file()
 
 
 @pytest.fixture
@@ -56,17 +72,17 @@ def get_app():
 
 @pytest.fixture(autouse=True)
 def get_fresh_notes_file_content():
-    write_notes_file()
+    set_clean_test_state()
     yield
-    write_notes_file()
+    set_clean_test_state()
 
 
 class TestView:
     def setup_method(self, test_method):
-        write_settings_file()
+        set_clean_test_class_state()
 
     def teardown_method(self, test_method):
-        write_settings_file()
+        set_clean_test_class_state()
 
     def test_view(self, get_app):
         assert get_app.model
