@@ -9,7 +9,7 @@ from kivymd.app import MDApp
 from kivymd.uix.menu import MDDropdownMenu
 
 from notes_app.controller.myscreen import MyScreenController
-from notes_app.model.myscreen import MyScreenModel
+from notes_app.model.myscreen import MyScreenModel, FALLBACK_NOTES_FILE_PATH
 from notes_app.settings import Settings
 from notes_app.utils.file import File, SectionIdentifier
 from notes_app.utils.search import Search
@@ -58,7 +58,7 @@ def get_app():
     class NotesApp(MDApp):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
-            self.model = MyScreenModel()
+            self.model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
             self.controller = MyScreenController(settings=settings, model=self.model)
 
     return NotesApp()
@@ -84,8 +84,6 @@ class TestView:
         assert get_app.model
         assert get_app.controller
 
-        # raw_file_data = get_app.controller.read_file_data()
-        # print(raw_file_data)
         screen = get_app.controller.get_screen()
 
         assert isinstance(screen.menu_storage, MDDropdownMenu)
@@ -602,7 +600,7 @@ class TestView:
 
         assert screen.popup.content.show_file_metadata_label == \
                """File path : {cwd}/assets/sample.txt\r
-File size (bytes) : 69\r
+File size (bytes) : 86\r
 Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=screen.model.last_updated_on)
 
     def test_press_menu_item_show_app_metadata(self, get_app):

@@ -8,12 +8,31 @@
 import base64
 import json
 from os import path, linesep, getcwd
+from typing import Tuple
 
 from notes_app.utils.time import format_epoch
 
 MODEL_STORAGE_FILE_PATH = f"{getcwd()}/model/myscreen.model"
 FALLBACK_NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def get_additional_attributes_from_file_path(file_path: str) -> Tuple[int, str]:
+    return path.getsize(file_path), \
+           format_epoch(
+               format=LAST_UPDATED_ON_TIME_FORMAT,
+               epoch_time=path.getmtime(file_path)
+           )
+
+
+def safe_load_model_data():
+    try:
+        with open(MODEL_STORAGE_FILE_PATH, "rb") as model_file:
+            decoded_data = base64.decodebytes(model_file.read())
+            json_data = json.loads(decoded_data)
+            return json_data
+    except (FileNotFoundError, json.JSONDecodeError):
+        return dict()
 
 
 class MyScreenModel:
@@ -26,14 +45,25 @@ class MyScreenModel:
     The model is (primarily) responsible for the logic of the application.
     MyScreenModel class task is to add two numbers.
     """
+    model_data = safe_load_model_data()
 
-    def __init__(self):
-        self._file_path = self.safe_load().get("_file_path") or FALLBACK_NOTES_FILE_PATH
-        self._file_size = self.safe_load().get("_file_size") or path.getsize(self._file_path)
-        self._last_updated_on = self.safe_load().get("_last_updated_on") or format_epoch(
-            format=LAST_UPDATED_ON_TIME_FORMAT,
-            epoch_time=path.getmtime(self._file_path),
-        )
+    def __init__(self, notes_file_path: str = None):
+        if notes_file_path and path.exists(notes_file_path):
+            self._file_path = notes_file_path
+            self._file_size, self._last_updated_on = \
+                get_additional_attributes_from_file_path(self._file_path)
+
+        elif MyScreenModel.model_data.get("_file_path") and \
+                path.exists(MyScreenModel.model_data["_file_path"]):
+            self._file_path = MyScreenModel.model_data["_file_path"]
+            self._file_size = MyScreenModel.model_data.get("_file_size")
+            self._last_updated_on = MyScreenModel.model_data.get("_last_updated_on")
+
+        else:
+            self._file_path = FALLBACK_NOTES_FILE_PATH
+            self._file_size, self._last_updated_on = \
+                get_additional_attributes_from_file_path(self._file_path)
+
         self.observers = []
 
     def __repr__(self):
@@ -109,12 +139,3 @@ class MyScreenModel:
 
         with open(MODEL_STORAGE_FILE_PATH, "wb") as model_file:
             model_file.write(encoded_data)
-
-    def safe_load(self):
-        try:
-            with open(MODEL_STORAGE_FILE_PATH, "rb") as model_file:
-                decoded_data = base64.decodebytes(model_file.read())
-                json_data = json.loads(decoded_data)
-                return json_data
-        except (FileNotFoundError, json.JSONDecodeError):
-            return dict()

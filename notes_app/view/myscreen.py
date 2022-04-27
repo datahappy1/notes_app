@@ -152,6 +152,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu_settings = self.get_menu_settings()
         self.popup = None
         self.snackbar = None
+
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
 
@@ -579,6 +580,5 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         ):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
-
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))
