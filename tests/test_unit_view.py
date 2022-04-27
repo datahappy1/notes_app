@@ -25,38 +25,32 @@ NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
 EMPTY_NOTES_FILE_PATH = f"{getcwd()}/assets/sample_empty.txt"
 
 
-def set_clean_test_class_state():
-    def _write_settings_file():
-        with open(file=SETTINGS_FILE_PATH, mode="w") as settings_file:
-            settings_file.write(
-                "\n".join(["[general_settings]",
-                           "font_name = RobotoMono-Regular",
-                           "font_size = 11.0",
-                           "background_color = black",
-                           "foreground_color = silver"])
-            )
-
-    _write_settings_file()
+def write_default_settings_file():
+    with open(file=SETTINGS_FILE_PATH, mode="w") as settings_file:
+        settings_file.write(
+            "\n".join(["[general_settings]",
+                       "font_name = RobotoMono-Regular",
+                       "font_size = 11.0",
+                       "background_color = black",
+                       "foreground_color = silver"])
+        )
 
 
-def set_clean_test_state():
-    def _write_notes_file():
-        with open(file=NOTES_FILE_PATH, mode="w") as notes_file:
-            notes_file.write(
-                "\n".join(["<section=first> Quod equidem non reprehendo",
-                           "<section=second> Quis istum dolorem timet"])
-            )
+def write_default_notes_file():
+    with open(file=NOTES_FILE_PATH, mode="w") as notes_file:
+        notes_file.write(
+            "\n".join(["<section=first> Quod equidem non reprehendo",
+                       "<section=second> Quis istum dolorem timet"])
+        )
 
-    def _write_model_file():
-        with open(file=MODEL_FILE_PATH, mode="wb") as model_file:
-            model_file.write(
-                b"""eyJfZmlsZV9wYXRoIjogIkM6XFxVc2Vyc1xccGF2ZWwucHJ1ZGt5XFxQeWNoYXJtUHJvamVjdHNc
-    XG5vdGVzX2FwcFxcdGVzdHMvYXNzZXRzL3NhbXBsZS50eHQiLCAiX2ZpbGVfc2l6ZSI6IDY5LCAi
-    X2xhc3RfdXBkYXRlZF9vbiI6ICIyMDIyLTA0LTI2IDEwOjQ1OjU3In0="""
-            )
 
-    _write_notes_file()
-    _write_model_file()
+def write_default_model_file():
+    with open(file=MODEL_FILE_PATH, mode="wb") as model_file:
+        model_file.write(
+            b"""eyJfZmlsZV9wYXRoIjogIkM6XFxVc2Vyc1xccGF2ZWwucHJ1ZGt5XFxQeWNoYXJtUHJvamVjdHNc
+XG5vdGVzX2FwcFxcdGVzdHMvYXNzZXRzL3NhbXBsZS50eHQiLCAiX2ZpbGVfc2l6ZSI6IDY5LCAi
+X2xhc3RfdXBkYXRlZF9vbiI6ICIyMDIyLTA0LTI2IDEwOjQ1OjU3In0="""
+        )
 
 
 @pytest.fixture
@@ -71,18 +65,20 @@ def get_app():
 
 
 @pytest.fixture(autouse=True)
-def get_fresh_notes_file_content():
-    set_clean_test_state()
+def get_default_test_files_state():
+    write_default_notes_file()
+    write_default_model_file()
     yield
-    set_clean_test_state()
+    write_default_notes_file()
+    write_default_model_file()
 
 
 class TestView:
     def setup_method(self, test_method):
-        set_clean_test_class_state()
+        write_default_settings_file()
 
     def teardown_method(self, test_method):
-        set_clean_test_class_state()
+        write_default_settings_file()
 
     def test_view(self, get_app):
         assert get_app.model
@@ -606,7 +602,7 @@ class TestView:
 
         assert screen.popup.content.show_file_metadata_label == \
                """File path : {cwd}/assets/sample.txt\r
-File size (bytes) : 86\r
+File size (bytes) : 69\r
 Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=screen.model.last_updated_on)
 
     def test_press_menu_item_show_app_metadata(self, get_app):

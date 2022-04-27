@@ -5,9 +5,9 @@ import pytest
 from notes_app.controller.myscreen import MyScreenController
 from notes_app.model.myscreen import MyScreenModel
 from notes_app.settings import Settings
-from notes_app.utils.colors import Color, get_color_by_name, get_next_color_by_rgba
+from notes_app.utils.color import Color, get_color_by_name, get_next_color_by_rgba
 from notes_app.utils.file import SectionIdentifier, File
-from notes_app.utils.fonts import get_next_font
+from notes_app.utils.font import get_next_font
 from notes_app.utils.search import Search, DEFAULT_VALUE_SEARCH_CASE_SENSITIVE, DEFAULT_VALUE_SEARCH_ALL_SECTIONS
 from notes_app.utils.time import format_epoch
 
@@ -43,14 +43,14 @@ class TestColor:
         assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1]).name == "black"
         assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
 
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_value=[1, 1, 1, 1]).name == "black"
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_rgba_value=[1, 1, 1, 1]).name == "black"
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_rgba_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
 
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_value=[0, 0, 0, 1]).name == "navy"
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_value=[0, 0, 0, 1]).rgba_value == (0, 0, 0.5, 1)
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_rgba_value=[0, 0, 0, 1]).name == "navy"
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_rgba_value=[0, 0, 0, 1]).rgba_value == (0, 0, 0.5, 1)
 
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 0, 1], skip_value=[1, 1, 1, 1]).name == "black"
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 0, 1], skip_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 0, 1], skip_rgba_value=[1, 1, 1, 1]).name == "black"
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 0, 1], skip_rgba_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
 
 
 class TestFont:

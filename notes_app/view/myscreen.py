@@ -18,14 +18,14 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.observer.observer import Observer
-from notes_app.utils.colors import get_color_by_name, get_next_color_by_rgba
+from notes_app.utils.color import get_color_by_name, get_next_color_by_rgba
 from notes_app.utils.file import (
     File,
     SectionIdentifier,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
-from notes_app.utils.fonts import get_next_font
+from notes_app.utils.font import get_next_font
 from notes_app.utils.search import Search
 
 APP_TITLE = "Notes"
@@ -273,14 +273,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         elif text_item == MenuSettingsItems.SetNextBackgroundColor.value:
             next_background_color = get_next_color_by_rgba(
                 rgba_value=self.text_section_view.background_color,
-                skip_value=self.text_section_view.foreground_color
+                skip_rgba_value=self.text_section_view.foreground_color
             )
             self.text_section_view.background_color = next_background_color.rgba_value
             self.settings.background_color = next_background_color.name
         elif text_item == MenuSettingsItems.SetNextForegroundColor.value:
             next_foreground_color = get_next_color_by_rgba(
                 rgba_value=self.text_section_view.foreground_color,
-                skip_value=self.text_section_view.background_color
+                skip_rgba_value=self.text_section_view.background_color
             )
             self.text_section_view.foreground_color = next_foreground_color.rgba_value
             self.settings.foreground_color = next_foreground_color.name
