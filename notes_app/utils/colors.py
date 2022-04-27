@@ -34,9 +34,17 @@ def get_color_by_name(color_name: AnyStr) -> Color:
             return color
 
 
-def get_next_color_by_rgba(rgba_value: List[int]) -> Color:
+def get_next_color_by_rgba(rgba_value: List[int], skip_value: List[int] = None) -> Color:
     iterable_available_colors = iter(AVAILABLE_COLORS)
 
     for color in iterable_available_colors:
         if color.rgba_value == tuple(rgba_value):
-            return next(iterable_available_colors, next(iter(AVAILABLE_COLORS)))
+            next_color = next(iterable_available_colors, next(iter(AVAILABLE_COLORS)))
+
+            if skip_value and next_color.rgba_value == tuple(skip_value):
+                return get_next_color_by_rgba(
+                    rgba_value=next_color.rgba_value,
+                    skip_value=skip_value
+                )
+
+            return next_color

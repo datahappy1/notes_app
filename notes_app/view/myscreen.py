@@ -272,13 +272,15 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             self.settings.font_size = self.text_section_view.font_size
         elif text_item == MenuSettingsItems.SetNextBackgroundColor.value:
             next_background_color = get_next_color_by_rgba(
-                rgba_value=self.text_section_view.background_color
+                rgba_value=self.text_section_view.background_color,
+                skip_value=self.text_section_view.foreground_color
             )
             self.text_section_view.background_color = next_background_color.rgba_value
             self.settings.background_color = next_background_color.name
         elif text_item == MenuSettingsItems.SetNextForegroundColor.value:
             next_foreground_color = get_next_color_by_rgba(
-                rgba_value=self.text_section_view.foreground_color
+                rgba_value=self.text_section_view.foreground_color,
+                skip_value=self.text_section_view.background_color
             )
             self.text_section_view.foreground_color = next_foreground_color.rgba_value
             self.settings.foreground_color = next_foreground_color.name

@@ -40,8 +40,17 @@ class TestColor:
         assert get_color_by_name("white").rgba_value == (1, 1, 1, 1)
 
     def test_get_last_color(self):
-        assert get_next_color_by_rgba([1, 1, 1, 1]).name == "black"
-        assert get_next_color_by_rgba([1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1]).name == "black"
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
+
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_value=[1, 1, 1, 1]).name == "black"
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
+
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_value=[0, 0, 0, 1]).name == "navy"
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_value=[0, 0, 0, 1]).rgba_value == (0, 0, 0.5, 1)
+
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 0, 1], skip_value=[1, 1, 1, 1]).name == "black"
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 0, 1], skip_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
 
 
 class TestFont:
