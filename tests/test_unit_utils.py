@@ -3,7 +3,7 @@ from os import getcwd
 import pytest
 
 from notes_app.controller.myscreen import MyScreenController
-from notes_app.model.myscreen import MyScreenModel
+from notes_app.model.myscreen import MyScreenModel, FALLBACK_NOTES_FILE_PATH
 from notes_app.settings import Settings
 from notes_app.utils.color import Color, get_color_by_name, get_next_color_by_rgba
 from notes_app.utils.file import SectionIdentifier, File
@@ -18,7 +18,7 @@ def get_file():
 
     controller = MyScreenController(
         settings=settings,
-        model=MyScreenModel()
+        model=MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
     )
 
     file = File(

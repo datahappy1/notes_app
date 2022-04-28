@@ -4,7 +4,7 @@ import pytest
 from kivymd.app import MDApp
 
 from notes_app.controller.myscreen import MyScreenController
-from notes_app.model.myscreen import MyScreenModel
+from notes_app.model.myscreen import MyScreenModel, FALLBACK_NOTES_FILE_PATH
 from notes_app.settings import Settings
 from notes_app.view.myscreen import MyScreenView
 
@@ -16,7 +16,7 @@ def get_app():
     class NotesApp(MDApp):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
-            self.model = MyScreenModel()
+            self.model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
             self.controller = MyScreenController(settings=settings, model=self.model)
 
     return NotesApp()

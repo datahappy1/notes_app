@@ -600,8 +600,8 @@ class TestView:
 
         assert screen.popup.content.show_file_metadata_label == \
                """File path : {cwd}/assets/sample.txt\r
-File size (bytes) : 86\r
-Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=screen.model.last_updated_on)
+File size (bytes) : {file_size}\r
+Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_size, dt_now=screen.model.last_updated_on)
 
     def test_press_menu_item_show_app_metadata(self, get_app):
         screen = get_app.controller.get_screen()

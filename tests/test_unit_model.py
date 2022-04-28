@@ -4,21 +4,21 @@ from os import getcwd
 
 from dateutil.parser import parse
 
-from notes_app.model.myscreen import MyScreenModel
+from notes_app.model.myscreen import MyScreenModel, FALLBACK_NOTES_FILE_PATH
 
 
 class TestModel:
     def test_model(self):
-        model = MyScreenModel()
+        model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
         assert model
         assert model._file_path == f"{getcwd()}/assets/sample.txt"
-        assert model._file_size == 88
+        assert type(model._file_size) == int
         assert parse(model._last_updated_on)
 
         assert model.observers == []
 
         assert model.__repr__() == {'_file_path': f"{getcwd()}/assets/sample.txt",
-                                    '_file_size': 88,
+                                    '_file_size': model.file_size,
                                     '_last_updated_on': f"{model.last_updated_on}"}
 
         assert model._get_attribute_to_formatted_name_map() == {'_file_path': 'File path',
@@ -27,28 +27,28 @@ class TestModel:
         model.dump_encoded()
 
     def test_set_get_file_path(self):
-        model = MyScreenModel()
+        model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
         model.file_path = "test"
         assert model.file_path == "test"
 
     def test_set_get_file_size(self):
-        model = MyScreenModel()
+        model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
         model.file_size = 42
         assert model.file_size == 42
 
     def test_set_get_last_updated_on(self):
-        model = MyScreenModel()
+        model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
         model.last_updated_on = 1650621021
         assert model.last_updated_on == "2022-04-22 11:50:21"
 
     def test_formatted(self):
-        model = MyScreenModel()
+        model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
         assert model.formatted == """File path : {cwd}/assets/sample.txt\r
-File size (bytes) : 88\r
-Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=model.last_updated_on)
+File size (bytes) : {file_size}\r
+Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on)
 
     def test_set_get_observers(self):
-        model = MyScreenModel()
+        model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
         observer = dict()
         model.add_observer(observer=observer)
         assert model.observers
@@ -56,7 +56,7 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=model.last_updated_on)
         assert model.observers[0] == observer
 
     def test_dump_encoded(self):
-        model = MyScreenModel()
+        model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
         assert model.dump_encoded() is None
 
     def test_safe_load(self):
@@ -69,5 +69,5 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), dt_now=model.last_updated_on)
             json_data = json.loads(decoded_data)
 
             assert json_data["_file_path"] == f"{getcwd()}/assets/sample.txt"
-            assert json_data["_file_size"] == 88
+            assert type(json_data["_file_size"]) == int
             assert parse(json_data["_last_updated_on"])
