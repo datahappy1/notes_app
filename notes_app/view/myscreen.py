@@ -2,10 +2,12 @@ import webbrowser
 from enum import Enum
 from os import path, linesep
 
+from kivy.core.text import Label
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.bubble import BubbleButton, Bubble
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
@@ -133,7 +135,30 @@ class MenuSettingsItems(Enum):
     ShowAppInfo = "Show application info"
 
 
-class MyScreenView(BoxLayout, MDScreen, Observer):
+# ###
+class CustomBubbleButton(BubbleButton):
+    pass
+
+
+class NumericKeyboard(Bubble):
+    layout = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super(NumericKeyboard, self).__init__(**kwargs)
+        self.create_bubble_button()
+
+    def create_bubble_button(self):
+        numeric_keypad = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '', '0', '.']
+        for x in numeric_keypad:
+            if len(x) == 0:
+                pass # self.layout.add_widget(Label(text=""))
+            else:
+                bubb_btn = CustomBubbleButton(text=str(x))
+                self.layout.add_widget(bubb_btn)
+# ###
+
+
+class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
     """"
     A class that implements the visual presentation `MyScreenModel`.
 
@@ -580,6 +605,16 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         ):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
+
+    # ###
+    # https://stackoverflow.com/questions/47552735/kivy-python-textinput-display-bubble
+    text_input = ObjectProperty(None)
+    def show_bubble(self, *l):
+        if not hasattr(self, 'bubb'):
+            self.bubb = bubb = NumericKeyboard()
+            self.bubb.arrow_pos = "bottom_mid"
+            self.add_widget(bubb)
+    # ###
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

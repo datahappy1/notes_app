@@ -1,5 +1,23 @@
 #:kivy 1.0
 
+<CustomBubbleButton>:
+    on_release:
+        app.root.text_input.text += self.text
+
+
+<NumericKeyboard>:
+    layout: layout
+
+    size_hint: (None, None)
+    size: (160, 120)
+    pos_hint: {'center_x': .5, 'y': .6}
+
+    GridLayout:
+        id: layout
+        cols: 3
+
+
+
 <CustomSnackbar>
     MDIconButton:
         pos_hint: {'center_y': .5}
@@ -57,6 +75,11 @@
 
                 use_bubble: False
                 on_text: root.text_input_changed_callback()
+
+                # ###
+                on_focus: root.show_bubble()
+                # ###
+
 
             MDNavigationDrawer:
                 id: nav_drawer
