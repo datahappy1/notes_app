@@ -2,10 +2,10 @@ import webbrowser
 from enum import Enum
 from os import path, linesep
 
-from kivy.core.text import Label
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty, StringProperty
+from kivy.clock import Clock
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.bubble import BubbleButton, Bubble
 from kivy.uix.floatlayout import FloatLayout
@@ -44,6 +44,8 @@ EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.7 & KivyMD"]
 
 AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT = 5
+
+BUBBLE_AUTO_DISMISS_TIMEOUT = 2
 
 
 class ItemDrawer(OneLineAvatarIconListItem):
@@ -98,7 +100,7 @@ class MyToggleButton(MDFlatButton, MDToggleButton):
 
 class SearchPopup(FloatLayout):
     get_search_switch_state = ObjectProperty(None)
-    switch_callback = ObjectProperty(None)
+    search_switch_callback = ObjectProperty(None)
     search_string_placeholder = StringProperty(None)
     search_results_message = StringProperty(None)
     execute_search = ObjectProperty(None)
@@ -135,28 +137,22 @@ class MenuSettingsItems(Enum):
     ShowAppInfo = "Show application info"
 
 
-# ###
 class CustomBubbleButton(BubbleButton):
     pass
 
 
-class NumericKeyboard(Bubble):
+class CustomBubble(Bubble):
     layout = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        super(NumericKeyboard, self).__init__(**kwargs)
-        self.create_bubble_button()
+        super(CustomBubble, self).__init__(**kwargs)
+        self.create_bubble_button(action="cut")
+        self.create_bubble_button(action="copy")
+        self.create_bubble_button(action="mark")
 
-    def create_bubble_button(self):
-        numeric_keypad = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '', '0', '.']
-        for x in numeric_keypad:
-            if len(x) == 0:
-                pass # self.layout.add_widget(Label(text=""))
-            else:
-                bubb_btn = CustomBubbleButton(text=str(x))
-                self.layout.add_widget(bubb_btn)
-# ###
-
+    def create_bubble_button(self, action):
+        bubble_button = CustomBubbleButton(text=action)
+        self.layout.add_widget(bubble_button)
 
 class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
     """"
@@ -177,6 +173,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
         self.menu_settings = self.get_menu_settings()
         self.popup = None
         self.snackbar = None
+        self.bubble = None
 
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
@@ -394,12 +391,16 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             return self.search.search_case_sensitive
         elif switch_id == "search_all_sections_switch":
             return self.search.search_all_sections
+        elif switch_id == "search_full_words_switch":
+            return self.search.search_full_words
 
-    def switch_callback(self, switch_id, state, *args):
+    def search_switch_callback(self, switch_id, state, *args):
         if switch_id == "search_case_sensitive_switch":
             self.search.search_case_sensitive = state
         elif switch_id == "search_all_sections_switch":
             self.search.search_all_sections = state
+        elif switch_id == "search_full_words_switch":
+            self.search.search_full_words = state
 
     def execute_search(self, *args):
         if not args[0] or len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
@@ -556,7 +557,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
     def press_icon_search(self, *args):
         content = SearchPopup(
             get_search_switch_state=self.get_search_switch_state,
-            switch_callback=self.switch_callback,
+            search_switch_callback=self.search_switch_callback,
             search_string_placeholder=self.last_searched_string,
             search_results_message="",
             execute_search=self.execute_search,
@@ -606,15 +607,28 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
 
-    # ###
-    # https://stackoverflow.com/questions/47552735/kivy-python-textinput-display-bubble
-    text_input = ObjectProperty(None)
     def show_bubble(self, *l):
-        if not hasattr(self, 'bubb'):
-            self.bubb = bubb = NumericKeyboard()
-            self.bubb.arrow_pos = "bottom_mid"
-            self.add_widget(bubb)
-    # ###
+        if not self.bubble:
+            self.bubble = CustomBubble()  # TODO action="mark" here send mark/clear based on which text selection
+            values = ('left_top', 'left_mid', 'left_bottom', 'top_left',
+                      'top_mid', 'top_right', 'right_top', 'right_mid',
+                      'right_bottom', 'bottom_left', 'bottom_mid', 'bottom_right')
+            index = values.index(self.bubble.arrow_pos)
+            self.bubble.arrow_pos = values[(index + 1) % len(values)]
+            print(self.ids, self.ids.float_text_layout)
+            self.auto_dismiss_timeout(BUBBLE_AUTO_DISMISS_TIMEOUT)
+            self.ids.float_text_layout.add_widget(self.bubble)
+
+    def press_bubble(self, *args):
+        print("bubble", args)
+        self.dismiss_bubble()
+
+    def dismiss_bubble(self):
+        self.ids.float_text_layout.remove_widget(self.bubble)
+        self.bubble = None
+
+    def auto_dismiss_timeout(self, timeout):
+        Clock.schedule_once(lambda dt: self.dismiss_bubble(), timeout)
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

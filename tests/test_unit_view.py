@@ -343,13 +343,13 @@ class TestView:
     def test_switch_callback(self, get_app):
         screen = get_app.controller.get_screen()
 
-        screen.switch_callback(
+        screen.search_switch_callback(
             switch_id="search_case_sensitive_switch",
             state="state1"
         )
         assert screen.search.search_case_sensitive == "state1"
 
-        screen.switch_callback(
+        screen.search_switch_callback(
             switch_id="search_all_sections_switch",
             state="state2"
         )
@@ -620,8 +620,8 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_s
         assert screen.popup.content.get_search_switch_state.__str__().startswith(
             "<bound method MyScreenView.get_search_switch_state of <Screen name=''>>"
         )
-        assert screen.popup.content.switch_callback.__str__().startswith(
-            "<bound method MyScreenView.switch_callback of <Screen name=''>>"
+        assert screen.popup.content.search_switch_callback.__str__().startswith(
+            "<bound method MyScreenView.search_switch_callback of <Screen name=''>>"
         )
         assert screen.popup.content.search_string_placeholder == "test placeholder"
         assert screen.popup.content.search_results_message == ""

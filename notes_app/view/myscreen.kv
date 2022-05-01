@@ -2,20 +2,19 @@
 
 <CustomBubbleButton>:
     on_release:
-        app.root.text_input.text += self.text
+        app.root.press_bubble(self)
 
 
-<NumericKeyboard>:
+<CustomBubble>:
     layout: layout
 
     size_hint: (None, None)
-    size: (160, 120)
+    # size: (80, 40)
     pos_hint: {'center_x': .5, 'y': .6}
 
     GridLayout:
         id: layout
         cols: 3
-
 
 
 <CustomSnackbar>
@@ -64,22 +63,20 @@
 
     ScreenManager:
         MDScreen:
-            TextInput:
-                id: text_input
-                multiline: True
-                do_wrap: True
+            FloatLayout:
+                id: float_text_layout
+                TextInput:
+                    id: text_input
+                    multiline: True
+                    do_wrap: True
 
-                font_name: "Roboto-Bold"
-                # background_color: (1,0,0,1) #if self.focus else (0,0,1,1)
-                # foreground_color: (1,1,0,1)
+                    font_name: "Roboto-Bold"
+                    # background_color: (1,0,0,1) #if self.focus else (0,0,1,1)
+                    # foreground_color: (1,1,0,1)
 
-                use_bubble: False
-                on_text: root.text_input_changed_callback()
-
-                # ###
-                on_focus: root.show_bubble()
-                # ###
-
+                    use_bubble: False
+                    on_text: root.text_input_changed_callback()
+                    on_touch_move: root.show_bubble(self)
 
             MDNavigationDrawer:
                 id: nav_drawer
@@ -202,7 +199,7 @@
             MDSwitch:
                 id: search_all_sections_switch
                 active: root.get_search_switch_state("search_all_sections_switch")
-                on_active: root.switch_callback("search_all_sections_switch", self.active)
+                on_active: root.search_switch_callback("search_all_sections_switch", self.active)
 
         MDBoxLayout:
             orientation: "horizontal"
@@ -213,7 +210,18 @@
             MDSwitch:
                 id: search_case_sensitive_switch
                 active: root.get_search_switch_state("search_case_sensitive_switch")
-                on_active: root.switch_callback("search_case_sensitive_switch", self.active)
+                on_active: root.search_switch_callback("search_case_sensitive_switch", self.active)
+
+        MDBoxLayout:
+            orientation: "horizontal"
+
+            MDLabel:
+                text: "Search full words"
+
+            MDSwitch:
+                id: search_full_words_switch
+                active: root.get_search_switch_state("search_full_words_switch")
+                on_active: root.search_switch_callback("search_full_words_switch", self.active)
 
         MDTextField:
             id: search_string_input_value

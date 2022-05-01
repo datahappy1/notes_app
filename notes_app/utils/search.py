@@ -2,12 +2,30 @@ import re
 
 DEFAULT_VALUE_SEARCH_CASE_SENSITIVE = False
 DEFAULT_VALUE_SEARCH_ALL_SECTIONS = False
+DEFAULT_VALUE_SEARCH_FULL_WORDS = False
+
+
+def regex_search_function(pattern, text):
+    return [m.start() for m in re.finditer(pattern, text)]
+
+
+def full_words_search_function(pattern, text):
+    words_split = text.split(" ")
+
+    def _get_position(i):
+        return len(" ".join(words_split[0:i]))
+
+    return [
+        _get_position(i) + 1 if i > 0 else _get_position(i) for i, word
+        in enumerate(words_split) if word == pattern
+    ]
 
 
 class Search:
     def __init__(self):
         self._search_case_sensitive = DEFAULT_VALUE_SEARCH_CASE_SENSITIVE
         self._search_all_sections = DEFAULT_VALUE_SEARCH_ALL_SECTIONS
+        self._search_full_words = DEFAULT_VALUE_SEARCH_FULL_WORDS
 
     @property
     def search_case_sensitive(self):
@@ -25,27 +43,21 @@ class Search:
     def search_all_sections(self, search_all_sections):
         self._search_all_sections = search_all_sections
 
-    @staticmethod
-    def _search(pattern, text):
-        return [m.start() for m in re.finditer(pattern, text)]
+    @property
+    def search_full_words(self):
+        return self._search_full_words
 
-    @staticmethod
-    def _case_sensitive_search(pattern, text):
-        return Search._search(pattern=pattern, text=text)
-
-    @staticmethod
-    def _case_insensitive_search(pattern, text):
-        pattern_lowered = pattern.lower()
-        text_lowered = text.lower()
-        return Search._search(pattern=pattern_lowered, text=text_lowered)
+    @search_full_words.setter
+    def search_full_words(self, search_full_words):
+        self._search_full_words = search_full_words
 
     def search_for_occurrences(self, pattern, file, current_section_identifier):
         found_occurrences = dict()
 
-        if self.search_case_sensitive:
-            search_function = Search._case_sensitive_search
+        if self.search_full_words:
+            search_function = full_words_search_function
         else:
-            search_function = Search._case_insensitive_search
+            search_function = regex_search_function
 
         if self.search_all_sections:
             sections_to_search_in = file.section_identifiers
@@ -56,6 +68,13 @@ class Search:
             text = file.get_section_content(
                 section_file_separator=section.section_file_separator
             )
+
+            if self.search_case_sensitive:
+                pass
+            else:
+                pattern = pattern.lower()
+                text = text.lower()
+
             search_result = search_function(pattern=pattern, text=text)
             if search_result:
                 found_occurrences[section.section_file_separator] = search_result
