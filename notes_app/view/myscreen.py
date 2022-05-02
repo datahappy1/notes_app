@@ -27,20 +27,16 @@ from notes_app.utils.file import (
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
 from notes_app.utils.font import get_next_font
-from notes_app.utils.search import Search
+from notes_app.utils.search import Search, validate_search_input
+from notes_app.utils.mark import get_marked_search_result, get_marked_selected_text_input
 
 APP_TITLE = "Notes"
-
-SEARCH_MINIMAL_CHAR_COUNT = 2
-SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE = "section "
-SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
-SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
-SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
-SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
-
+APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.7 & KivyMD"]
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
-APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.7 & KivyMD"]
+SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
+SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE = "section "
+SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
 
 AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT = 5
 
@@ -160,7 +156,7 @@ class CustomBubble(Bubble):
         self.layout.add_widget(bubble_button)
 
 
-class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
+class MyScreenView(BoxLayout, MDScreen, Observer):
     """"
     A class that implements the visual presentation `MyScreenModel`.
 
@@ -410,7 +406,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             self.search.search_full_words = state
 
     def execute_search(self, *args):
-        if not args[0] or len(args[0]) < SEARCH_MINIMAL_CHAR_COUNT or args[0].isspace():
+        if not validate_search_input(input_string=args[0]):
             self.popup.content.search_results_message = "Invalid search"
             return
 
@@ -431,8 +427,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
         found_occurrences_count = 0
 
         for (
-                section_file_separator,
-                section_found_occurrences,
+            section_file_separator,
+            section_found_occurrences,
         ) in found_occurrences.items():
             found_occurrences_count += len(section_found_occurrences)
             text_data = self.file.get_section_content(section_file_separator)
@@ -441,13 +437,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
                 position_end = position_start + len(self.last_searched_string)
 
                 found_string = text_data[position_start:position_end]
-
-                found_string_marked = (
-                    f"[{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
-                    f"[color={SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR}]"
-                    f"{found_string}"
-                    f"[/color]"
-                    f"[/{SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE}]"
+                found_string_marked = get_marked_search_result(
+                    found_string=found_string
                 )
 
                 found_string_extra_chars = text_data[
@@ -615,7 +606,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             self.auto_save_text_input_change_counter = 0
 
     def show_bubble(self, *l):
-        if self.text_section_view.selection_text != "" and self.selected_text != self.text_section_view.selection_text:
+        if self.text_section_view.selection_text != "" and \
+                self.selected_text != self.text_section_view.selection_text:
             # print("setting self.selected_text", self.selected_text, self.text_section_view.)
             self.selected_text = self.text_section_view.selection_text
 
@@ -632,8 +624,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             self.ids.float_text_layout.add_widget(self.bubble)
 
     def execute_mark_text(self):
-        # print("marking")
-        pass
+        marked_text = get_marked_selected_text_input(
+            selected_string=self.selected_text
+        )
+        print(marked_text)
 
     def execute_clear_text(self):
         # print("clearing")

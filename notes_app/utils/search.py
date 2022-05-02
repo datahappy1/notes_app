@@ -1,8 +1,18 @@
 import re
 
+SEARCH_MINIMAL_CHAR_COUNT = 2
+
 DEFAULT_VALUE_SEARCH_CASE_SENSITIVE = False
 DEFAULT_VALUE_SEARCH_ALL_SECTIONS = False
 DEFAULT_VALUE_SEARCH_FULL_WORDS = False
+
+
+def validate_search_input(input_string):
+    if not input_string \
+            or len(input_string) < SEARCH_MINIMAL_CHAR_COUNT \
+            or input_string.isspace():
+        return False
+    return True
 
 
 def regex_search_function(pattern, text):
@@ -32,24 +42,24 @@ class Search:
         return self._search_case_sensitive
 
     @search_case_sensitive.setter
-    def search_case_sensitive(self, search_case_sensitive):
-        self._search_case_sensitive = search_case_sensitive
+    def search_case_sensitive(self, value):
+        self._search_case_sensitive = value
 
     @property
     def search_all_sections(self):
         return self._search_all_sections
 
     @search_all_sections.setter
-    def search_all_sections(self, search_all_sections):
-        self._search_all_sections = search_all_sections
+    def search_all_sections(self, value):
+        self._search_all_sections = value
 
     @property
     def search_full_words(self):
         return self._search_full_words
 
     @search_full_words.setter
-    def search_full_words(self, search_full_words):
-        self._search_full_words = search_full_words
+    def search_full_words(self, value):
+        self._search_full_words = value
 
     def search_for_occurrences(self, pattern, file, current_section_identifier):
         found_occurrences = dict()

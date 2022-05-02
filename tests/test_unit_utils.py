@@ -8,7 +8,10 @@ from notes_app.settings import Settings
 from notes_app.utils.color import Color, get_color_by_name, get_next_color_by_rgba
 from notes_app.utils.file import SectionIdentifier, File
 from notes_app.utils.font import get_next_font
-from notes_app.utils.search import Search, regex_search_function, full_words_search_function, \
+from notes_app.utils.mark import _get_marked, get_marked_search_result, \
+    get_marked_selected_text_input
+from notes_app.utils.search import Search, validate_search_input, \
+    regex_search_function, full_words_search_function, SEARCH_MINIMAL_CHAR_COUNT, \
     DEFAULT_VALUE_SEARCH_CASE_SENSITIVE, DEFAULT_VALUE_SEARCH_ALL_SECTIONS, \
     DEFAULT_VALUE_SEARCH_FULL_WORDS
 from notes_app.utils.time import format_epoch
@@ -66,6 +69,15 @@ class TestTime:
 
 
 class TestSearch:
+    @pytest.mark.parametrize("input_string, is_valid", [
+        ("  ", False),
+        (None, False),
+        ((SEARCH_MINIMAL_CHAR_COUNT - 1) * "a", False),
+        (SEARCH_MINIMAL_CHAR_COUNT * "a", True),
+    ])
+    def test_validate_search_input(self, input_string, is_valid):
+        assert validate_search_input(input_string) is is_valid
+
     @pytest.mark.parametrize("pattern, text, occurrences", [
         ("is","this is some section.yeah",[2, 5]),
         ("is some","this is some section.yeah",[5]),
@@ -242,3 +254,22 @@ class TestFile:
         assert get_file.transform_data_by_sections_to_raw_data_content() == """<section=first> Quod equidem non reprehendo
 <section=second> Quis istum dolorem timet
 """
+
+
+class TestMark:
+    def test__get_marked(self):
+        assert _get_marked(
+            input="some string",
+            highlight_style="style",
+            highlight_color="eeeeee"
+        ) == "[style][color=eeeeee]some string[/color][/style]"
+
+    def test_get_marked_search_result(self):
+        assert get_marked_search_result(
+            found_string="some string"
+        ) == "[b][color=ff0000]some string[/color][/b]"
+
+    def test_get_marked_selected_text_input(self):
+        assert get_marked_selected_text_input(
+            selected_string="some string"
+        ) == "[i][color=ffaa00]some string[/color][/i]"
