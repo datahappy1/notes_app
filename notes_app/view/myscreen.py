@@ -143,13 +143,17 @@ class CustomBubbleButton(BubbleButton):
 class CustomBubbleActions(Enum):
     Mark = "mark"
     Clear = "clear"
+    Copy = "copy"
+    Paste = "paste"
 
 
 class CustomBubble(Bubble):
+    buttons = ObjectProperty(None)
+
     def __init__(self, **kwargs):
         super(CustomBubble, self).__init__(**kwargs)
-        self.create_bubble_button(action="mark")
-        self.create_bubble_button(action="clear")
+        for button in kwargs["buttons"]:
+            self.create_bubble_button(action=button.value)
 
     def create_bubble_button(self, action):
         bubble_button = CustomBubbleButton(text=action)
@@ -176,6 +180,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
         self.popup = None
         self.snackbar = None
         self.bubble = None
+        self.selected_text = str()
 
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
@@ -610,8 +615,15 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             self.auto_save_text_input_change_counter = 0
 
     def show_bubble(self, *l):
+        if self.text_section_view.selection_text != "" and self.selected_text != self.text_section_view.selection_text:
+            # print("setting self.selected_text", self.selected_text, self.text_section_view.)
+            self.selected_text = self.text_section_view.selection_text
+
         if not self.bubble:
-            self.bubble = CustomBubble()  # TODO action="mark" here send mark/clear based on which text selection
+            buttons = [CustomBubbleActions.Copy, CustomBubbleActions.Paste]
+            # TODO action="mark" here send mark/clear based on which text selection
+            buttons += [CustomBubbleActions.Mark, CustomBubbleActions.Clear]
+            self.bubble = CustomBubble(buttons=buttons)
             values = ('left_top', 'left_mid', 'left_bottom', 'top_left',
                       'top_mid', 'top_right', 'right_top', 'right_mid',
                       'right_bottom', 'bottom_left', 'bottom_mid', 'bottom_right')
@@ -620,11 +632,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             self.ids.float_text_layout.add_widget(self.bubble)
 
     def execute_mark_text(self):
-        print("marking")
+        # print("marking")
         pass
 
     def execute_clear_text(self):
-        print("clearing")
+        # print("clearing")
         pass
 
     def press_bubble(self, *args):
@@ -634,6 +646,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             self.execute_mark_text()
         if action == CustomBubbleActions.Clear.value:
             self.execute_clear_text()
+        if action == CustomBubbleActions.Copy.value:
+            self.text_section_view.copy(data=self.selected_text)
+        if action == CustomBubbleActions.Paste.value:
+            self.text_section_view.paste()
 
         self.dismiss_bubble()
 
