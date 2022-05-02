@@ -77,6 +77,7 @@
                     use_bubble: False
                     on_text: root.text_input_changed_callback()
                     on_touch_move: root.show_bubble(self)
+                    on_touch_down: root.dismiss_bubble()
 
             MDNavigationDrawer:
                 id: nav_drawer

@@ -5,7 +5,6 @@ from os import path, linesep
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty, StringProperty
-from kivy.clock import Clock
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.bubble import BubbleButton, Bubble
 from kivy.uix.floatlayout import FloatLayout
@@ -138,21 +137,24 @@ class MenuSettingsItems(Enum):
 
 
 class CustomBubbleButton(BubbleButton):
-    pass
+    text = StringProperty(None)
+
+
+class CustomBubbleActions(Enum):
+    Mark = "mark"
+    Clear = "clear"
 
 
 class CustomBubble(Bubble):
-    layout = ObjectProperty(None)
-
     def __init__(self, **kwargs):
         super(CustomBubble, self).__init__(**kwargs)
-        self.create_bubble_button(action="cut")
-        self.create_bubble_button(action="copy")
         self.create_bubble_button(action="mark")
+        self.create_bubble_button(action="clear")
 
     def create_bubble_button(self, action):
         bubble_button = CustomBubbleButton(text=action)
         self.layout.add_widget(bubble_button)
+
 
 class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
     """"
@@ -256,7 +258,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             }
             for i in MenuStorageItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5, )
 
     def get_menu_settings(self):
         menu_items = [
@@ -270,7 +272,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
             }
             for i in MenuSettingsItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5, )
 
     def press_menu_storage_item_callback(self, text_item):
         if text_item == MenuStorageItems.ChooseFile.value:
@@ -424,8 +426,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
         found_occurrences_count = 0
 
         for (
-            section_file_separator,
-            section_found_occurrences,
+                section_file_separator,
+                section_found_occurrences,
         ) in found_occurrences.items():
             found_occurrences_count += len(section_found_occurrences)
             text_data = self.file.get_section_content(section_file_separator)
@@ -444,9 +446,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
                 )
 
                 found_string_extra_chars = text_data[
-                    position_end: position_end
-                    + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
-                ]
+                                           position_end: position_end
+                                                         + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
+                                           ]
 
                 section_identifier = SectionIdentifier(
                     section_file_separator=section_file_separator
@@ -469,9 +471,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
 
     def execute_add_section(self, *args):
         if (
-            not args[0]
-            or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
-            or args[0].isspace()
+                not args[0]
+                or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+                or args[0].isspace()
         ):
             self.popup.content.add_section_result_message = "Invalid name"
             return
@@ -601,8 +603,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
         self.auto_save_text_input_change_counter += 1
 
         if (
-            self.auto_save_text_input_change_counter
-            == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
+                self.auto_save_text_input_change_counter
+                == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
         ):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
@@ -615,20 +617,30 @@ class MyScreenView(BoxLayout, MDScreen, Observer, Bubble):
                       'right_bottom', 'bottom_left', 'bottom_mid', 'bottom_right')
             index = values.index(self.bubble.arrow_pos)
             self.bubble.arrow_pos = values[(index + 1) % len(values)]
-            print(self.ids, self.ids.float_text_layout)
-            self.auto_dismiss_timeout(BUBBLE_AUTO_DISMISS_TIMEOUT)
             self.ids.float_text_layout.add_widget(self.bubble)
 
+    def execute_mark_text(self):
+        print("marking")
+        pass
+
+    def execute_clear_text(self):
+        print("clearing")
+        pass
+
     def press_bubble(self, *args):
-        print("bubble", args)
+        action = args[0].text
+
+        if action == CustomBubbleActions.Mark.value:
+            self.execute_mark_text()
+        if action == CustomBubbleActions.Clear.value:
+            self.execute_clear_text()
+
         self.dismiss_bubble()
 
     def dismiss_bubble(self):
-        self.ids.float_text_layout.remove_widget(self.bubble)
-        self.bubble = None
-
-    def auto_dismiss_timeout(self, timeout):
-        Clock.schedule_once(lambda dt: self.dismiss_bubble(), timeout)
+        if self.bubble:
+            self.ids.float_text_layout.remove_widget(self.bubble)
+            self.bubble = None
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))
