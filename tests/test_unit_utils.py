@@ -8,8 +8,7 @@ from notes_app.settings import Settings
 from notes_app.utils.color import Color, get_color_by_name, get_next_color_by_rgba
 from notes_app.utils.file import SectionIdentifier, File
 from notes_app.utils.font import get_next_font
-from notes_app.utils.mark import _get_marked, get_marked_search_result, \
-    get_marked_selected_text_input
+from notes_app.utils.mark import _get_marked, get_marked_search_result
 from notes_app.utils.search import Search, validate_search_input, \
     regex_search_function, full_words_search_function, SEARCH_MINIMAL_CHAR_COUNT, \
     DEFAULT_VALUE_SEARCH_CASE_SENSITIVE, DEFAULT_VALUE_SEARCH_ALL_SECTIONS, \
@@ -259,17 +258,12 @@ class TestFile:
 class TestMark:
     def test__get_marked(self):
         assert _get_marked(
-            input="some string",
-            highlight_style="style",
-            highlight_color="eeeeee"
-        ) == "[style][color=eeeeee]some string[/color][/style]"
+            string="some string",
+            highlight_style="some_style",
+            highlight_color="some_color"
+        ) == "[some_style][color=some_color]some string[/color][/some_style]"
 
     def test_get_marked_search_result(self):
         assert get_marked_search_result(
             found_string="some string"
         ) == "[b][color=ff0000]some string[/color][/b]"
-
-    def test_get_marked_selected_text_input(self):
-        assert get_marked_selected_text_input(
-            selected_string="some string"
-        ) == "[i][color=ffaa00]some string[/color][/i]"

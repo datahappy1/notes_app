@@ -6,7 +6,6 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.bubble import BubbleButton, Bubble
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
@@ -28,11 +27,7 @@ from notes_app.utils.file import (
 )
 from notes_app.utils.font import get_next_font
 from notes_app.utils.search import Search, validate_search_input
-from notes_app.utils.mark import (
-    is_selected_text_input_marked,
-    get_marked_search_result,
-    get_marked_selected_text_input,
-)
+from notes_app.utils.mark import get_marked_search_result
 
 APP_TITLE = "Notes"
 APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.7 & KivyMD"]
@@ -43,8 +38,6 @@ SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE = "section "
 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
 
 AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT = 5
-
-BUBBLE_AUTO_DISMISS_TIMEOUT = 2
 
 
 class ItemDrawer(OneLineAvatarIconListItem):
@@ -136,30 +129,6 @@ class MenuSettingsItems(Enum):
     ShowAppInfo = "Show application info"
 
 
-class CustomBubbleButton(BubbleButton):
-    text = StringProperty(None)
-
-
-class CustomBubbleActions(Enum):
-    Mark = "mark"
-    Clear = "clear"
-    Copy = "copy"
-    Paste = "paste"
-
-
-class CustomBubble(Bubble):
-    buttons = ObjectProperty(None)
-
-    def __init__(self, **kwargs):
-        super(CustomBubble, self).__init__(**kwargs)
-        for button in kwargs["buttons"]:
-            self.create_bubble_button(action=button.value)
-
-    def create_bubble_button(self, action):
-        bubble_button = CustomBubbleButton(text=action)
-        self.layout.add_widget(bubble_button)
-
-
 class MyScreenView(BoxLayout, MDScreen, Observer):
     """"
     A class that implements the visual presentation `MyScreenModel`.
@@ -179,8 +148,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.menu_settings = self.get_menu_settings()
         self.popup = None
         self.snackbar = None
-        self.bubble = None
-        self.selected_text = str()
 
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
@@ -612,76 +579,5 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         ):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
-
-    def show_bubble(self, *l):
-        if (
-            self.text_section_view.selection_text != ""
-            and self.selected_text != self.text_section_view.selection_text
-        ):
-            # print("setting self.selected_text", self.selected_text, self.text_section_view.)
-            self.selected_text = self.text_section_view.selection_text
-
-        if not self.bubble:
-            buttons = [CustomBubbleActions.Copy, CustomBubbleActions.Paste]
-
-            if is_selected_text_input_marked(
-                cursor_index=self.text_section_view.cursor_index(),
-                text=self.text_section_view.text,
-            ):
-                buttons += [CustomBubbleActions.Clear]
-            else:
-                buttons += [CustomBubbleActions.Mark]
-
-            # buttons += [CustomBubbleActions.Mark, CustomBubbleActions.Clear]
-            self.bubble = CustomBubble(buttons=buttons)
-            values = (
-                "left_top",
-                "left_mid",
-                "left_bottom",
-                "top_left",
-                "top_mid",
-                "top_right",
-                "right_top",
-                "right_mid",
-                "right_bottom",
-                "bottom_left",
-                "bottom_mid",
-                "bottom_right",
-            )
-            index = values.index(self.bubble.arrow_pos)
-            self.bubble.arrow_pos = values[(index + 1) % len(values)]
-            self.ids.float_text_layout.add_widget(self.bubble)
-
-    def execute_mark_text(self):
-        marked_text = get_marked_selected_text_input(selected_string=self.selected_text)
-        print(marked_text)
-        new_text = self.text_section_view.text.replace(self.selected_text, marked_text)
-        print(new_text)
-        self.text_section_view.text = new_text
-
-
-    def execute_clear_text(self):
-        # print("clearing")
-        pass
-
-    def press_bubble(self, *args):
-        action = args[0].text
-
-        if action == CustomBubbleActions.Mark.value:
-            self.execute_mark_text()
-        if action == CustomBubbleActions.Clear.value:
-            self.execute_clear_text()
-        if action == CustomBubbleActions.Copy.value:
-            self.text_section_view.copy(data=self.selected_text)
-        if action == CustomBubbleActions.Paste.value:
-            self.text_section_view.paste()
-
-        self.dismiss_bubble()
-
-    def dismiss_bubble(self):
-        if self.bubble:
-            self.ids.float_text_layout.remove_widget(self.bubble)
-            self.bubble = None
-
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

@@ -1,22 +1,5 @@
 #:kivy 1.0
 
-<CustomBubbleButton>:
-    on_release:
-        app.root.press_bubble(self)
-
-
-<CustomBubble>:
-    layout: layout
-
-    size_hint: (None, None)
-    size: (280, 60)
-    pos_hint: {'center_x': .5, 'y': .6}
-
-    GridLayout:
-        id: layout
-        cols: 4
-
-
 <CustomSnackbar>
     MDIconButton:
         pos_hint: {'center_y': .5}
@@ -75,10 +58,8 @@
                     # background_color: (1,0,0,1) #if self.focus else (0,0,1,1)
                     # foreground_color: (1,1,0,1)
 
-                    use_bubble: False
+                    use_bubble: True
                     on_text: root.text_input_changed_callback()
-                    on_touch_move: root.show_bubble(self)
-                    on_touch_down: root.dismiss_bubble()
 
             MDNavigationDrawer:
                 id: nav_drawer

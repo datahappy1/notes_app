@@ -1,5 +1,5 @@
 # notes_app
-notes app written in Python + Kivy
+notes app written in Python + KivyMD
 
 following 
 - https://kivymd.readthedocs.io/en/latest/components/
