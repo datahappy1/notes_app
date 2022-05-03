@@ -6,12 +6,15 @@ SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
 SELECTED_TEXT_INPUT_MATCHED_HIGHLIGHT_COLOR = "ffaa00"
 SELECTED_TEXT_INPUT_MATCHED_HIGHLIGHT_STYLE = "i"
 
+COLOR_MARK_START = r"\[color=[a-zA-Z]+]"
+COLOR_MARK_END = r"\[/color]"
 
-def _get_marked(input, highlight_style, highlight_color):
+
+def _get_marked(string, highlight_style, highlight_color):
     return (
         f"[{highlight_style}]"
         f"[color={highlight_color}]"
-        f"{input}"
+        f"{string}"
         f"[/color]"
         f"[/{highlight_style}]"
     )
@@ -19,41 +22,44 @@ def _get_marked(input, highlight_style, highlight_color):
 
 def get_marked_search_result(found_string):
     return _get_marked(
-        input=found_string,
+        string=found_string,
         highlight_style=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
-        highlight_color=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR
+        highlight_color=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR,
     )
 
 
 def get_marked_selected_text_input(selected_string):
     return _get_marked(
-        input=selected_string,
+        string=selected_string,
         highlight_style=SELECTED_TEXT_INPUT_MATCHED_HIGHLIGHT_STYLE,
-        highlight_color=SELECTED_TEXT_INPUT_MATCHED_HIGHLIGHT_COLOR
+        highlight_color=SELECTED_TEXT_INPUT_MATCHED_HIGHLIGHT_COLOR,
     )
 
 
-def is_selected_text_input_marked(selected_string, text):
-    input_str = "adafa abc [color=red] hua def [/color] xyz"
-    pattern = "def"
+def is_selected_text_input_marked(cursor_index, text):
+    l_side_color_mark_starts = [
+        x for x in re.finditer(COLOR_MARK_START, text[0:cursor_index])
+    ]
+    l_side_color_mark_ends = [
+        x for x in re.finditer(COLOR_MARK_END, text[0:cursor_index])
+    ]
 
-    COLOR_MARK_START = "\[color=[a-zA-Z]+]"
-    COLOR_MARK_END = "\[/color]"
+    r_side_color_mark_starts = [
+        x for x in re.finditer(COLOR_MARK_START, text[cursor_index:])
+    ]
+    r_side_color_mark_ends = [
+        x for x in re.finditer(COLOR_MARK_END, text[cursor_index:])
+    ]
 
-    pattern_location_index = input_str.index(pattern)
+    if (
+        l_side_color_mark_starts
+        and r_side_color_mark_ends
+        and not l_side_color_mark_ends
+        and not r_side_color_mark_starts
+    ):
+        return True
 
-    # left_color_mark_starts = re.finditer(COLOR_MARK_START, input_str[0:pattern_location_index])
-    left_color_mark_ends = re.finditer(COLOR_MARK_END, input_str[0:pattern_location_index])
+    if len(l_side_color_mark_starts) > len(l_side_color_mark_ends):
+        return True
 
-    right_color_mark_starts = re.finditer(COLOR_MARK_START, input_str[pattern_location_index:])
-    # right_color_mark_ends = re.finditer(COLOR_MARK_END, input_str[pattern_location_index:])
-
-    # print([x for x in left_color_mark_starts])
-    # print([x for x in left_color_mark_ends])
-    #
-    # print([x for x in right_color_mark_starts])
-    # print([x for x in right_color_mark_ends])
-
-    if left_color_mark_ends or right_color_mark_starts:
-        return False
-    return True
+    return False

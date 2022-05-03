@@ -28,7 +28,11 @@ from notes_app.utils.file import (
 )
 from notes_app.utils.font import get_next_font
 from notes_app.utils.search import Search, validate_search_input
-from notes_app.utils.mark import get_marked_search_result, get_marked_selected_text_input
+from notes_app.utils.mark import (
+    is_selected_text_input_marked,
+    get_marked_search_result,
+    get_marked_selected_text_input,
+)
 
 APP_TITLE = "Notes"
 APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.7 & KivyMD"]
@@ -259,7 +263,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             }
             for i in MenuStorageItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5, )
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
 
     def get_menu_settings(self):
         menu_items = [
@@ -273,7 +277,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             }
             for i in MenuSettingsItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5, )
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
 
     def press_menu_storage_item_callback(self, text_item):
         if text_item == MenuStorageItems.ChooseFile.value:
@@ -299,14 +303,14 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         elif text_item == MenuSettingsItems.SetNextBackgroundColor.value:
             next_background_color = get_next_color_by_rgba(
                 rgba_value=self.text_section_view.background_color,
-                skip_rgba_value=self.text_section_view.foreground_color
+                skip_rgba_value=self.text_section_view.foreground_color,
             )
             self.text_section_view.background_color = next_background_color.rgba_value
             self.settings.background_color = next_background_color.name
         elif text_item == MenuSettingsItems.SetNextForegroundColor.value:
             next_foreground_color = get_next_color_by_rgba(
                 rgba_value=self.text_section_view.foreground_color,
-                skip_rgba_value=self.text_section_view.background_color
+                skip_rgba_value=self.text_section_view.background_color,
             )
             self.text_section_view.foreground_color = next_foreground_color.rgba_value
             self.settings.foreground_color = next_foreground_color.name
@@ -326,9 +330,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             text="changes saved",
             icon="information",
             snackbar_x="10dp",
-            snackbar_y="10dp"
+            snackbar_y="10dp",
         )
-        self.snackbar.size_hint_x = (Window.width - (self.snackbar.snackbar_x * 2)) / Window.width
+        self.snackbar.size_hint_x = (
+            Window.width - (self.snackbar.snackbar_x * 2)
+        ) / Window.width
         self.snackbar.open()
 
     def show_error_bar(self, error_message):
@@ -342,7 +348,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             snackbar_x="10dp",
             snackbar_y="10dp",
         )
-        self.snackbar.size_hint_x = (Window.width - (self.snackbar.snackbar_x * 2)) / Window.width
+        self.snackbar.size_hint_x = (
+            Window.width - (self.snackbar.snackbar_x * 2)
+        ) / Window.width
         self.snackbar.open()
 
     def execute_open_file(self, path, filename):
@@ -442,9 +450,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                 )
 
                 found_string_extra_chars = text_data[
-                                           position_end: position_end
-                                                         + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
-                                           ]
+                    position_end : position_end
+                    + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
+                ]
 
                 section_identifier = SectionIdentifier(
                     section_file_separator=section_file_separator
@@ -467,9 +475,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def execute_add_section(self, *args):
         if (
-                not args[0]
-                or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
-                or args[0].isspace()
+            not args[0]
+            or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+            or args[0].isspace()
         ):
             self.popup.content.add_section_result_message = "Invalid name"
             return
@@ -599,34 +607,54 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.auto_save_text_input_change_counter += 1
 
         if (
-                self.auto_save_text_input_change_counter
-                == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
+            self.auto_save_text_input_change_counter
+            == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
         ):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
 
     def show_bubble(self, *l):
-        if self.text_section_view.selection_text != "" and \
-                self.selected_text != self.text_section_view.selection_text:
+        if (
+            self.text_section_view.selection_text != ""
+            and self.selected_text != self.text_section_view.selection_text
+        ):
             # print("setting self.selected_text", self.selected_text, self.text_section_view.)
             self.selected_text = self.text_section_view.selection_text
 
         if not self.bubble:
             buttons = [CustomBubbleActions.Copy, CustomBubbleActions.Paste]
             # TODO action="mark" here send mark/clear based on which text selection
-            buttons += [CustomBubbleActions.Mark, CustomBubbleActions.Clear]
+
+            if is_selected_text_input_marked(
+                cursor_index=self.text_section_view.cursor_index(),
+                text=self.text_section_view.text,
+            ):
+                buttons += [CustomBubbleActions.Clear]
+            else:
+                buttons += [CustomBubbleActions.Mark]
+
+            # buttons += [CustomBubbleActions.Mark, CustomBubbleActions.Clear]
             self.bubble = CustomBubble(buttons=buttons)
-            values = ('left_top', 'left_mid', 'left_bottom', 'top_left',
-                      'top_mid', 'top_right', 'right_top', 'right_mid',
-                      'right_bottom', 'bottom_left', 'bottom_mid', 'bottom_right')
+            values = (
+                "left_top",
+                "left_mid",
+                "left_bottom",
+                "top_left",
+                "top_mid",
+                "top_right",
+                "right_top",
+                "right_mid",
+                "right_bottom",
+                "bottom_left",
+                "bottom_mid",
+                "bottom_right",
+            )
             index = values.index(self.bubble.arrow_pos)
             self.bubble.arrow_pos = values[(index + 1) % len(values)]
             self.ids.float_text_layout.add_widget(self.bubble)
 
     def execute_mark_text(self):
-        marked_text = get_marked_selected_text_input(
-            selected_string=self.selected_text
-        )
+        marked_text = get_marked_selected_text_input(selected_string=self.selected_text)
         print(marked_text)
 
     def execute_clear_text(self):

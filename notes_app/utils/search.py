@@ -8,9 +8,11 @@ DEFAULT_VALUE_SEARCH_FULL_WORDS = False
 
 
 def validate_search_input(input_string):
-    if not input_string \
-            or len(input_string) < SEARCH_MINIMAL_CHAR_COUNT \
-            or input_string.isspace():
+    if (
+        not input_string
+        or len(input_string) < SEARCH_MINIMAL_CHAR_COUNT
+        or input_string.isspace()
+    ):
         return False
     return True
 
@@ -26,8 +28,9 @@ def full_words_search_function(pattern, text):
         return len(" ".join(words_split[0:i]))
 
     return [
-        _get_position(i) + 1 if i > 0 else _get_position(i) for i, word
-        in enumerate(words_split) if word == pattern
+        _get_position(i) + 1 if i > 0 else _get_position(i)
+        for i, word in enumerate(words_split)
+        if word == pattern
     ]
 
 

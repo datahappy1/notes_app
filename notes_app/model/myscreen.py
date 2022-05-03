@@ -18,11 +18,12 @@ LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def get_additional_attributes_from_file_path(file_path: str) -> Tuple[int, str]:
-    return path.getsize(file_path), \
-           format_epoch(
-               format=LAST_UPDATED_ON_TIME_FORMAT,
-               epoch_time=path.getmtime(file_path)
-           )
+    return (
+        path.getsize(file_path),
+        format_epoch(
+            format=LAST_UPDATED_ON_TIME_FORMAT, epoch_time=path.getmtime(file_path)
+        ),
+    )
 
 
 def safe_load_model_data():
@@ -45,24 +46,30 @@ class MyScreenModel:
     The model is (primarily) responsible for the logic of the application.
     MyScreenModel class task is to add two numbers.
     """
+
     model_data = safe_load_model_data()
 
     def __init__(self, notes_file_path: str = None):
         if notes_file_path and path.exists(notes_file_path):
             self._file_path = notes_file_path
-            self._file_size, self._last_updated_on = \
-                get_additional_attributes_from_file_path(self._file_path)
+            (
+                self._file_size,
+                self._last_updated_on,
+            ) = get_additional_attributes_from_file_path(self._file_path)
 
-        elif MyScreenModel.model_data.get("_file_path") and \
-                path.exists(MyScreenModel.model_data["_file_path"]):
+        elif MyScreenModel.model_data.get("_file_path") and path.exists(
+            MyScreenModel.model_data["_file_path"]
+        ):
             self._file_path = MyScreenModel.model_data["_file_path"]
             self._file_size = MyScreenModel.model_data.get("_file_size")
             self._last_updated_on = MyScreenModel.model_data.get("_last_updated_on")
 
         else:
             self._file_path = FALLBACK_NOTES_FILE_PATH
-            self._file_size, self._last_updated_on = \
-                get_additional_attributes_from_file_path(self._file_path)
+            (
+                self._file_size,
+                self._last_updated_on,
+            ) = get_additional_attributes_from_file_path(self._file_path)
 
         self.observers = []
 
