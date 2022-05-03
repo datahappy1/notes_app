@@ -12,11 +12,11 @@ COLOR_MARK_END = r"\[/color]"
 
 def _get_marked(string, highlight_style, highlight_color):
     return (
-        f"[{highlight_style}]"
-        f"[color={highlight_color}]"
+        # f"[{highlight_style}]"
+        f"[color=#{highlight_color}]"
         f"{string}"
         f"[/color]"
-        f"[/{highlight_style}]"
+        # f"[/{highlight_style}]"
     )
 
 

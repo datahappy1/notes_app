@@ -623,7 +623,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
         if not self.bubble:
             buttons = [CustomBubbleActions.Copy, CustomBubbleActions.Paste]
-            # TODO action="mark" here send mark/clear based on which text selection
 
             if is_selected_text_input_marked(
                 cursor_index=self.text_section_view.cursor_index(),
@@ -656,6 +655,10 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def execute_mark_text(self):
         marked_text = get_marked_selected_text_input(selected_string=self.selected_text)
         print(marked_text)
+        new_text = self.text_section_view.text.replace(self.selected_text, marked_text)
+        print(new_text)
+        self.text_section_view.text = new_text
+
 
     def execute_clear_text(self):
         # print("clearing")
