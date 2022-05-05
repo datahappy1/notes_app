@@ -33,7 +33,6 @@
         theme_text_color: "Custom"
         on_release: root.delete(section_item)
 
-
 <MyScreenView>:
     orientation: "vertical"
     text_section_view: text_input
@@ -55,8 +54,6 @@
                     markup: True
 
                     font_name: "Roboto-Bold"
-                    # background_color: (1,0,0,1) #if self.focus else (0,0,1,1)
-                    # foreground_color: (1,1,0,1)
 
                     use_bubble: True
                     on_text: root.text_input_changed_callback()
@@ -84,8 +81,8 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        # md_bg_color: app.theme_cls.primary_light
-        padding: [dp(20),dp(10),dp(20),dp(10)]
+        md_bg_color: app.theme_cls.primary_light
+        padding: [dp(50),dp(30),dp(50),dp(30)]
 
         FileChooserListView:
             id: filechooser
@@ -107,8 +104,8 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        # md_bg_color: app.theme_cls.primary_light
-        padding: [dp(20),dp(10),dp(20),dp(10)]
+        md_bg_color: app.theme_cls.primary_light
+        padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
             font_style: "H6"
@@ -129,8 +126,8 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        # md_bg_color: app.theme_cls.primary_light
-        padding: [dp(20),dp(10),dp(20),dp(10)]
+        md_bg_color: app.theme_cls.primary_light
+        padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
             font_style: "H6"
@@ -159,8 +156,8 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        # md_bg_color: app.theme_cls.primary_light
-        padding: [dp(20),dp(10),dp(20),dp(10)]
+        md_bg_color: app.theme_cls.primary_light
+        padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
             font_style: "H6"
@@ -175,34 +172,43 @@
 
         MDBoxLayout:
             orientation: "horizontal"
+            adaptive_height: True
 
             MDLabel:
                 text: "Search in all sections"
+                pos_hint: {'center_x': .5, 'center_y': .5}
 
             MDSwitch:
                 id: search_all_sections_switch
+                pos_hint: {'center_x': .5, 'center_y': .5}
                 active: root.get_search_switch_state("search_all_sections_switch")
                 on_active: root.search_switch_callback("search_all_sections_switch", self.active)
 
         MDBoxLayout:
             orientation: "horizontal"
+            adaptive_height: True
 
             MDLabel:
                 text: "Search case sensitive"
+                pos_hint: {'center_x': .5, 'center_y': .5}
 
             MDSwitch:
                 id: search_case_sensitive_switch
+                pos_hint: {'center_x': .5, 'center_y': .5}
                 active: root.get_search_switch_state("search_case_sensitive_switch")
                 on_active: root.search_switch_callback("search_case_sensitive_switch", self.active)
 
         MDBoxLayout:
             orientation: "horizontal"
+            adaptive_height: True
 
             MDLabel:
                 text: "Search full words"
+                pos_hint: {'center_x': .5, 'center_y': .5}
 
             MDSwitch:
                 id: search_full_words_switch
+                pos_hint: {'center_x': .5, 'center_y': .5}
                 active: root.get_search_switch_state("search_full_words_switch")
                 on_active: root.search_switch_callback("search_full_words_switch", self.active)
 
@@ -227,8 +233,8 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        # md_bg_color: app.theme_cls.primary_light
-        padding: [dp(20),dp(10),dp(20),dp(10)]
+        md_bg_color: app.theme_cls.primary_light
+        padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
             font_style: "H6"

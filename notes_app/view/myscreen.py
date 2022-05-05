@@ -4,6 +4,7 @@ from os import path, linesep
 
 from kivy.core.window import Window
 from kivy.lang import Builder
+from kivy.metrics import dp
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
@@ -26,8 +27,8 @@ from notes_app.utils.file import (
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
 from notes_app.utils.font import get_next_font
-from notes_app.utils.search import Search, validate_search_input
 from notes_app.utils.mark import get_marked_search_result
+from notes_app.utils.search import Search, validate_search_input
 
 APP_TITLE = "Notes"
 APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.7 & KivyMD"]
@@ -200,7 +201,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         for section_identifier in section_identifiers:
             self.ids.md_list.add_widget(
                 ItemDrawer(
-                    icon="bookmark",
+                    icon="bookmark-outline",
                     id=section_identifier.section_file_separator,
                     text=f"section: {section_identifier.section_name}",
                     on_release=lambda x=f"{section_identifier.section_file_separator}": self.press_drawer_item_callback(
@@ -223,28 +224,28 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             {
                 "text": f"{i.value}",
                 "viewclass": "OneLineListItem",
-                # "height": dp(40),
+                "height": dp(40),
                 "on_release": lambda x=f"{i.value}": self.press_menu_storage_item_callback(
                     x
                 ),
             }
             for i in MenuStorageItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5, )
 
     def get_menu_settings(self):
         menu_items = [
             {
                 "text": f"{i.value}",
                 "viewclass": "OneLineListItem",
-                # "height": dp(40),
+                "height": dp(40),
                 "on_release": lambda x=f"{i.value}": self.press_menu_settings_item_callback(
                     x
                 ),
             }
             for i in MenuSettingsItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5, )
 
     def press_menu_storage_item_callback(self, text_item):
         if text_item == MenuStorageItems.ChooseFile.value:
@@ -300,8 +301,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             snackbar_y="10dp",
         )
         self.snackbar.size_hint_x = (
-            Window.width - (self.snackbar.snackbar_x * 2)
-        ) / Window.width
+                                            Window.width - (self.snackbar.snackbar_x * 2)
+                                    ) / Window.width
         self.snackbar.open()
 
     def show_error_bar(self, error_message):
@@ -316,8 +317,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
             snackbar_y="10dp",
         )
         self.snackbar.size_hint_x = (
-            Window.width - (self.snackbar.snackbar_x * 2)
-        ) / Window.width
+                                            Window.width - (self.snackbar.snackbar_x * 2)
+                                    ) / Window.width
         self.snackbar.open()
 
     def execute_open_file(self, path, filename):
@@ -402,8 +403,8 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         found_occurrences_count = 0
 
         for (
-            section_file_separator,
-            section_found_occurrences,
+                section_file_separator,
+                section_found_occurrences,
         ) in found_occurrences.items():
             found_occurrences_count += len(section_found_occurrences)
             text_data = self.file.get_section_content(section_file_separator)
@@ -417,9 +418,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
                 )
 
                 found_string_extra_chars = text_data[
-                    position_end : position_end
-                    + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
-                ]
+                                           position_end: position_end
+                                                         + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
+                                           ]
 
                 section_identifier = SectionIdentifier(
                     section_file_separator=section_file_separator
@@ -442,9 +443,9 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
 
     def execute_add_section(self, *args):
         if (
-            not args[0]
-            or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
-            or args[0].isspace()
+                not args[0]
+                or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+                or args[0].isspace()
         ):
             self.popup.content.add_section_result_message = "Invalid name"
             return
@@ -477,6 +478,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.dismiss()
         self.popup = Popup()  # TODO check
 
+    # TODO switch to MDFileManager
     def press_menu_item_open_file(self, *args):
         content = OpenFilePopup(
             open_file=self.execute_open_file, cancel=self.cancel_popup
@@ -484,7 +486,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Open File",
             content=content,
-            # size_hint=(0.9, 0.9)
+            size_hint=(0.7, 0.9)
         )
         self.popup.open()
 
@@ -501,6 +503,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def press_menu_item_save_file(self, *args):
         self.save_current_section_to_file()
 
+    # TODO switch to MDDialog
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataPopup(
             show_file_metadata_label=self.model.formatted, cancel=self.cancel_popup
@@ -508,10 +511,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Show File metadata",
             content=content,
-            # size_hint=(0.9, 0.9)
+            size_hint=(0.7, 0.9)
         )
         self.popup.open()
 
+    # TODO switch to MDDialog
     def press_menu_item_show_app_metadata(self, *args):
         app_info = linesep.join(APP_METADATA_ROWS)
 
@@ -523,10 +527,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Show App metadata",
             content=content,
-            # size_hint=(0.9, 0.9)
+            size_hint=(0.7, 0.9)
         )
         self.popup.open()
 
+    # TODO switch to MDDialog
     def press_icon_search(self, *args):
         content = SearchPopup(
             get_search_switch_state=self.get_search_switch_state,
@@ -539,10 +544,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Search",
             content=content,
-            # size_hint=(0.9, 0.9)
+            size_hint=(0.7, 0.9)
         )
         self.popup.open()
 
+    # TODO switch to MDDialog
     def press_add_section(self, *args):
         content = AddSectionPopup(
             add_section_result_message="",
@@ -552,7 +558,7 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Add section",
             content=content,
-            # size_hint=(0.9, 0.9)
+            size_hint=(0.7, 0.9)
         )
         self.popup.open()
 
@@ -574,10 +580,11 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.auto_save_text_input_change_counter += 1
 
         if (
-            self.auto_save_text_input_change_counter
-            == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
+                self.auto_save_text_input_change_counter
+                == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
         ):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
+
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

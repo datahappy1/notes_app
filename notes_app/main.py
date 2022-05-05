@@ -19,7 +19,7 @@ class NotesApp(MDApp):
         self.model = MyScreenModel()
         self.controller = MyScreenController(settings=settings, model=self.model)
 
-    def _on_request_close(self, *args):
+    def _on_request_close(self, *source, **args):
         if self.controller.view.is_unsaved_change:
             self.controller.view.save_current_section_to_file()
 
@@ -27,15 +27,15 @@ class NotesApp(MDApp):
         # 'Red', 'Pink', 'Purple', 'DeepPurple', 'Indigo', 'Blue', 'LightBlue',
         # 'Cyan', 'Teal', 'Green', 'LightGreen', 'Lime', 'Yellow', 'Amber',
         # 'Orange', 'DeepOrange', 'Brown', 'Gray', 'BlueGray'
-        self.theme_cls.primary_palette = "Blue"
-        self.theme_cls.accent_palette = "Red"
+        self.theme_cls.primary_palette = "DeepPurple"
+        self.theme_cls.accent_palette = "LightBlue"
 
         # '50', '100', '200', '300', '400', '500', '600', '700', '800', '900',
         # 'A100', 'A200', 'A400', 'A700'
-        self.theme_cls.primary_hue = "A700"
+        self.theme_cls.primary_hue = "A400"
 
         # 'Light', 'Dark'
-        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.theme_style = "Light"
 
         Window.bind(on_request_close=self._on_request_close)
 
