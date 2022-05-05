@@ -6,11 +6,11 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import ObjectProperty, StringProperty
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.floatlayout import MDFloatLayout
 from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.list import MDList, OneLineAvatarIconListItem, ThreeLineListItem
@@ -48,7 +48,7 @@ class ItemDrawer(OneLineAvatarIconListItem):
     delete = ObjectProperty()
 
 
-class ContentNavigationDrawer(BoxLayout):
+class ContentNavigationDrawer(MDBoxLayout):
     pass
 
 
@@ -65,23 +65,23 @@ class DrawerList(ThemableBehavior, MDList):
         instance_item.text_color = self.theme_cls.primary_color
 
 
-class OpenFilePopup(FloatLayout):
+class OpenFilePopup(MDFloatLayout):
     open_file = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
-class ShowFileMetadataPopup(FloatLayout):
+class ShowFileMetadataPopup(MDFloatLayout):
     show_file_metadata_label = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
-class ShowAppMetadataPopup(FloatLayout):
+class ShowAppMetadataPopup(MDFloatLayout):
     show_app_metadata_label = ObjectProperty(None)
     execute_goto_external_url = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
-class AddSectionPopup(FloatLayout):
+class AddSectionPopup(MDFloatLayout):
     add_section_result_message = StringProperty(None)
     execute_add_section = ObjectProperty(None)
     cancel = ObjectProperty(None)
@@ -91,7 +91,7 @@ class MyToggleButton(MDFlatButton, MDToggleButton):
     pass
 
 
-class SearchPopup(FloatLayout):
+class SearchPopup(MDFloatLayout):
     get_search_switch_state = ObjectProperty(None)
     search_switch_callback = ObjectProperty(None)
     search_string_placeholder = StringProperty(None)
@@ -130,7 +130,7 @@ class MenuSettingsItems(Enum):
     ShowAppInfo = "Show application info"
 
 
-class MyScreenView(BoxLayout, MDScreen, Observer):
+class MyScreenView(MDBoxLayout, MDScreen, Observer):
     """"
     A class that implements the visual presentation `MyScreenModel`.
 
@@ -478,7 +478,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         self.popup.dismiss()
         self.popup = Popup()  # TODO check
 
-    # TODO switch to MDFileManager
     def press_menu_item_open_file(self, *args):
         content = OpenFilePopup(
             open_file=self.execute_open_file, cancel=self.cancel_popup
@@ -503,7 +502,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
     def press_menu_item_save_file(self, *args):
         self.save_current_section_to_file()
 
-    # TODO switch to MDDialog
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataPopup(
             show_file_metadata_label=self.model.formatted, cancel=self.cancel_popup
@@ -515,7 +513,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         )
         self.popup.open()
 
-    # TODO switch to MDDialog
     def press_menu_item_show_app_metadata(self, *args):
         app_info = linesep.join(APP_METADATA_ROWS)
 
@@ -531,7 +528,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         )
         self.popup.open()
 
-    # TODO switch to MDDialog
     def press_icon_search(self, *args):
         content = SearchPopup(
             get_search_switch_state=self.get_search_switch_state,
@@ -548,7 +544,6 @@ class MyScreenView(BoxLayout, MDScreen, Observer):
         )
         self.popup.open()
 
-    # TODO switch to MDDialog
     def press_add_section(self, *args):
         content = AddSectionPopup(
             add_section_result_message="",
