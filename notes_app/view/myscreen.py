@@ -6,11 +6,10 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import ObjectProperty, StringProperty
-from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.dialog import MDDialog
 from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
 from kivymd.uix.button import MDFlatButton
 from kivymd.uix.list import MDList, OneLineAvatarIconListItem, ThreeLineListItem
@@ -65,23 +64,23 @@ class DrawerList(ThemableBehavior, MDList):
         instance_item.text_color = self.theme_cls.primary_color
 
 
-class OpenFilePopup(MDFloatLayout):
+class OpenFileDialogContent(MDBoxLayout):
     open_file = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
-class ShowFileMetadataPopup(MDFloatLayout):
+class ShowFileMetadataDialogContent(MDBoxLayout):
     show_file_metadata_label = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
-class ShowAppMetadataPopup(MDFloatLayout):
+class ShowAppMetadataDialogContent(MDBoxLayout):
     show_app_metadata_label = ObjectProperty(None)
     execute_goto_external_url = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
-class AddSectionPopup(MDFloatLayout):
+class AddSectionDialogContent(MDBoxLayout):
     add_section_result_message = StringProperty(None)
     execute_add_section = ObjectProperty(None)
     cancel = ObjectProperty(None)
@@ -91,7 +90,7 @@ class MyToggleButton(MDFlatButton, MDToggleButton):
     pass
 
 
-class SearchPopup(MDFloatLayout):
+class SearchDialogContent(MDBoxLayout):
     get_search_switch_state = ObjectProperty(None)
     search_switch_callback = ObjectProperty(None)
     search_string_placeholder = StringProperty(None)
@@ -149,6 +148,8 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.menu_settings = self.get_menu_settings()
         self.popup = None
         self.snackbar = None
+
+        self.dialog = None
 
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
@@ -334,12 +335,12 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             self.filter_data_split_by_section(
                 section_identifier=self.file.default_section_identifier
             )
-            self.cancel_popup()
+            self.cancel_dialog()
 
         except ValueError:
             self.file.delete_all_section_identifiers()
             self.file.delete_all_sections_content()
-            self.cancel_popup()
+            self.cancel_dialog()
             self.press_add_section()
 
     def execute_goto_search_result(self, custom_list_item):
@@ -363,7 +364,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         cursor_position = self.text_section_view.get_cursor_from_index(position)
         self.text_section_view.cursor = cursor_position
 
-        self.cancel_popup()
+        self.cancel_dialog()
 
     def get_search_switch_state(self, switch_id):
         if switch_id == "search_case_sensitive_switch":
@@ -383,12 +384,12 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
 
     def execute_search(self, *args):
         if not validate_search_input(input_string=args[0]):
-            self.popup.content.search_results_message = "Invalid search"
+            self.dialog.content_cls.search_results_message = "Invalid search"
             return
 
         self.last_searched_string = args[0]
 
-        self.popup.content.results_list.clear_widgets()
+        self.dialog.content_cls.results_list.clear_widgets()
 
         found_occurrences = self.search.search_for_occurrences(
             pattern=self.last_searched_string,
@@ -397,7 +398,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         )
 
         if not found_occurrences:
-            self.popup.content.search_results_message = "No match found"
+            self.dialog.content_cls.search_results_message = "No match found"
             return
 
         found_occurrences_count = 0
@@ -426,7 +427,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
                     section_file_separator=section_file_separator
                 )
 
-                self.popup.content.results_list.add_widget(
+                self.dialog.content_cls.results_list.add_widget(
                     CustomListItem(
                         text=f"{found_string_marked}{found_string_extra_chars}...",
                         secondary_text=f"{SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE}{section_identifier.section_name}",
@@ -435,7 +436,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
                     )
                 )
 
-        self.popup.content.search_results_message = (
+        self.dialog.content_cls.search_results_message = (
             f"Matches on {found_occurrences_count} positions found"
             if found_occurrences_count > 1
             else f"Match on {found_occurrences_count} position found"
@@ -447,14 +448,14 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
                 or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
                 or args[0].isspace()
         ):
-            self.popup.content.add_section_result_message = "Invalid name"
+            self.dialog.content_cls.add_section_result_message = "Invalid name"
             return
 
         section_name = args[0]
         section_identifier = SectionIdentifier(section_name=section_name)
 
         if section_identifier.section_file_separator in self.file.section_identifiers:
-            self.popup.content.add_section_result_message = "Name already exists"
+            self.dialog.content_cls.add_section_result_message = "Name already exists"
             return
 
         self.file.add_section_identifier(
@@ -469,25 +470,26 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
 
         self.set_drawer_items(section_identifiers=self.file.section_identifiers)
 
-        self.cancel_popup()
+        self.cancel_dialog()
 
     def execute_goto_external_url(self):
         return webbrowser.open(EXTERNAL_REPOSITORY_URL)
 
-    def cancel_popup(self):
-        self.popup.dismiss()
-        self.popup = Popup()  # TODO check
+    def cancel_dialog(self, *args):
+        self.dialog.dismiss()
+        self.dialog = MDDialog()
 
     def press_menu_item_open_file(self, *args):
-        content = OpenFilePopup(
-            open_file=self.execute_open_file, cancel=self.cancel_popup
+        content = OpenFileDialogContent(
+            open_file=self.execute_open_file,
+            cancel=self.cancel_dialog,
         )
-        self.popup = Popup(
+        self.dialog = MDDialog(
             title="Open File",
-            content=content,
-            size_hint=(0.6, 0.9)
+            type="custom",
+            content_cls=content,
         )
-        self.popup.open()
+        self.dialog.open()
 
     def save_current_section_to_file(self):
         self.file.set_section_content(
@@ -503,59 +505,62 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.save_current_section_to_file()
 
     def press_menu_item_show_file_metadata(self, *args):
-        content = ShowFileMetadataPopup(
-            show_file_metadata_label=self.model.formatted, cancel=self.cancel_popup
+        content = ShowFileMetadataDialogContent(
+            show_file_metadata_label=self.model.formatted,
+            cancel=self.cancel_dialog,
         )
-        self.popup = Popup(
-            title="Show File metadata",
-            content=content,
-            size_hint=(0.6, 0.6)
+        self.dialog = MDDialog(
+            title="Show File metadata:",
+            type="custom",
+            content_cls=content,
         )
-        self.popup.open()
+        self.dialog.open()
 
     def press_menu_item_show_app_metadata(self, *args):
         app_info = linesep.join(APP_METADATA_ROWS)
 
-        content = ShowAppMetadataPopup(
+        content = ShowAppMetadataDialogContent(
             show_app_metadata_label=app_info,
             execute_goto_external_url=self.execute_goto_external_url,
-            cancel=self.cancel_popup,
+            cancel=self.cancel_dialog,
         )
-        self.popup = Popup(
-            title="Show App metadata",
-            content=content,
-            size_hint=(0.6, 0.6)
+        self.dialog = MDDialog(
+            title="Show App metadata:",
+            type="custom",
+            content_cls=content,
         )
-        self.popup.open()
+        self.dialog.open()
 
     def press_icon_search(self, *args):
-        content = SearchPopup(
+        content = SearchDialogContent(
             get_search_switch_state=self.get_search_switch_state,
             search_switch_callback=self.search_switch_callback,
             search_string_placeholder=self.last_searched_string,
             search_results_message="",
             execute_search=self.execute_search,
-            cancel=self.cancel_popup,
+            cancel=self.cancel_dialog,
         )
-        self.popup = Popup(
-            title="Search",
-            content=content,
-            size_hint=(0.6, 0.9)
+
+        self.dialog = MDDialog(
+            title="Search:",
+            type="custom",
+            content_cls=content,
         )
-        self.popup.open()
+
+        self.dialog.open()
 
     def press_add_section(self, *args):
-        content = AddSectionPopup(
+        content = AddSectionDialogContent(
             add_section_result_message="",
             execute_add_section=self.execute_add_section,
-            cancel=self.cancel_popup,
+            cancel=self.cancel_dialog,
         )
-        self.popup = Popup(
-            title="Add section",
-            content=content,
-            size_hint=(0.6, 0.6)
+        self.dialog = MDDialog(
+            title="Add section:",
+            type="custom",
+            content_cls=content,
         )
-        self.popup.open()
+        self.dialog.open()
 
     def press_delete_section(self, section_item):
         if len(self.file.section_identifiers) == 1:

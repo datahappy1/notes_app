@@ -24,7 +24,7 @@ class NotesApp(MDApp):
             self.controller.view.save_current_section_to_file()
 
     def build(self):
-        self.theme_cls.theme_style = "Dark"  # "Light"
+        self.theme_cls.theme_style = "Dark"
 
         Window.bind(on_request_close=self._on_request_close)
 

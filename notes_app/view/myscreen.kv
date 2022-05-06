@@ -79,14 +79,19 @@
                         elevation_normal: 12
                         pos_hint: {'x': .8, 'y':.05}
 
-<OpenFilePopup>:
+<OpenFileDialogContent>:
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "420dp"
+
     MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#333333")
-        color_normal: get_color_from_hex("#718089")
-        color_active: get_color_from_hex("#f3ab44")
+        #md_bg_color: get_color_from_hex("#333333")
+        #color_normal: get_color_from_hex("#718089")
+        #color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
 
         FileChooserListView:
@@ -96,22 +101,26 @@
         MDBoxLayout:
             size_hint_y: None
             height: 30
-            Button:
+            MDFlatButton:
                 text: "Cancel"
                 on_release: root.cancel()
-
-            Button:
+            MDFlatButton:
                 text: "Load"
                 on_release: root.open_file(filechooser.path, filechooser.selection)
 
-<ShowFileMetadataPopup>
+<ShowFileMetadataDialogContent>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "420dp"
+
     MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#333333")
-        color_normal: get_color_from_hex("#718089")
-        color_active: get_color_from_hex("#f3ab44")
+        #md_bg_color: get_color_from_hex("#333333")
+        #color_normal: get_color_from_hex("#718089")
+        #color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
@@ -123,18 +132,23 @@
         MDBoxLayout:
             size_hint_y: None
             height: 30
-            Button:
+            MDFlatButton:
                 text: "Close"
                 on_release: root.cancel()
 
-<ShowAppMetadataPopup>
+<ShowAppMetadataDialogContent>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "420dp"
+
     MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#333333")
-        color_normal: get_color_from_hex("#718089")
-        color_active: get_color_from_hex("#f3ab44")
+        #md_bg_color: get_color_from_hex("#333333")
+        #color_normal: get_color_from_hex("#718089")
+        #color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDBoxLayout:
@@ -155,20 +169,25 @@
         MDBoxLayout:
             size_hint_y: None
             height: 30
-            Button:
+            MDFlatButton:
                 text: "Close"
                 on_release: root.cancel()
 
-<SearchPopup>
+<SearchDialogContent>:
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "420dp"
+
     results_list: scroll
 
     MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#333333")
-        color_normal: get_color_from_hex("#718089")
-        color_active: get_color_from_hex("#f3ab44")
+        #md_bg_color: get_color_from_hex("#333333")
+        #color_normal: get_color_from_hex("#718089")
+        #color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
@@ -233,21 +252,26 @@
         MDBoxLayout:
             size_hint_y: None
             height: 30
-            Button:
+            MDFlatButton:
                 text: "Cancel"
                 on_release: root.cancel()
-            Button:
+            MDFlatButton:
                 text: "Search"
                 on_release: root.execute_search(search_string_input_value.text)
 
-<AddSectionPopup>
+<AddSectionDialogContent>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "420dp"
+
     MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#333333")
-        color_normal: get_color_from_hex("#718089")
-        color_active: get_color_from_hex("#f3ab44")
+        #md_bg_color: get_color_from_hex("#333333")
+        #color_normal: get_color_from_hex("#718089")
+        #color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
@@ -264,9 +288,9 @@
         BoxLayout:
             size_hint_y: None
             height: 30
-            Button:
+            MDFlatButton:
                 text: "Cancel"
                 on_release: root.cancel()
-            Button:
+            MDFlatButton:
                 text: "Add"
                 on_release: root.execute_add_section(section_name_input_value.text)
