@@ -53,9 +53,7 @@
                     multiline: True
                     do_wrap: True
                     markup: True
-
                     font_name: "Roboto-Bold"
-
                     use_bubble: True
                     on_text: root.text_input_changed_callback()
 
@@ -63,7 +61,7 @@
                 id: nav_drawer
 
                 ContentNavigationDrawer:
-                    md_bg_color: get_color_from_hex("#344954")
+                    md_bg_color: get_color_from_hex("#004080")
                     color_normal: get_color_from_hex("#718089")
                     color_active: get_color_from_hex("#f3ab44")
 
@@ -86,7 +84,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#344954")
+        md_bg_color: get_color_from_hex("#004080")
         color_normal: get_color_from_hex("#718089")
         color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
@@ -95,7 +93,7 @@
             id: filechooser
             filters: [lambda folder, filename: filename.endswith('.txt')]
 
-        BoxLayout:
+        MDBoxLayout:
             size_hint_y: None
             height: 30
             Button:
@@ -111,7 +109,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#344954")
+        md_bg_color: get_color_from_hex("#004080")
         color_normal: get_color_from_hex("#718089")
         color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
@@ -120,14 +118,13 @@
             font_style: "H6"
             halign: "center"
             valign: "center"
-            markup: True
             text: root.show_file_metadata_label
 
-        BoxLayout:
+        MDBoxLayout:
             size_hint_y: None
             height: 30
             Button:
-                text: "Cancel"
+                text: "Close"
                 on_release: root.cancel()
 
 <ShowAppMetadataPopup>
@@ -135,25 +132,27 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#344954")
+        md_bg_color: get_color_from_hex("#004080")
         color_normal: get_color_from_hex("#718089")
         color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
 
-        MDLabel:
-            font_style: "H6"
-            halign: "center"
-            valign: "center"
-            markup: True
-            text: root.show_app_metadata_label
+        MDBoxLayout:
+            orientation: "vertical"
 
-        MDIconButton:
-            icon: "github"
-            pos_hint: {"center_x": .5, "center_y": .2}
-            on_release:
-                root.execute_goto_external_url()
+            MDLabel:
+                font_style: "H6"
+                halign: "center"
+                valign: "center"
+                text: root.show_app_metadata_label
 
-        BoxLayout:
+            MDIconButton:
+                icon: "github"
+                pos_hint: {"center_x": .5, "center_y": .5}
+                on_release:
+                    root.execute_goto_external_url()
+
+        MDBoxLayout:
             size_hint_y: None
             height: 30
             Button:
@@ -167,7 +166,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#344954")
+        md_bg_color: get_color_from_hex("#004080")
         color_normal: get_color_from_hex("#718089")
         color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]
@@ -231,7 +230,7 @@
             hint_text: "What string to search for?"
             max_text_length: 10
 
-        BoxLayout:
+        MDBoxLayout:
             size_hint_y: None
             height: 30
             Button:
@@ -246,7 +245,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        md_bg_color: get_color_from_hex("#344954")
+        md_bg_color: get_color_from_hex("#004080")
         color_normal: get_color_from_hex("#718089")
         color_active: get_color_from_hex("#f3ab44")
         padding: [dp(50),dp(30),dp(50),dp(30)]

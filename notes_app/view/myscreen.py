@@ -485,7 +485,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Open File",
             content=content,
-            size_hint=(0.7, 0.9)
+            size_hint=(0.6, 0.9)
         )
         self.popup.open()
 
@@ -509,7 +509,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Show File metadata",
             content=content,
-            size_hint=(0.7, 0.9)
+            size_hint=(0.6, 0.6)
         )
         self.popup.open()
 
@@ -524,7 +524,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Show App metadata",
             content=content,
-            size_hint=(0.7, 0.9)
+            size_hint=(0.6, 0.6)
         )
         self.popup.open()
 
@@ -540,7 +540,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Search",
             content=content,
-            size_hint=(0.7, 0.9)
+            size_hint=(0.6, 0.9)
         )
         self.popup.open()
 
@@ -553,7 +553,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.popup = Popup(
             title="Add section",
             content=content,
-            size_hint=(0.7, 0.9)
+            size_hint=(0.6, 0.6)
         )
         self.popup.open()
 
