@@ -3,8 +3,8 @@ from os import getcwd, linesep
 
 import pytest
 from kivy.properties import ObjectProperty, StringProperty
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.popup import Popup
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.dialog import MDDialog
 from kivymd.app import MDApp
 from kivymd.uix.menu import MDDropdownMenu
 
@@ -14,7 +14,7 @@ from notes_app.settings import Settings
 from notes_app.utils.file import File, SectionIdentifier
 from notes_app.utils.search import Search
 from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageItems, ItemDrawer, \
-    ShowFileMetadataPopup, ShowAppMetadataPopup, CustomSnackbar, CustomListItem, APP_METADATA_ROWS, \
+    ShowFileMetadataDialogContent, ShowAppMetadataDialogContent, CustomSnackbar, CustomListItem, APP_METADATA_ROWS, \
     AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
 
 settings = Settings()
@@ -185,19 +185,19 @@ class TestView:
 
         value = MenuStorageItems.ChooseFile.value
         screen.press_menu_storage_item_callback(text_item=value)
-        assert isinstance(screen.popup, Popup)
-        assert screen.popup.title == "Open File"
+        assert isinstance(screen.dialog, MDDialog)
+        assert screen.dialog.title == "Open File:"
 
         value = MenuStorageItems.ShowFileInfo.value
         screen.press_menu_storage_item_callback(text_item=value)
-        assert isinstance(screen.popup, Popup)
-        assert screen.popup.title == "Show File metadata"
-        assert isinstance(screen.popup.content, ShowFileMetadataPopup)
+        assert isinstance(screen.dialog, MDDialog)
+        assert screen.dialog.title == "Show File metadata:"
+        assert isinstance(screen.dialog.content_cls, ShowFileMetadataDialogContent)
 
         value = MenuStorageItems.Save.value
         model_change_ts_before = get_app.model.last_updated_on
         screen.press_menu_storage_item_callback(text_item=value)
-        assert isinstance(screen.popup, Popup)
+        assert isinstance(screen.dialog, MDDialog)
         model_change_ts_after = get_app.model.last_updated_on
         assert model_change_ts_after >= model_change_ts_before
 
@@ -266,9 +266,9 @@ class TestView:
         # ShowAppInfo
         value = MenuSettingsItems.ShowAppInfo.value
         screen.press_menu_settings_item_callback(text_item=value)
-        assert isinstance(screen.popup, Popup)
-        assert screen.popup.title == "Show App metadata"
-        assert isinstance(screen.popup.content, ShowAppMetadataPopup)
+        assert isinstance(screen.dialog, MDDialog)
+        assert screen.dialog.title == "Show App metadata:"
+        assert isinstance(screen.dialog.content_cls, ShowAppMetadataDialogContent)
 
     def test_notify_model_is_changed(self, get_app):
         screen = get_app.controller.get_screen()
@@ -297,11 +297,11 @@ class TestView:
         screen = get_app.controller.get_screen()
 
         screen.press_menu_item_open_file()
-        assert screen.popup.title == "Open File"
+        assert screen.dialog.title == "Open File:"
 
         # NOTES_FILE_PATH
         screen.execute_open_file(path=None, filename=(NOTES_FILE_PATH,))
-        assert screen.popup.title == "No title"
+        assert screen.dialog.title == ""
 
         assert screen.file._file_path == NOTES_FILE_PATH
         assert isinstance(screen.ids.md_list.children[0], ItemDrawer)
@@ -313,7 +313,7 @@ class TestView:
         assert screen.file._section_identifiers == []
         assert screen.file._data_by_sections == {}
 
-        assert screen.popup.title == "Add section"
+        assert screen.dialog.title == "Add section:"
 
     def test_execute_goto_search_result(self, get_app):
         screen = get_app.controller.get_screen()
@@ -325,11 +325,11 @@ class TestView:
 
         custom_list_item = _CustomListItem("second", "10")
 
-        screen.popup = Popup()
+        screen.dialog = MDDialog()
 
         assert screen.execute_goto_search_result(custom_list_item) is None
         assert screen.text_section_view.cursor == (10, 0)
-        assert screen.popup.title == "No title"
+        assert screen.dialog.title == ""
 
     def test_get_search_switch_state(self, get_app):
         screen = get_app.controller.get_screen()
@@ -359,7 +359,7 @@ class TestView:
     def test_execute_search(self, get_app):
         screen = get_app.controller.get_screen()
 
-        class SearchPopup(FloatLayout):
+        class SearchDialogContent(MDBoxLayout):
             get_search_switch_state = ObjectProperty(None)
             switch_callback = ObjectProperty(None)
             search_string_placeholder = StringProperty(None)
@@ -370,7 +370,7 @@ class TestView:
         def _(*args):
             return True
 
-        content = SearchPopup(
+        content = SearchDialogContent(
             get_search_switch_state=_,
             switch_callback=_,
             search_string_placeholder="",
@@ -379,97 +379,97 @@ class TestView:
             cancel=_
         )
 
-        screen.popup = Popup(
+        screen.dialog = MDDialog(
             title="test title",
-            content=content,
+            content_cls=content,
         )
-        screen.popup.open()
+        screen.dialog.open()
 
         assert screen.execute_search("") is None
-        assert screen.popup.content.search_results_message == "Invalid search"
-        assert screen.popup.content.results_list.children == []
+        assert screen.dialog.content_cls.search_results_message == "Invalid search"
+        assert screen.dialog.content_cls.results_list.children == []
 
         assert screen.execute_search(None) is None
-        assert screen.popup.content.search_results_message == "Invalid search"
-        assert screen.popup.content.results_list.children == []
+        assert screen.dialog.content_cls.search_results_message == "Invalid search"
+        assert screen.dialog.content_cls.results_list.children == []
 
         screen.search.search_all_sections = False
         assert screen.execute_search("lor") is None
-        assert screen.popup.content.search_results_message == "No match found"
-        assert screen.popup.content.results_list.children == []
+        assert screen.dialog.content_cls.search_results_message == "No match found"
+        assert screen.dialog.content_cls.results_list.children == []
 
         screen.search.search_all_sections = True
         assert screen.execute_search("lor") is None
-        assert screen.popup.content.search_results_message == "Match on 1 position found"
-        assert len(screen.popup.content.results_list.children) == 1
-        assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
-        assert screen.popup.content.results_list.children[0].text == f"[b][color=ff0000]lor[/color][/b]em timet..."
-        assert screen.popup.content.results_list.children[0].secondary_text == "section second"
-        assert screen.popup.content.results_list.children[0].tertiary_text == "position 13"
-        assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
+        assert screen.dialog.content_cls.search_results_message == "Match on 1 position found"
+        assert len(screen.dialog.content_cls.results_list.children) == 1
+        assert isinstance(screen.dialog.content_cls.results_list.children[0], CustomListItem)
+        assert screen.dialog.content_cls.results_list.children[0].text == f"[b][color=ff0000]lor[/color][/b]em timet..."
+        assert screen.dialog.content_cls.results_list.children[0].secondary_text == "section second"
+        assert screen.dialog.content_cls.results_list.children[0].tertiary_text == "position 13"
+        assert screen.dialog.content_cls.results_list.children[0].on_release.__str__().startswith(
             "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
         )
 
         screen.search.search_case_sensitive = False
         assert screen.execute_search("Quod") is None
-        assert screen.popup.content.search_results_message == "Match on 1 position found"
-        assert len(screen.popup.content.results_list.children) == 1
-        assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
-        assert screen.popup.content.results_list.children[0].text == \
+        assert screen.dialog.content_cls.search_results_message == "Match on 1 position found"
+        assert len(screen.dialog.content_cls.results_list.children) == 1
+        assert isinstance(screen.dialog.content_cls.results_list.children[0], CustomListItem)
+        assert screen.dialog.content_cls.results_list.children[0].text == \
                f"[b][color=ff0000]Quod[/color][/b] equidem non reprehendo\n..."
-        assert screen.popup.content.results_list.children[0].secondary_text == "section first"
-        assert screen.popup.content.results_list.children[0].tertiary_text == "position 0"
-        assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
+        assert screen.dialog.content_cls.results_list.children[0].secondary_text == "section first"
+        assert screen.dialog.content_cls.results_list.children[0].tertiary_text == "position 0"
+        assert screen.dialog.content_cls.results_list.children[0].on_release.__str__().startswith(
             "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
         )
 
         screen.search.search_case_sensitive = True
         assert screen.execute_search("Quod") is None
-        assert screen.popup.content.search_results_message == "Match on 1 position found"
-        assert len(screen.popup.content.results_list.children) == 1
-        assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
-        assert screen.popup.content.results_list.children[0].text == \
+        assert screen.dialog.content_cls.search_results_message == "Match on 1 position found"
+        assert len(screen.dialog.content_cls.results_list.children) == 1
+        assert isinstance(screen.dialog.content_cls.results_list.children[0], CustomListItem)
+        assert screen.dialog.content_cls.results_list.children[0].text == \
                f"[b][color=ff0000]Quod[/color][/b] equidem non reprehendo\n..."
-        assert screen.popup.content.results_list.children[0].secondary_text == "section first"
-        assert screen.popup.content.results_list.children[0].tertiary_text == "position 0"
-        assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
+        assert screen.dialog.content_cls.results_list.children[0].secondary_text == "section first"
+        assert screen.dialog.content_cls.results_list.children[0].tertiary_text == "position 0"
+        assert screen.dialog.content_cls.results_list.children[0].on_release.__str__().startswith(
             "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
         )
 
         screen.search.search_case_sensitive = False
         assert screen.execute_search("Qu") is None
-        assert screen.popup.content.search_results_message == "Matches on 3 positions found"
-        assert len(screen.popup.content.results_list.children) == 3
+        assert screen.dialog.content_cls.search_results_message == "Matches on 3 positions found"
+        assert len(screen.dialog.content_cls.results_list.children) == 3
 
-        assert isinstance(screen.popup.content.results_list.children[0], CustomListItem)
-        assert screen.popup.content.results_list.children[0].text == \
+        assert isinstance(screen.dialog.content_cls.results_list.children[0], CustomListItem)
+        assert screen.dialog.content_cls.results_list.children[0].text == \
                f"[b][color=ff0000]Qu[/color][/b]is istum dolorem timet..."
-        assert screen.popup.content.results_list.children[0].secondary_text == "section second"
-        assert screen.popup.content.results_list.children[0].tertiary_text == "position 0"
-        assert screen.popup.content.results_list.children[0].on_release.__str__().startswith(
+        assert screen.dialog.content_cls.results_list.children[0].secondary_text == "section second"
+        assert screen.dialog.content_cls.results_list.children[0].tertiary_text == "position 0"
+        assert screen.dialog.content_cls.results_list.children[0].on_release.__str__().startswith(
             "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
         )
-        assert isinstance(screen.popup.content.results_list.children[1], CustomListItem)
-        assert screen.popup.content.results_list.children[1].text == \
+        assert isinstance(screen.dialog.content_cls.results_list.children[1], CustomListItem)
+        assert screen.dialog.content_cls.results_list.children[1].text == \
                f"[b][color=ff0000]qu[/color][/b]idem non reprehendo\n..."
-        assert screen.popup.content.results_list.children[1].secondary_text == "section first"
-        assert screen.popup.content.results_list.children[1].tertiary_text == "position 6"
-        assert screen.popup.content.results_list.children[1].on_release.__str__().startswith(
+        assert screen.dialog.content_cls.results_list.children[1].secondary_text == "section first"
+        assert screen.dialog.content_cls.results_list.children[1].tertiary_text == "position 6"
+        assert screen.dialog.content_cls.results_list.children[1].on_release.__str__().startswith(
             "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
         )
-        assert isinstance(screen.popup.content.results_list.children[2], CustomListItem)
-        assert screen.popup.content.results_list.children[2].text == \
+        assert isinstance(screen.dialog.content_cls.results_list.children[2], CustomListItem)
+        assert screen.dialog.content_cls.results_list.children[2].text == \
                f"[b][color=ff0000]Qu[/color][/b]od equidem non reprehendo\n..."
-        assert screen.popup.content.results_list.children[2].secondary_text == "section first"
-        assert screen.popup.content.results_list.children[2].tertiary_text == "position 0"
-        assert screen.popup.content.results_list.children[2].on_release.__str__().startswith(
+        assert screen.dialog.content_cls.results_list.children[2].secondary_text == "section first"
+        assert screen.dialog.content_cls.results_list.children[2].tertiary_text == "position 0"
+        assert screen.dialog.content_cls.results_list.children[2].on_release.__str__().startswith(
             "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
         )
 
     def test_execute_add_section(self, get_app):
         screen = get_app.controller.get_screen()
 
-        class _AddSectionPopup(FloatLayout):
+        class _AddSectionDialogContent(MDBoxLayout):
             add_section_result_message = StringProperty(None)
             execute_add_section = ObjectProperty(None)
             cancel = ObjectProperty(None)
@@ -477,29 +477,29 @@ class TestView:
         def _(*args):
             return True
 
-        content = _AddSectionPopup(
+        content = _AddSectionDialogContent(
             add_section_result_message="",
             execute_add_section=_,
             cancel=_
         )
 
-        screen.popup = Popup(
+        screen.dialog = MDDialog(
             title="test title",
-            content=content,
+            content_cls=content,
         )
-        screen.popup.open()
+        screen.dialog.open()
 
         section_name = ""
         assert screen.execute_add_section(section_name) is None
-        assert screen.popup.content.add_section_result_message == "Invalid name"
+        assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
 
         section_name = None
         assert screen.execute_add_section(section_name) is None
-        assert screen.popup.content.add_section_result_message == "Invalid name"
+        assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
 
         section_name = "first"
         assert screen.execute_add_section(section_name) is None
-        assert screen.popup.content is None
+        assert screen.dialog.content_cls is None
 
         section_name = "new section"
         assert len(screen.file.section_identifiers) == 3
@@ -519,10 +519,10 @@ class TestView:
         # assert screen.execute_goto_external_url()
         pass
 
-    def test_cancel_popup(self, get_app):
+    def test_cancel_dialog(self, get_app):
         screen = get_app.controller.get_screen()
 
-        class _AddSectionPopup(FloatLayout):
+        class _AddSectionDialogContent(MDBoxLayout):
             add_section_result_message = StringProperty(None)
             execute_add_section = ObjectProperty(None)
             cancel = ObjectProperty(None)
@@ -530,44 +530,44 @@ class TestView:
         def _(*args):
             return True
 
-        content = _AddSectionPopup(
+        content = _AddSectionDialogContent(
             add_section_result_message="test message",
             execute_add_section=_,
             cancel=_
         )
 
-        screen.popup = Popup(
+        screen.dialog = MDDialog(
             title="test title",
-            content=content,
+            content_cls=content,
         )
-        screen.popup.open()
+        screen.dialog.open()
 
-        assert screen.popup.content.add_section_result_message == "test message"
+        assert screen.dialog.content_cls.add_section_result_message == "test message"
 
-        assert screen.cancel_popup() is None
-        assert screen.popup.content is None
+        assert screen.cancel_dialog() is None
+        assert screen.dialog.content_cls is None
 
     def test_press_menu_item_open_file(self, get_app):
         screen = get_app.controller.get_screen()
 
-        class _OpenFilePopup(FloatLayout):
+        class _OpenFileDialogContent(MDBoxLayout):
             open_file = ObjectProperty(None)
             cancel = ObjectProperty(None)
 
         def _(*args):
             return True
 
-        content = _OpenFilePopup(
+        content = _OpenFileDialogContent(
             open_file=_, cancel=_
         )
-        self.popup = Popup(
+        self.dialog = MDDialog(
             title="Open File",
-            content=content,
+            content_cls=content,
         )
 
         assert screen.press_menu_item_open_file() is None
 
-        assert screen.popup.content.open_file.__str__().startswith(
+        assert screen.dialog.content_cls.open_file.__str__().startswith(
             "<bound method MyScreenView.execute_open_file of <Screen name=''>>"
         )
 
@@ -598,7 +598,7 @@ class TestView:
 
         assert screen.press_menu_item_show_file_metadata() is None
 
-        assert screen.popup.content.show_file_metadata_label == \
+        assert screen.dialog.content_cls.show_file_metadata_label == \
                """File path : {cwd}/assets/sample.txt\r
 File size (bytes) : {file_size}\r
 Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_size, dt_now=screen.model.last_updated_on)
@@ -608,7 +608,7 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_s
 
         assert screen.press_menu_item_show_app_metadata() is None
 
-        assert screen.popup.content.show_app_metadata_label == \
+        assert screen.dialog.content_cls.show_app_metadata_label == \
                linesep.join(APP_METADATA_ROWS)
 
     def test_press_icon_search(self, get_app):
@@ -617,19 +617,19 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_s
         screen.last_searched_string = "test placeholder"
         screen.press_icon_search()
 
-        assert screen.popup.content.get_search_switch_state.__str__().startswith(
+        assert screen.dialog.content_cls.get_search_switch_state.__str__().startswith(
             "<bound method MyScreenView.get_search_switch_state of <Screen name=''>>"
         )
-        assert screen.popup.content.search_switch_callback.__str__().startswith(
+        assert screen.dialog.content_cls.search_switch_callback.__str__().startswith(
             "<bound method MyScreenView.search_switch_callback of <Screen name=''>>"
         )
-        assert screen.popup.content.search_string_placeholder == "test placeholder"
-        assert screen.popup.content.search_results_message == ""
-        assert screen.popup.content.execute_search.__str__().startswith(
+        assert screen.dialog.content_cls.search_string_placeholder == "test placeholder"
+        assert screen.dialog.content_cls.search_results_message == ""
+        assert screen.dialog.content_cls.execute_search.__str__().startswith(
             "<bound method MyScreenView.execute_search of <Screen name=''>>"
         )
-        assert screen.popup.content.cancel.__str__().startswith(
-            "<bound method MyScreenView.cancel_popup of <Screen name=''>>"
+        assert screen.dialog.content_cls.cancel.__str__().startswith(
+            "<bound method MyScreenView.cancel_dialog of <Screen name=''>>"
         )
 
     def test_press_add_section(self, get_app):
@@ -637,12 +637,12 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_s
 
         screen.press_add_section()
 
-        assert screen.popup.content.add_section_result_message == ""
-        assert screen.popup.content.execute_add_section.__str__().startswith(
+        assert screen.dialog.content_cls.add_section_result_message == ""
+        assert screen.dialog.content_cls.execute_add_section.__str__().startswith(
             "<bound method MyScreenView.execute_add_section of <Screen name=''>>"
         )
-        assert screen.popup.content.cancel.__str__().startswith(
-            "<bound method MyScreenView.cancel_popup of <Screen name=''>>"
+        assert screen.dialog.content_cls.cancel.__str__().startswith(
+            "<bound method MyScreenView.cancel_dialog of <Screen name=''>>"
         )
 
     def test_press_delete_section(self, get_app):

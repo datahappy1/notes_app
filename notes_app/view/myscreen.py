@@ -6,12 +6,15 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import ObjectProperty, StringProperty
+from kivy.uix.modalview import ModalView
 from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
+from kivymd.toast import toast
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.list import MDList, OneLineAvatarIconListItem, ThreeLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -146,9 +149,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
 
         self.menu_storage = self.get_menu_storage()
         self.menu_settings = self.get_menu_settings()
-        self.popup = None
         self.snackbar = None
-
         self.dialog = None
 
         self.last_searched_string = str()
@@ -485,7 +486,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             cancel=self.cancel_dialog,
         )
         self.dialog = MDDialog(
-            title="Open File",
+            title="Open File:",
             type="custom",
             content_cls=content,
         )
