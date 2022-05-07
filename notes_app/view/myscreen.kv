@@ -10,9 +10,6 @@
         size_hint_y: None
         height: self.texture_size[1]
         text: root.text
-        # font_size: root.font_size
-        # theme_text_color: 'Custom'
-        # text_color: get_color_from_hex('ffffff')
         shorten: True
         shorten_from: 'right'
         pos_hint: {'center_y': .5}
@@ -39,7 +36,6 @@
 
     MDToolbar:
         id: toolbar
-        md_bg_color: app.theme_cls.bg_dark
         elevation: 8
         left_action_items: [["menu", lambda x: nav_drawer.set_state("open")],["magnify", lambda x: root.press_icon_search()]]
         right_action_items: [["file", lambda x: root.menu_storage.open()],["cog", lambda x: root.menu_settings.open()]]
@@ -62,8 +58,6 @@
 
                 ContentNavigationDrawer:
                     md_bg_color: app.theme_cls.bg_dark
-                    #color_normal: get_color_from_hex("#718089")
-                    #color_active: get_color_from_hex("#f3ab44")
 
                     orientation: "vertical"
                     padding: "8dp"
@@ -89,10 +83,7 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        #md_bg_color: get_color_from_hex("#333333")
-        #color_normal: get_color_from_hex("#718089")
-        #color_active: get_color_from_hex("#f3ab44")
-        #padding: [dp(50),dp(30),dp(50),dp(30)]
+        padding: [dp(50),dp(30),dp(50),dp(30)]
 
         FileChooserListView:
             id: filechooser
@@ -100,11 +91,13 @@
 
         MDBoxLayout:
             size_hint_y: None
-            height: 30
+            height: 40
             MDFlatButton:
+                size_hint: (.5, .8)
                 text: "Cancel"
                 on_release: root.cancel()
-            MDFlatButton:
+            MDRectangleFlatButton:
+                size_hint: (.5, .8)
                 text: "Load"
                 on_release: root.open_file(filechooser.path, filechooser.selection)
 
@@ -118,10 +111,6 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        #md_bg_color: get_color_from_hex("#333333")
-        #color_normal: get_color_from_hex("#718089")
-        #color_active: get_color_from_hex("#f3ab44")
-        #padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
             font_style: "H6"
@@ -131,8 +120,9 @@
 
         MDBoxLayout:
             size_hint_y: None
-            height: 30
-            MDFlatButton:
+            height: 40
+            MDRectangleFlatButton:
+                size_hint: (.5, .8)
                 text: "Close"
                 on_release: root.cancel()
 
@@ -146,10 +136,6 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        #md_bg_color: get_color_from_hex("#333333")
-        #color_normal: get_color_from_hex("#718089")
-        #color_active: get_color_from_hex("#f3ab44")
-        #padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDBoxLayout:
             orientation: "vertical"
@@ -168,8 +154,9 @@
 
         MDBoxLayout:
             size_hint_y: None
-            height: 30
-            MDFlatButton:
+            height: 40
+            MDRectangleFlatButton:
+                size_hint: (.5, .8)
                 text: "Close"
                 on_release: root.cancel()
 
@@ -177,7 +164,7 @@
     orientation: "vertical"
     spacing: "12dp"
     size_hint_y: None
-    height: "420dp"
+    height: "500dp"
 
     results_list: scroll
 
@@ -185,15 +172,11 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        #md_bg_color: get_color_from_hex("#333333")
-        #color_normal: get_color_from_hex("#718089")
-        #color_active: get_color_from_hex("#f3ab44")
-        #padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
             font_style: "H6"
             halign: "center"
-            valign: "center"
+            valign: "bottom"
             text: root.search_results_message
 
         ScrollableLabel:
@@ -204,44 +187,28 @@
         MDBoxLayout:
             orientation: "horizontal"
             adaptive_height: True
-
-            MDLabel:
-                text: "Search in all sections"
-                pos_hint: {'center_x': .5, 'center_y': .5}
+            spacing: "10dp"
 
             MDSwitch:
                 id: search_all_sections_switch
-                pos_hint: {'center_x': .5, 'center_y': .5}
                 active: root.get_search_switch_state("search_all_sections_switch")
                 on_active: root.search_switch_callback("search_all_sections_switch", self.active)
-
-        MDBoxLayout:
-            orientation: "horizontal"
-            adaptive_height: True
-
             MDLabel:
-                text: "Search case sensitive"
-                pos_hint: {'center_x': .5, 'center_y': .5}
+                text: "all sections"
 
             MDSwitch:
                 id: search_case_sensitive_switch
-                pos_hint: {'center_x': .5, 'center_y': .5}
                 active: root.get_search_switch_state("search_case_sensitive_switch")
                 on_active: root.search_switch_callback("search_case_sensitive_switch", self.active)
-
-        MDBoxLayout:
-            orientation: "horizontal"
-            adaptive_height: True
-
             MDLabel:
-                text: "Search full words"
-                pos_hint: {'center_x': .5, 'center_y': .5}
+                text: "case sensitive"
 
             MDSwitch:
                 id: search_full_words_switch
-                pos_hint: {'center_x': .5, 'center_y': .5}
                 active: root.get_search_switch_state("search_full_words_switch")
                 on_active: root.search_switch_callback("search_full_words_switch", self.active)
+            MDLabel:
+                text: "full words"
 
         MDTextField:
             id: search_string_input_value
@@ -251,11 +218,13 @@
 
         MDBoxLayout:
             size_hint_y: None
-            height: 30
+            height: 40
             MDFlatButton:
+                size_hint: (.5, .8)
                 text: "Cancel"
                 on_release: root.cancel()
-            MDFlatButton:
+            MDRectangleFlatButton:
+                size_hint: (.5, .8)
                 text: "Search"
                 on_release: root.execute_search(search_string_input_value.text)
 
@@ -269,10 +238,6 @@
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        #md_bg_color: get_color_from_hex("#333333")
-        #color_normal: get_color_from_hex("#718089")
-        #color_active: get_color_from_hex("#f3ab44")
-        #padding: [dp(50),dp(30),dp(50),dp(30)]
 
         MDLabel:
             font_style: "H6"
@@ -287,10 +252,12 @@
 
         BoxLayout:
             size_hint_y: None
-            height: 30
+            height: 40
             MDFlatButton:
+                size_hint: (.5, .8)
                 text: "Cancel"
                 on_release: root.cancel()
-            MDFlatButton:
+            MDRectangleFlatButton:
+                size_hint: (.5, .8)
                 text: "Add"
                 on_release: root.execute_add_section(section_name_input_value.text)

@@ -6,15 +6,12 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import ObjectProperty, StringProperty
-from kivy.uix.modalview import ModalView
 from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
-from kivymd.toast import toast
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
 from kivymd.uix.button import MDFlatButton
-from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.list import MDList, OneLineAvatarIconListItem, ThreeLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -113,7 +110,6 @@ class CustomListItem(ThreeLineListItem):
 class CustomSnackbar(BaseSnackbar):
     text = StringProperty(None)
     icon = StringProperty(None)
-    # font_size = NumericProperty("15sp")
 
 
 class MenuStorageItems(Enum):
