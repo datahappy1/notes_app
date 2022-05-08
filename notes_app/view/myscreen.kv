@@ -36,6 +36,7 @@
 
     MDToolbar:
         id: toolbar
+        md_bg_color: app.theme_cls.primary_color
         elevation: 8
         left_action_items: [["menu", lambda x: nav_drawer.set_state("open")],["magnify", lambda x: root.press_icon_search()]]
         right_action_items: [["file", lambda x: root.menu_storage.open()],["cog", lambda x: root.menu_settings.open()]]
@@ -57,11 +58,10 @@
                 id: nav_drawer
 
                 ContentNavigationDrawer:
-                    md_bg_color: app.theme_cls.bg_dark
-
                     orientation: "vertical"
                     padding: "8dp"
                     spacing: "8dp"
+                    md_bg_color: app.theme_cls.primary_color
 
                     ScrollView:
                         DrawerList:
@@ -77,13 +77,12 @@
     orientation: "vertical"
     spacing: "12dp"
     size_hint_y: None
-    height: "420dp"
+    height: "500dp"
 
     MDBoxLayout:
         size: root.size
         pos: root.pos
         orientation: "vertical"
-        padding: [dp(50),dp(30),dp(50),dp(30)]
 
         FileChooserListView:
             id: filechooser
@@ -105,7 +104,7 @@
     orientation: "vertical"
     spacing: "12dp"
     size_hint_y: None
-    height: "420dp"
+    height: "500dp"
 
     MDBoxLayout:
         size: root.size
@@ -126,11 +125,47 @@
                 text: "Close"
                 on_release: root.cancel()
 
+<ShowFileSyncOptionsDialogContent>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "500dp"
+
+    MDBoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+
+        MDLabel:
+            font_style: "H6"
+            halign: "center"
+            valign: "center"
+            text: root.show_file_sync_options_label
+
+        MDTextField:
+            hint_text: "API Key"
+
+        MDTextField:
+            hint_text: "API Secret"
+            password: True
+
+        MDBoxLayout:
+            size_hint_y: None
+            height: 40
+            MDFlatButton:
+                size_hint: (.5, .8)
+                text: "Cancel"
+                on_release: root.cancel()
+            MDRectangleFlatButton:
+                size_hint: (.5, .8)
+                text: "Login"
+                on_release: root.execute_sync_login()
+
 <ShowAppMetadataDialogContent>
     orientation: "vertical"
     spacing: "12dp"
     size_hint_y: None
-    height: "420dp"
+    height: "500dp"
 
     MDBoxLayout:
         size: root.size
@@ -232,7 +267,7 @@
     orientation: "vertical"
     spacing: "12dp"
     size_hint_y: None
-    height: "420dp"
+    height: "500dp"
 
     MDBoxLayout:
         size: root.size

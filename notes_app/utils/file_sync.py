@@ -1,0 +1,1 @@
+SUPPORTED_SYNC_PROVIDERS = ["Dropbox"]

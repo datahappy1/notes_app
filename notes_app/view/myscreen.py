@@ -25,6 +25,7 @@ from notes_app.utils.file import (
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
+from notes_app.utils.file_sync import SUPPORTED_SYNC_PROVIDERS
 from notes_app.utils.font import get_next_font
 from notes_app.utils.mark import get_marked_search_result
 from notes_app.utils.search import Search, validate_search_input
@@ -58,10 +59,10 @@ class DrawerList(ThemableBehavior, MDList):
         Set the color of the icon and text for the menu item.
         """
         for item in self.children:
-            if item.text_color == self.theme_cls.primary_color:
+            if item.text_color == self.theme_cls.primary_light:
                 item.text_color = self.theme_cls.text_color
                 break
-        instance_item.text_color = self.theme_cls.primary_color
+        instance_item.text_color = self.theme_cls.primary_light
 
 
 class OpenFileDialogContent(MDBoxLayout):
@@ -80,14 +81,15 @@ class ShowAppMetadataDialogContent(MDBoxLayout):
     cancel = ObjectProperty(None)
 
 
+class ShowFileSyncOptionsDialogContent(MDBoxLayout):
+    show_file_sync_options_label = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
 class AddSectionDialogContent(MDBoxLayout):
     add_section_result_message = StringProperty(None)
     execute_add_section = ObjectProperty(None)
     cancel = ObjectProperty(None)
-
-
-class MyToggleButton(MDFlatButton, MDToggleButton):
-    pass
 
 
 class SearchDialogContent(MDBoxLayout):
@@ -116,6 +118,7 @@ class MenuStorageItems(Enum):
     ChooseFile = "Choose storage file"
     ShowFileInfo = "Show storage file info"
     Save = "Save storage file"
+    SyncOptions = "Sync options"
 
 
 class MenuSettingsItems(Enum):
@@ -252,6 +255,8 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             self.press_menu_item_show_file_metadata()
         elif text_item == MenuStorageItems.Save.value:
             self.press_menu_item_save_file()
+        elif text_item == MenuStorageItems.SyncOptions.value:
+            self.press_menu_item_open_sync_options()
 
         self.menu_storage.dismiss()
 
@@ -472,6 +477,9 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
     def execute_goto_external_url(self):
         return webbrowser.open(EXTERNAL_REPOSITORY_URL)
 
+    def execute_sync_login(self):
+        pass
+
     def cancel_dialog(self, *args):
         self.dialog.dismiss()
         self.dialog = MDDialog()
@@ -523,6 +531,19 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         )
         self.dialog = MDDialog(
             title="Show App metadata:",
+            type="custom",
+            content_cls=content,
+        )
+        self.dialog.open()
+
+    def press_menu_item_open_sync_options(self):
+        content = ShowFileSyncOptionsDialogContent(
+            show_file_sync_options_label=f"supported storage providers: "
+                                         f"{', '.join([provider for provider in SUPPORTED_SYNC_PROVIDERS])}",
+            cancel=self.cancel_dialog,
+        )
+        self.dialog = MDDialog(
+            title="Show File sync options:",
             type="custom",
             content_cls=content,
         )
