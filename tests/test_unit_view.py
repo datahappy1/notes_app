@@ -696,8 +696,6 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_s
         screen.file_manager = screen.get_file_manager()
         screen.file_manager.show(os.getcwd())
         screen.manager_open = True
-        _manager_id_prev = id(screen.file_manager)
 
         screen.cancel_file_manager()
         assert screen.manager_open is False
-        assert _manager_id_prev != id(screen.file_manager)

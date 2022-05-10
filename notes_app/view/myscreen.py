@@ -154,6 +154,9 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.snackbar = None
         self.dialog = None
 
+        self.manager_open = False
+        self.file_manager = None
+
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
 
@@ -161,9 +164,6 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
 
         self.current_section_identifier = self.file.default_section_identifier
         self.search = Search()
-
-        self.manager_open = False
-        self.file_manager = None
 
         self.filter_data_split_by_section()
         self.set_drawer_items(section_identifiers=self.file.section_identifiers)
@@ -620,7 +620,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         """
         self.manager_open = False
         self.file_manager.close()
-        self.file_manager = self.get_file_manager()
+        #self.file_manager = self.get_file_manager()
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))
