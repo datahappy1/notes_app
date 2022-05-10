@@ -1,10 +1,15 @@
 import re
+from typing import AnyStr
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
 
 DEFAULT_VALUE_SEARCH_CASE_SENSITIVE = False
 DEFAULT_VALUE_SEARCH_ALL_SECTIONS = False
 DEFAULT_VALUE_SEARCH_FULL_WORDS = False
+
+SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
+SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE = "section "
+SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
 
 
 def validate_search_input(input_string):
@@ -93,3 +98,39 @@ class Search:
                 found_occurrences[section.section_file_separator] = search_result
 
         return found_occurrences
+
+
+def transform_position_text_placeholder_to_position(
+    position_text_placeholder: AnyStr = None,
+) -> int:
+    if position_text_placeholder:
+        return int(
+            position_text_placeholder.replace(
+                SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE, ""
+            )
+        )
+    return 0
+
+
+def transform_position_to_position_text_placeholder(position_start: int = 0) -> AnyStr:
+    if position_start:
+        return f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}"
+    return f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{0}"
+
+
+def transform_section_text_placeholder_to_section_name(
+    section_text_placeholder: AnyStr = None,
+) -> AnyStr:
+    if section_text_placeholder:
+        return section_text_placeholder.replace(
+            SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE, ""
+        )
+    return ""
+
+
+def transform_section_name_to_section_text_placeholder(
+    section_name: AnyStr = "",
+) -> AnyStr:
+    if section_name:
+        return f"{SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE}{section_name}"
+    return f"{SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE}"

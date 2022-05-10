@@ -1,6 +1,8 @@
+import os
 import webbrowser
 from enum import Enum
 from os import path, linesep
+from os.path import exists
 
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -10,8 +12,7 @@ from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.behaviors.toggle_behavior import MDToggleButton
-from kivymd.uix.button import MDFlatButton
+from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.list import MDList, OneLineAvatarIconListItem, ThreeLineListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
@@ -28,17 +29,20 @@ from notes_app.utils.file import (
 from notes_app.utils.file_sync import SUPPORTED_SYNC_PROVIDERS
 from notes_app.utils.font import get_next_font
 from notes_app.utils.mark import get_marked_search_result
-from notes_app.utils.search import Search, validate_search_input
+from notes_app.utils.search import (
+    Search,
+    validate_search_input,
+    SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT,
+    transform_section_text_placeholder_to_section_name,
+    transform_section_name_to_section_text_placeholder,
+    transform_position_text_placeholder_to_position,
+    transform_position_to_position_text_placeholder,
+)
+from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
 
 APP_TITLE = "Notes"
-APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.7 & KivyMD"]
+APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.8 & KivyMD"]
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
-
-SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
-SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE = "section "
-SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
-
-AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT = 5
 
 
 class ItemDrawer(OneLineAvatarIconListItem):
@@ -54,15 +58,14 @@ class ContentNavigationDrawer(MDBoxLayout):
 
 class DrawerList(ThemableBehavior, MDList):
     def set_color_item(self, instance_item):
-        """
-        Called when tap on a menu item
+        """Called when tap on a menu item.
         Set the color of the icon and text for the menu item.
         """
         for item in self.children:
-            if item.text_color == self.theme_cls.primary_light:
+            if item.text_color == self.theme_cls.primary_color:
                 item.text_color = self.theme_cls.text_color
                 break
-        instance_item.text_color = self.theme_cls.primary_light
+        instance_item.text_color = self.theme_cls.primary_color
 
 
 class OpenFileDialogContent(MDBoxLayout):
@@ -159,6 +162,9 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.current_section_identifier = self.file.default_section_identifier
         self.search = Search()
 
+        self.manager_open = False
+        self.file_manager = None
+
         self.filter_data_split_by_section()
         self.set_drawer_items(section_identifiers=self.file.section_identifiers)
 
@@ -232,7 +238,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             }
             for i in MenuStorageItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5, )
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
 
     def get_menu_settings(self):
         menu_items = [
@@ -246,7 +252,13 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             }
             for i in MenuSettingsItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5, )
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
+
+    def get_file_manager(self):
+        return MDFileManager(
+            exit_manager=self.cancel_file_manager,
+            select_path=self.file_manager_select_path,
+        )
 
     def press_menu_storage_item_callback(self, text_item):
         if text_item == MenuStorageItems.ChooseFile.value:
@@ -304,8 +316,8 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             snackbar_y="10dp",
         )
         self.snackbar.size_hint_x = (
-                                            Window.width - (self.snackbar.snackbar_x * 2)
-                                    ) / Window.width
+            Window.width - (self.snackbar.snackbar_x * 2)
+        ) / Window.width
         self.snackbar.open()
 
     def show_error_bar(self, error_message):
@@ -320,43 +332,43 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             snackbar_y="10dp",
         )
         self.snackbar.size_hint_x = (
-                                            Window.width - (self.snackbar.snackbar_x * 2)
-                                    ) / Window.width
+            Window.width - (self.snackbar.snackbar_x * 2)
+        ) / Window.width
         self.snackbar.open()
 
-    def execute_open_file(self, path, filename):
-        if not filename:
+    def execute_open_file(self, file_path):
+        if not file_path or not exists(file_path):
+            self.show_error_bar(error_message="Invalid file")
             return
 
-        file_path = filename[0]
-        self.controller.set_file_path(file_path)
+        validated_file_path = File.get_validated_file_path(file_path)
+        if not validated_file_path:
+            self.show_error_bar(error_message=f"Cannot open the file {file_path}")
+            return
+
+        self.controller.set_file_path(validated_file_path)
 
         try:
-            self.file = File(file_path=file_path, controller=self.controller)
+            self.file = File(file_path=validated_file_path, controller=self.controller)
             self.set_drawer_items(section_identifiers=self.file.section_identifiers)
             self.filter_data_split_by_section(
                 section_identifier=self.file.default_section_identifier
             )
-            self.cancel_dialog()
-
         except ValueError:
             self.file.delete_all_section_identifiers()
             self.file.delete_all_sections_content()
-            self.cancel_dialog()
             self.press_add_section()
 
     def execute_goto_search_result(self, custom_list_item):
-        section_name = custom_list_item.secondary_text.replace(
-            SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE, ""
+        section_name = transform_section_text_placeholder_to_section_name(
+            section_text_placeholder=custom_list_item.secondary_text
         )
 
         self.current_section_identifier = SectionIdentifier(section_name=section_name)
         self.filter_data_split_by_section()
 
-        position = int(
-            custom_list_item.tertiary_text.replace(
-                SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE, ""
-            )
+        position = transform_position_text_placeholder_to_position(
+            position_text_placeholder=custom_list_item.tertiary_text
         )
 
         self.text_section_view.select_text(
@@ -406,8 +418,8 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         found_occurrences_count = 0
 
         for (
-                section_file_separator,
-                section_found_occurrences,
+            section_file_separator,
+            section_found_occurrences,
         ) in found_occurrences.items():
             found_occurrences_count += len(section_found_occurrences)
             text_data = self.file.get_section_content(section_file_separator)
@@ -421,9 +433,9 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
                 )
 
                 found_string_extra_chars = text_data[
-                                           position_end: position_end
-                                                         + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
-                                           ]
+                    position_end : position_end
+                    + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
+                ]
 
                 section_identifier = SectionIdentifier(
                     section_file_separator=section_file_separator
@@ -432,8 +444,12 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
                 self.dialog.content_cls.results_list.add_widget(
                     CustomListItem(
                         text=f"{found_string_marked}{found_string_extra_chars}...",
-                        secondary_text=f"{SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE}{section_identifier.section_name}",
-                        tertiary_text=f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}",
+                        secondary_text=transform_section_name_to_section_text_placeholder(
+                            section_name=section_identifier.section_name
+                        ),
+                        tertiary_text=transform_position_to_position_text_placeholder(
+                            position_start=position_start
+                        ),
                         on_release=self.execute_goto_search_result,
                     )
                 )
@@ -446,9 +462,9 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
 
     def execute_add_section(self, *args):
         if (
-                not args[0]
-                or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
-                or args[0].isspace()
+            not args[0]
+            or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+            or args[0].isspace()
         ):
             self.dialog.content_cls.add_section_result_message = "Invalid name"
             return
@@ -484,18 +500,6 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.dialog.dismiss()
         self.dialog = MDDialog()
 
-    def press_menu_item_open_file(self, *args):
-        content = OpenFileDialogContent(
-            open_file=self.execute_open_file,
-            cancel=self.cancel_dialog,
-        )
-        self.dialog = MDDialog(
-            title="Open File:",
-            type="custom",
-            content_cls=content,
-        )
-        self.dialog.open()
-
     def save_current_section_to_file(self):
         self.file.set_section_content(
             section_file_separator=self.text_section_view.section_file_separator,
@@ -511,13 +515,10 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
 
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataDialogContent(
-            show_file_metadata_label=self.model.formatted,
-            cancel=self.cancel_dialog,
+            show_file_metadata_label=self.model.formatted, cancel=self.cancel_dialog,
         )
         self.dialog = MDDialog(
-            title="Show File metadata:",
-            type="custom",
-            content_cls=content,
+            title="Show File metadata:", type="custom", content_cls=content,
         )
         self.dialog.open()
 
@@ -530,22 +531,18 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             cancel=self.cancel_dialog,
         )
         self.dialog = MDDialog(
-            title="Show App metadata:",
-            type="custom",
-            content_cls=content,
+            title="Show App metadata:", type="custom", content_cls=content,
         )
         self.dialog.open()
 
     def press_menu_item_open_sync_options(self):
         content = ShowFileSyncOptionsDialogContent(
             show_file_sync_options_label=f"supported storage providers: "
-                                         f"{', '.join([provider for provider in SUPPORTED_SYNC_PROVIDERS])}",
+            f"{', '.join([provider for provider in SUPPORTED_SYNC_PROVIDERS])}",
             cancel=self.cancel_dialog,
         )
         self.dialog = MDDialog(
-            title="Show File sync options:",
-            type="custom",
-            content_cls=content,
+            title="Show File sync options:", type="custom", content_cls=content,
         )
         self.dialog.open()
 
@@ -559,11 +556,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             cancel=self.cancel_dialog,
         )
 
-        self.dialog = MDDialog(
-            title="Search:",
-            type="custom",
-            content_cls=content,
-        )
+        self.dialog = MDDialog(title="Search:", type="custom", content_cls=content,)
 
         self.dialog.open()
 
@@ -574,9 +567,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             cancel=self.cancel_dialog,
         )
         self.dialog = MDDialog(
-            title="Add section:",
-            type="custom",
-            content_cls=content,
+            title="Add section:", type="custom", content_cls=content,
         )
         self.dialog.open()
 
@@ -598,11 +589,38 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         self.auto_save_text_input_change_counter += 1
 
         if (
-                self.auto_save_text_input_change_counter
-                == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
+            self.auto_save_text_input_change_counter
+            == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
         ):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0
+
+    def press_menu_item_open_file(self):
+        """
+        output manager to the screen
+        """
+        self.file_manager = self.get_file_manager()
+        self.file_manager.show(os.getcwd())
+        self.manager_open = True
+
+    def file_manager_select_path(self, path):
+        """
+        It will be called when you click on the file name
+        or the catalog selection button.
+
+        :type path: str;
+        :param path: path to the selected directory or file
+        """
+        self.cancel_file_manager()
+        self.execute_open_file(file_path=path)
+
+    def cancel_file_manager(self, *args):
+        """
+        Called when the user reaches the root of the directory tree.
+        """
+        self.manager_open = False
+        self.file_manager.close()
+        self.file_manager = self.get_file_manager()
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

@@ -1,5 +1,5 @@
+import uuid
 from os import getcwd
-
 import pytest
 
 from notes_app.controller.myscreen import MyScreenController
@@ -12,7 +12,9 @@ from notes_app.utils.mark import _get_marked, get_marked_search_result
 from notes_app.utils.search import Search, validate_search_input, \
     regex_search_function, full_words_search_function, SEARCH_MINIMAL_CHAR_COUNT, \
     DEFAULT_VALUE_SEARCH_CASE_SENSITIVE, DEFAULT_VALUE_SEARCH_ALL_SECTIONS, \
-    DEFAULT_VALUE_SEARCH_FULL_WORDS
+    DEFAULT_VALUE_SEARCH_FULL_WORDS, transform_position_text_placeholder_to_position, \
+    transform_position_to_position_text_placeholder, transform_section_name_to_section_text_placeholder, \
+    transform_section_text_placeholder_to_section_name
 from notes_app.utils.time import format_epoch
 
 
@@ -51,7 +53,8 @@ class TestColor:
         assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_rgba_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
 
         assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_rgba_value=[0, 0, 0, 1]).name == "navy"
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_rgba_value=[0, 0, 0, 1]).rgba_value == (0, 0, 0.5, 1)
+        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1], skip_rgba_value=[0, 0, 0, 1]).rgba_value == (
+        0, 0, 0.5, 1)
 
         assert get_next_color_by_rgba(rgba_value=[1, 1, 0, 1], skip_rgba_value=[1, 1, 1, 1]).name == "black"
         assert get_next_color_by_rgba(rgba_value=[1, 1, 0, 1], skip_rgba_value=[1, 1, 1, 1]).rgba_value == (0, 0, 0, 1)
@@ -78,20 +81,20 @@ class TestSearch:
         assert validate_search_input(input_string) is is_valid
 
     @pytest.mark.parametrize("pattern, text, occurrences", [
-        ("is","this is some section.yeah",[2, 5]),
-        ("is some","this is some section.yeah",[5]),
-        ("his","this is some section.yeah",[1]),
+        ("is", "this is some section.yeah", [2, 5]),
+        ("is some", "this is some section.yeah", [5]),
+        ("his", "this is some section.yeah", [1]),
     ])
     def test_regex_search_function(self, pattern, text, occurrences):
         assert regex_search_function(pattern, text) == occurrences
 
     @pytest.mark.parametrize("pattern, text, occurrences", [
-        ("is","is some section.yeah", [0]),
-        ("is","is is some is section.yeah", [0, 3, 11]),
-        ("is","this is some is section.yeah", [5, 13]),
-        ("is","this is some section.yeah",[5]),
-        ("is some","this is some section.yeah",[]),
-        ("his","this is some section.yeah",[]),
+        ("is", "is some section.yeah", [0]),
+        ("is", "is is some is section.yeah", [0, 3, 11]),
+        ("is", "this is some is section.yeah", [5, 13]),
+        ("is", "this is some section.yeah", [5]),
+        ("is some", "this is some section.yeah", []),
+        ("his", "this is some section.yeah", []),
     ])
     def test_full_words_search_function(self, pattern, text, occurrences):
         assert full_words_search_function(pattern, text) == occurrences
@@ -170,6 +173,25 @@ class TestSearch:
             pattern="nonx", file=get_file, current_section_identifier=current_section_identifier
         ) == {}
 
+    def test_transform_position_text_placeholder_to_position(self):
+        assert transform_position_text_placeholder_to_position(position_text_placeholder="position 1") == 1
+        assert transform_position_text_placeholder_to_position(position_text_placeholder="position 0") == 0
+        assert transform_position_text_placeholder_to_position(position_text_placeholder=None) == 0
+
+    def test_transform_position_to_position_text_placeholder(self):
+        assert transform_position_to_position_text_placeholder(position_start=1) == "position 1"
+        assert transform_position_to_position_text_placeholder() == "position 0"
+        assert transform_position_to_position_text_placeholder(position_start=None) == "position 0"
+
+    def test_transform_section_text_placeholder_to_section_name(self):
+        assert transform_section_text_placeholder_to_section_name(section_text_placeholder="section A") == "A"
+        assert transform_section_text_placeholder_to_section_name(section_text_placeholder=None) == ""
+
+    def test_transform_section_name_to_section_text_placeholder(self):
+        assert transform_section_name_to_section_text_placeholder(section_name="A") == "section A"
+        assert transform_section_name_to_section_text_placeholder() == "section "
+        assert transform_section_name_to_section_text_placeholder(section_name=None) == "section "
+
 
 class TestSectionIdentifier:
     def test_section_identifier(self):
@@ -184,6 +206,16 @@ class TestSectionIdentifier:
 
 
 class TestFile:
+    def test_get_validated_file_path(self):
+        file_path = f"{getcwd()}/assets/sample.txt"
+        assert File.get_validated_file_path(file_path=file_path) == file_path
+        # results in FileNotFoundError
+        file_path = f"{getcwd()}/assets/sample_not_existing_{uuid.uuid4().hex}.txt"
+        assert File.get_validated_file_path(file_path=file_path) is None
+        # results in PermissionError
+        file_path = f"{getcwd()}/assets/"
+        assert File.get_validated_file_path(file_path=file_path) is None
+
     def test_get_raw_data_content(self, get_file):
         raw_data = get_file.get_raw_data_content()
         assert raw_data == """<section=first> Quod equidem non reprehendo

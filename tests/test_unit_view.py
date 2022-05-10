@@ -1,3 +1,4 @@
+import os
 from copy import copy
 from os import getcwd, linesep
 
@@ -6,6 +7,7 @@ from kivy.properties import ObjectProperty, StringProperty
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
 from kivymd.app import MDApp
+from kivymd.uix.filemanager import MDFileManager, FloatButton
 from kivymd.uix.menu import MDDropdownMenu
 
 from notes_app.controller.myscreen import MyScreenController
@@ -14,8 +16,8 @@ from notes_app.settings import Settings
 from notes_app.utils.file import File, SectionIdentifier
 from notes_app.utils.search import Search
 from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageItems, ItemDrawer, \
-    ShowFileMetadataDialogContent, ShowAppMetadataDialogContent, CustomSnackbar, CustomListItem, APP_METADATA_ROWS, \
-    AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
+    ShowFileMetadataDialogContent, ShowAppMetadataDialogContent, CustomSnackbar, CustomListItem, APP_METADATA_ROWS
+from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
 
 settings = Settings()
 
@@ -185,8 +187,8 @@ class TestView:
 
         value = MenuStorageItems.ChooseFile.value
         screen.press_menu_storage_item_callback(text_item=value)
-        assert isinstance(screen.dialog, MDDialog)
-        assert screen.dialog.title == "Open File:"
+        assert screen.manager_open is True
+        assert isinstance(screen.file_manager, MDFileManager)
 
         value = MenuStorageItems.ShowFileInfo.value
         screen.press_menu_storage_item_callback(text_item=value)
@@ -296,20 +298,22 @@ class TestView:
     def test_execute_open_file(self, get_app):
         screen = get_app.controller.get_screen()
 
+        assert screen.manager_open is False
         screen.press_menu_item_open_file()
-        assert screen.dialog.title == "Open File:"
+        assert screen.manager_open is True
+        assert isinstance(screen.file_manager, MDFileManager)
+        assert isinstance(screen.file_manager.children[0], FloatButton)
+        assert isinstance(screen.file_manager.children[1], MDBoxLayout)
 
         # NOTES_FILE_PATH
-        screen.execute_open_file(path=None, filename=(NOTES_FILE_PATH,))
-        assert screen.dialog.title == ""
-
+        screen.execute_open_file(file_path=NOTES_FILE_PATH)
         assert screen.file._file_path == NOTES_FILE_PATH
         assert isinstance(screen.ids.md_list.children[0], ItemDrawer)
         assert screen.ids.md_list.children[0].id == "<section=second> "
         assert screen.text_section_view.text == "Quod equidem non reprehendo\n"
 
         # EMPTY_NOTES_FILE_PATH
-        screen.execute_open_file(path=None, filename=(EMPTY_NOTES_FILE_PATH,))
+        screen.execute_open_file(file_path=EMPTY_NOTES_FILE_PATH)
         assert screen.file._section_identifiers == []
         assert screen.file._data_by_sections == {}
 
@@ -329,6 +333,7 @@ class TestView:
 
         assert screen.execute_goto_search_result(custom_list_item) is None
         assert screen.text_section_view.cursor == (10, 0)
+        # screen.execute_goto_search_result() wraps up by closing the dialog
         assert screen.dialog.title == ""
 
     def test_get_search_switch_state(self, get_app):
@@ -543,33 +548,11 @@ class TestView:
         screen.dialog.open()
 
         assert screen.dialog.content_cls.add_section_result_message == "test message"
+        _dialog_id_prev = id(screen.dialog)
 
         assert screen.cancel_dialog() is None
         assert screen.dialog.content_cls is None
-
-    def test_press_menu_item_open_file(self, get_app):
-        screen = get_app.controller.get_screen()
-
-        class _OpenFileDialogContent(MDBoxLayout):
-            open_file = ObjectProperty(None)
-            cancel = ObjectProperty(None)
-
-        def _(*args):
-            return True
-
-        content = _OpenFileDialogContent(
-            open_file=_, cancel=_
-        )
-        self.dialog = MDDialog(
-            title="Open File",
-            content_cls=content,
-        )
-
-        assert screen.press_menu_item_open_file() is None
-
-        assert screen.dialog.content_cls.open_file.__str__().startswith(
-            "<bound method MyScreenView.execute_open_file of <Screen name=''>>"
-        )
+        assert _dialog_id_prev != id(screen.dialog)
 
     def test_save_current_section_to_file(self, get_app):
         screen = get_app.controller.get_screen()
@@ -601,7 +584,8 @@ class TestView:
         assert screen.dialog.content_cls.show_file_metadata_label == \
                """File path : {cwd}/assets/sample.txt\r
 File size (bytes) : {file_size}\r
-Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_size, dt_now=screen.model.last_updated_on)
+Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_size,
+                                     dt_now=screen.model.last_updated_on)
 
     def test_press_menu_item_show_app_metadata(self, get_app):
         screen = get_app.controller.get_screen()
@@ -685,3 +669,35 @@ Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_s
 
         assert screen.text_input_changed_callback() is None
         assert screen.auto_save_text_input_change_counter == 1
+
+    def test_press_menu_item_open_file(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        assert screen.press_menu_item_open_file() is None
+        assert isinstance(screen.file_manager, MDFileManager)
+        assert screen.manager_open is True
+
+    def test_file_manager_select_path(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        screen.file_manager = screen.get_file_manager()
+        screen.file_manager.show(os.getcwd())
+        screen.manager_open = True
+
+        screen.file_manager_select_path(path=NOTES_FILE_PATH)
+        assert screen.manager_open is False
+        assert isinstance(screen.file_manager, MDFileManager)
+        assert isinstance(screen.file_manager.children[0], FloatButton)
+        assert isinstance(screen.file_manager.children[1], MDBoxLayout)
+
+    def test_cancel_file_manager(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        screen.file_manager = screen.get_file_manager()
+        screen.file_manager.show(os.getcwd())
+        screen.manager_open = True
+        _manager_id_prev = id(screen.file_manager)
+
+        screen.cancel_file_manager()
+        assert screen.manager_open is False
+        assert _manager_id_prev != id(screen.file_manager)
