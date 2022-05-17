@@ -704,12 +704,9 @@ class TestView:
 
         assert screen.press_menu_item_show_file_metadata() is None
 
-        # replace line break string "\r" with "" to achieve Win/Linux compatibility
         assert (
-            screen.dialog.content_cls.show_file_metadata_label.strip()
-            == """File path : {cwd}/assets/sample.txt
-File size (bytes) : {file_size}
-Last updated on : {dt_now}""".strip().format(
+            ' '.join(screen.dialog.content_cls.show_file_metadata_label.splitlines())
+            == """File path : {cwd}/assets/sample.txt File size (bytes) : {file_size} Last updated on : {dt_now}""".strip().format(
                 cwd=getcwd(),
                 file_size=screen.model.file_size,
                 dt_now=screen.model.last_updated_on,
