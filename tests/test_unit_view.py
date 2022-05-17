@@ -706,9 +706,9 @@ class TestView:
 
         # replace line break string "\r" with "" to achieve Win/Linux compatibility
         assert (
-            screen.dialog.content_cls.show_file_metadata_label
-            == """File path : {cwd}/assets/sample.txt\r
-File size (bytes) : {file_size}\r
+            screen.dialog.content_cls.show_file_metadata_label.strip()
+            == """File path : {cwd}/assets/sample.txt
+File size (bytes) : {file_size}
 Last updated on : {dt_now}""".strip().format(
                 cwd=getcwd(),
                 file_size=screen.model.file_size,
