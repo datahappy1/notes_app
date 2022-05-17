@@ -709,9 +709,7 @@ class TestView:
             screen.dialog.content_cls.show_file_metadata_label
             == """File path : {cwd}/assets/sample.txt\r
 File size (bytes) : {file_size}\r
-Last updated on : {dt_now}""".replace(
-                "\r", ""
-            ).format(
+Last updated on : {dt_now}""".strip().format(
                 cwd=getcwd(),
                 file_size=screen.model.file_size,
                 dt_now=screen.model.last_updated_on,

@@ -52,9 +52,7 @@ class TestModel:
             model.formatted
             == """File path : {cwd}/assets/sample.txt\r
 File size (bytes) : {file_size}\r
-Last updated on : {dt_now}""".replace(
-                "\r", ""
-            ).format(
+Last updated on : {dt_now}""".strip().format(
                 cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on
             )
         )

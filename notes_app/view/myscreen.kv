@@ -98,42 +98,6 @@
                 text: "Close"
                 on_release: root.cancel()
 
-<ShowFileSyncOptionsDialogContent>
-    orientation: "vertical"
-    spacing: "12dp"
-    size_hint_y: None
-    height: "500dp"
-
-    MDBoxLayout:
-        size: root.size
-        pos: root.pos
-        orientation: "vertical"
-
-        MDLabel:
-            font_style: "H6"
-            halign: "center"
-            valign: "center"
-            text: root.show_file_sync_options_label
-
-        MDTextField:
-            hint_text: "API Key"
-
-        MDTextField:
-            hint_text: "API Secret"
-            password: True
-
-        MDBoxLayout:
-            size_hint_y: None
-            height: 40
-            MDFlatButton:
-                size_hint: (.5, .8)
-                text: "Cancel"
-                on_release: root.cancel()
-            MDRectangleFlatButton:
-                size_hint: (.5, .8)
-                text: "Login"
-                on_release: root.execute_sync_login()
-
 <ShowAppMetadataDialogContent>
     orientation: "vertical"
     spacing: "12dp"
