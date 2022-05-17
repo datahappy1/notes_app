@@ -31,18 +31,28 @@ class TestController:
 
     def test_set_file_path(self, get_app):
         controller = get_app.controller
-        assert controller.set_file_path(file_path=f"{getcwd()}/assets/sample.txt") is None
+        assert (
+            controller.set_file_path(file_path=f"{getcwd()}/assets/sample.txt") is None
+        )
 
     def test_read_file_data(self, get_app):
         controller = get_app.controller
-        assert controller.read_file_data() == """<section=first> Quod equidem non reprehendo
+        assert (
+            controller.read_file_data()
+            == """<section=first> Quod equidem non reprehendo
 <section=second> Quis istum dolorem timet"""
+        )
 
     def test_save_file_data(self, get_app):
         controller = get_app.controller
-        assert controller.save_file_data(data="""<section=first> Quod equidem non reprehendo
+        assert (
+            controller.save_file_data(
+                data="""<section=first> Quod equidem non reprehendo
 <section=second> Quis istum dolorem timet
-""") is None
+"""
+            )
+            is None
+        )
 
     def test_get_screen(self, get_app):
         controller = get_app.controller

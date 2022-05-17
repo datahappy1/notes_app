@@ -238,7 +238,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             }
             for i in MenuStorageItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5)
 
     def get_menu_settings(self):
         menu_items = [
@@ -252,7 +252,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             }
             for i in MenuSettingsItems
         ]
-        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5,)
+        return MDDropdownMenu(caller=self.ids.toolbar, items=menu_items, width_mult=5)
 
     def get_file_manager(self):
         return MDFileManager(
@@ -515,10 +515,10 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
 
     def press_menu_item_show_file_metadata(self, *args):
         content = ShowFileMetadataDialogContent(
-            show_file_metadata_label=self.model.formatted, cancel=self.cancel_dialog,
+            show_file_metadata_label=self.model.formatted, cancel=self.cancel_dialog
         )
         self.dialog = MDDialog(
-            title="Show File metadata:", type="custom", content_cls=content,
+            title="Show File metadata:", type="custom", content_cls=content
         )
         self.dialog.open()
 
@@ -531,7 +531,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             cancel=self.cancel_dialog,
         )
         self.dialog = MDDialog(
-            title="Show App metadata:", type="custom", content_cls=content,
+            title="Show App metadata:", type="custom", content_cls=content
         )
         self.dialog.open()
 
@@ -542,7 +542,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             cancel=self.cancel_dialog,
         )
         self.dialog = MDDialog(
-            title="Show File sync options:", type="custom", content_cls=content,
+            title="Show File sync options:", type="custom", content_cls=content
         )
         self.dialog.open()
 
@@ -556,7 +556,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             cancel=self.cancel_dialog,
         )
 
-        self.dialog = MDDialog(title="Search:", type="custom", content_cls=content,)
+        self.dialog = MDDialog(title="Search:", type="custom", content_cls=content)
 
         self.dialog.open()
 
@@ -566,9 +566,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
             execute_add_section=self.execute_add_section,
             cancel=self.cancel_dialog,
         )
-        self.dialog = MDDialog(
-            title="Add section:", type="custom", content_cls=content,
-        )
+        self.dialog = MDDialog(title="Add section:", type="custom", content_cls=content)
         self.dialog.open()
 
     def press_delete_section(self, section_item):
@@ -620,7 +618,7 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         """
         self.manager_open = False
         self.file_manager.close()
-        #self.file_manager = self.get_file_manager()
+        # self.file_manager = self.get_file_manager()
 
 
 Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))

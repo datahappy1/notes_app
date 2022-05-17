@@ -17,13 +17,17 @@ class TestModel:
 
         assert model.observers == []
 
-        assert model.__repr__() == {'_file_path': f"{getcwd()}/assets/sample.txt",
-                                    '_file_size': model.file_size,
-                                    '_last_updated_on': f"{model.last_updated_on}"}
+        assert model.__repr__() == {
+            "_file_path": f"{getcwd()}/assets/sample.txt",
+            "_file_size": model.file_size,
+            "_last_updated_on": f"{model.last_updated_on}",
+        }
 
-        assert model._get_attribute_to_formatted_name_map() == {'_file_path': 'File path',
-                                                                '_file_size': 'File size (bytes)',
-                                                                '_last_updated_on': 'Last updated on'}
+        assert model._get_attribute_to_formatted_name_map() == {
+            "_file_path": "File path",
+            "_file_size": "File size (bytes)",
+            "_last_updated_on": "Last updated on",
+        }
         model.dump_encoded()
 
     def test_set_get_file_path(self):
@@ -44,11 +48,16 @@ class TestModel:
     def test_formatted(self):
         model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
         # replace line break string "\r" with "" to achieve Win/Linux compatibility
-        assert model.formatted == """File path : {cwd}/assets/sample.txt\r
+        assert (
+            model.formatted
+            == """File path : {cwd}/assets/sample.txt\r
 File size (bytes) : {file_size}\r
-Last updated on : {dt_now}"""\
-            .replace("\r", "")\
-            .format(cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on)
+Last updated on : {dt_now}""".replace(
+                "\r", ""
+            ).format(
+                cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on
+            )
+        )
 
     def test_set_get_observers(self):
         model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)

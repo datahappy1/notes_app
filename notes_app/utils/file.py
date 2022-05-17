@@ -11,7 +11,7 @@ SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
 
 class SectionIdentifier:
     def __init__(
-            self, section_file_separator: AnyStr = None, section_name: AnyStr = None,
+        self, section_file_separator: AnyStr = None, section_name: AnyStr = None
     ):
         if not section_file_separator and not section_name:
             raise ValueError(
@@ -19,8 +19,8 @@ class SectionIdentifier:
             )
 
         self.section_file_separator = (
-                section_file_separator
-                or self._transform_name_to_separator(section_name=section_name)
+            section_file_separator
+            or self._transform_name_to_separator(section_name=section_name)
         )
         self.section_name = section_name or self._transform_separator_to_name()
 
@@ -105,12 +105,12 @@ class File:
         self._data_by_sections.pop(section_file_separator)
 
     def _transform_raw_data_content_to_data_by_sections(
-            self,
+        self,
     ) -> Dict[SectionIdentifier, AnyStr]:
         dict_data = dict()
         for item in zip(
-                self._section_identifiers,
-                re.split(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)[1:],
+            self._section_identifiers,
+            re.split(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)[1:],
         ):
             dict_data[item[0].section_file_separator] = item[1]
 
