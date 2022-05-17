@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+Kivy = "==2.1.0"
+Kivy-Garden = "==0.1.4"
+kivymd = "==0.104.2"
+
+
+[dev-packages]
+pytest = "*"
+python-dateutil = "*"
+
+[requires]
+python_version = "3.8"

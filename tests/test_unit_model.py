@@ -43,9 +43,12 @@ class TestModel:
 
     def test_formatted(self):
         model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
+        # replace line break string "\r" with "" to achieve Win/Linux compatibility
         assert model.formatted == """File path : {cwd}/assets/sample.txt\r
 File size (bytes) : {file_size}\r
-Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on)
+Last updated on : {dt_now}"""\
+            .replace("\r", "")\
+            .format(cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on)
 
     def test_set_get_observers(self):
         model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)

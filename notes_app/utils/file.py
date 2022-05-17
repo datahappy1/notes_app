@@ -62,7 +62,7 @@ class File:
         try:
             with open(file=file_path, mode="r"):
                 pass
-        except (PermissionError, FileNotFoundError):
+        except (PermissionError, FileNotFoundError, IsADirectoryError):
             return
         return file_path
 

@@ -4,9 +4,9 @@ from os import getcwd, linesep
 
 import pytest
 from kivy.properties import ObjectProperty, StringProperty
+from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
-from kivymd.app import MDApp
 from kivymd.uix.filemanager import MDFileManager, FloatButton
 from kivymd.uix.menu import MDDropdownMenu
 
@@ -15,9 +15,9 @@ from notes_app.model.myscreen import MyScreenModel, FALLBACK_NOTES_FILE_PATH
 from notes_app.settings import Settings
 from notes_app.utils.file import File, SectionIdentifier
 from notes_app.utils.search import Search
+from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
 from notes_app.view.myscreen import DrawerList, MenuSettingsItems, MenuStorageItems, ItemDrawer, \
     ShowFileMetadataDialogContent, ShowAppMetadataDialogContent, CustomSnackbar, CustomListItem, APP_METADATA_ROWS
-from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
 
 settings = Settings()
 
@@ -581,11 +581,12 @@ class TestView:
 
         assert screen.press_menu_item_show_file_metadata() is None
 
-        assert screen.dialog.content_cls.show_file_metadata_label == \
-               """File path : {cwd}/assets/sample.txt\r
+        # replace line break string "\r" with "" to achieve Win/Linux compatibility
+        assert screen.dialog.content_cls.show_file_metadata_label == """File path : {cwd}/assets/sample.txt\r
 File size (bytes) : {file_size}\r
-Last updated on : {dt_now}""".format(cwd=getcwd(), file_size=screen.model.file_size,
-                                     dt_now=screen.model.last_updated_on)
+Last updated on : {dt_now}""" \
+            .replace("\r", "") \
+            .format(cwd=getcwd(), file_size=screen.model.file_size, dt_now=screen.model.last_updated_on)
 
     def test_press_menu_item_show_app_metadata(self, get_app):
         screen = get_app.controller.get_screen()
