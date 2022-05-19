@@ -1,12 +1,12 @@
 import time
 from os import path
 
-from notes_app.view.myscreen import MyScreenView
+from notes_app.view.notes_view import NotesView
 
 
-class MyScreenController:
+class NotesController:
     """
-    The `MyScreenController` class represents a controller implementation.
+    The `NotesController` class represents a controller implementation.
     Coordinates work of the view with the model.
 
     The controller implements the strategy pattern. The controller connects to
@@ -19,7 +19,7 @@ class MyScreenController:
         The constructor creates the view.
         """
         self.model = model
-        self.view = MyScreenView(settings=settings, controller=self, model=self.model)
+        self.view = NotesView(settings=settings, controller=self, model=self.model)
 
     def set_file_path(self, file_path):
         self.model.file_path = file_path

@@ -12,7 +12,7 @@ from typing import Tuple
 
 from notes_app.utils.time import format_epoch
 
-MODEL_STORAGE_FILE_PATH = f"{getcwd()}/model/myscreen.model"
+MODEL_STORAGE_FILE_PATH = f"{getcwd()}/model/notes.model"
 FALLBACK_NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -36,15 +36,12 @@ def safe_load_model_data():
         return dict()
 
 
-class MyScreenModel:
+class NotesModel:
     """
-    The MyScreenModel class is a data model implementation. The model stores
-    the values of the variables `c`, `d` and their sum. The model provides an
+    The NotesModel class is a data model implementation. The model stores
+    the values of the variables related to the storage file metadata. The model provides an
     interface through which to work with stored values. The model contains
     methods for registration, deletion and notification observers.
-
-    The model is (primarily) responsible for the logic of the application.
-    MyScreenModel class task is to add two numbers.
     """
 
     model_data = safe_load_model_data()
@@ -57,12 +54,12 @@ class MyScreenModel:
                 self._last_updated_on,
             ) = get_additional_attributes_from_file_path(self._file_path)
 
-        elif MyScreenModel.model_data.get("_file_path") and path.exists(
-            MyScreenModel.model_data["_file_path"]
+        elif NotesModel.model_data.get("_file_path") and path.exists(
+            NotesModel.model_data["_file_path"]
         ):
-            self._file_path = MyScreenModel.model_data["_file_path"]
-            self._file_size = MyScreenModel.model_data.get("_file_size")
-            self._last_updated_on = MyScreenModel.model_data.get("_last_updated_on")
+            self._file_path = NotesModel.model_data["_file_path"]
+            self._file_size = NotesModel.model_data.get("_file_size")
+            self._last_updated_on = NotesModel.model_data.get("_last_updated_on")
 
         else:
             self._file_path = FALLBACK_NOTES_FILE_PATH
@@ -121,7 +118,7 @@ class MyScreenModel:
     def formatted(self):
         all_instance_attributes = list(self.__dict__.items())
         attribute_to_formatted_name_map = (
-            MyScreenModel._get_attribute_to_formatted_name_map()
+            NotesModel._get_attribute_to_formatted_name_map()
         )
 
         return linesep.join(

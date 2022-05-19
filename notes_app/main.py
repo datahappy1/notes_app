@@ -1,4 +1,8 @@
+import os
+import sys
+
 from kivy.config import Config
+from kivy.resources import resource_add_path
 
 Config.set("graphics", "window_state", "maximized")
 Config.set("input", "mouse", "mouse,multitouch_on_demand")
@@ -7,8 +11,8 @@ from kivy.core.window import Window
 from kivymd.app import MDApp
 
 from notes_app.settings import Settings
-from notes_app.controller.myscreen import MyScreenController
-from notes_app.model.myscreen import MyScreenModel
+from notes_app.controller.notes_controller import NotesController
+from notes_app.model.notes_model import NotesModel
 
 settings = Settings()
 
@@ -16,8 +20,8 @@ settings = Settings()
 class NotesApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.model = MyScreenModel()
-        self.controller = MyScreenController(settings=settings, model=self.model)
+        self.model = NotesModel()
+        self.controller = NotesController(settings=settings, model=self.model)
 
     def _on_request_close(self, *source, **args):
         if self.controller.view.is_unsaved_change:
@@ -32,4 +36,7 @@ class NotesApp(MDApp):
         return self.controller.get_screen()
 
 
-NotesApp().run()
+if __name__ == '__main__':
+    if hasattr(sys, '_MEIPASS'):
+        resource_add_path(os.path.join(sys._MEIPASS))
+    NotesApp().run()

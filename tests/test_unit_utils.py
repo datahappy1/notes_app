@@ -2,8 +2,8 @@ import uuid
 from os import getcwd
 import pytest
 
-from notes_app.controller.myscreen import MyScreenController
-from notes_app.model.myscreen import MyScreenModel, FALLBACK_NOTES_FILE_PATH
+from notes_app.controller.notes_controller import NotesController
+from notes_app.model.notes_model import NotesModel, FALLBACK_NOTES_FILE_PATH
 from notes_app.settings import Settings
 from notes_app.utils.color import Color, get_color_by_name, get_next_color_by_rgba
 from notes_app.utils.file import SectionIdentifier, File
@@ -30,8 +30,8 @@ from notes_app.utils.time import format_epoch
 def get_file():
     settings = Settings()
 
-    controller = MyScreenController(
-        settings=settings, model=MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
+    controller = NotesController(
+        settings=settings, model=NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
     )
 
     file = File(file_path=f"{getcwd()}/assets/sample.txt", controller=controller)

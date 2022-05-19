@@ -10,13 +10,13 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.filemanager import MDFileManager, FloatButton
 from kivymd.uix.menu import MDDropdownMenu
 
-from notes_app.controller.myscreen import MyScreenController
-from notes_app.model.myscreen import MyScreenModel, FALLBACK_NOTES_FILE_PATH
+from notes_app.controller.notes_controller import NotesController
+from notes_app.model.notes_model import NotesModel, FALLBACK_NOTES_FILE_PATH
 from notes_app.settings import Settings
 from notes_app.utils.file import File, SectionIdentifier
 from notes_app.utils.search import Search
 from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
-from notes_app.view.myscreen import (
+from notes_app.view.notes_view import (
     DrawerList,
     MenuSettingsItems,
     MenuStorageItems,
@@ -31,7 +31,7 @@ from notes_app.view.myscreen import (
 settings = Settings()
 
 SETTINGS_FILE_PATH = f"{getcwd()}/settings.conf"
-MODEL_FILE_PATH = f"{getcwd()}/model/myscreen.model"
+MODEL_FILE_PATH = f"{getcwd()}/model/notes.model"
 NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
 EMPTY_NOTES_FILE_PATH = f"{getcwd()}/assets/sample_empty.txt"
 
@@ -77,8 +77,8 @@ def get_app():
     class NotesApp(MDApp):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
-            self.model = MyScreenModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-            self.controller = MyScreenController(settings=settings, model=self.model)
+            self.model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
+            self.controller = NotesController(settings=settings, model=self.model)
 
     return NotesApp()
 
@@ -447,7 +447,7 @@ class TestView:
             screen.dialog.content_cls.results_list.children[0]
             .on_release.__str__()
             .startswith(
-                "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+                "<bound method ButtonBehavior.on_release of <notes_app.view.notes_view.CustomListItem object at"
             )
         )
 
@@ -477,7 +477,7 @@ class TestView:
             screen.dialog.content_cls.results_list.children[0]
             .on_release.__str__()
             .startswith(
-                "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+                "<bound method ButtonBehavior.on_release of <notes_app.view.notes_view.CustomListItem object at"
             )
         )
 
@@ -507,7 +507,7 @@ class TestView:
             screen.dialog.content_cls.results_list.children[0]
             .on_release.__str__()
             .startswith(
-                "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+                "<bound method ButtonBehavior.on_release of <notes_app.view.notes_view.CustomListItem object at"
             )
         )
 
@@ -538,7 +538,7 @@ class TestView:
             screen.dialog.content_cls.results_list.children[0]
             .on_release.__str__()
             .startswith(
-                "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+                "<bound method ButtonBehavior.on_release of <notes_app.view.notes_view.CustomListItem object at"
             )
         )
         assert isinstance(
@@ -560,7 +560,7 @@ class TestView:
             screen.dialog.content_cls.results_list.children[1]
             .on_release.__str__()
             .startswith(
-                "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+                "<bound method ButtonBehavior.on_release of <notes_app.view.notes_view.CustomListItem object at"
             )
         )
         assert isinstance(
@@ -582,7 +582,7 @@ class TestView:
             screen.dialog.content_cls.results_list.children[2]
             .on_release.__str__()
             .startswith(
-                "<bound method ButtonBehavior.on_release of <notes_app.view.myscreen.CustomListItem object at"
+                "<bound method ButtonBehavior.on_release of <notes_app.view.notes_view.CustomListItem object at"
             )
         )
 
@@ -729,18 +729,18 @@ class TestView:
         screen.press_icon_search()
 
         assert screen.dialog.content_cls.get_search_switch_state.__str__().startswith(
-            "<bound method MyScreenView.get_search_switch_state of <Screen name=''>>"
+            "<bound method NotesView.get_search_switch_state of <Screen name=''>>"
         )
         assert screen.dialog.content_cls.search_switch_callback.__str__().startswith(
-            "<bound method MyScreenView.search_switch_callback of <Screen name=''>>"
+            "<bound method NotesView.search_switch_callback of <Screen name=''>>"
         )
         assert screen.dialog.content_cls.search_string_placeholder == "test placeholder"
         assert screen.dialog.content_cls.search_results_message == ""
         assert screen.dialog.content_cls.execute_search.__str__().startswith(
-            "<bound method MyScreenView.execute_search of <Screen name=''>>"
+            "<bound method NotesView.execute_search of <Screen name=''>>"
         )
         assert screen.dialog.content_cls.cancel.__str__().startswith(
-            "<bound method MyScreenView.cancel_dialog of <Screen name=''>>"
+            "<bound method NotesView.cancel_dialog of <Screen name=''>>"
         )
 
     def test_press_add_section(self, get_app):
@@ -750,10 +750,10 @@ class TestView:
 
         assert screen.dialog.content_cls.add_section_result_message == ""
         assert screen.dialog.content_cls.execute_add_section.__str__().startswith(
-            "<bound method MyScreenView.execute_add_section of <Screen name=''>>"
+            "<bound method NotesView.execute_add_section of <Screen name=''>>"
         )
         assert screen.dialog.content_cls.cancel.__str__().startswith(
-            "<bound method MyScreenView.cancel_dialog of <Screen name=''>>"
+            "<bound method NotesView.cancel_dialog of <Screen name=''>>"
         )
 
     def test_press_delete_section(self, get_app):

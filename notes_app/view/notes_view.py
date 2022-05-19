@@ -18,7 +18,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
-from notes_app.observer.observer import Observer
+from notes_app.observer.notes_observer import Observer
 from notes_app.utils.color import get_color_by_name, get_next_color_by_rgba
 from notes_app.utils.file import (
     File,
@@ -127,9 +127,9 @@ class MenuSettingsItems(Enum):
     ShowAppInfo = "Show application info"
 
 
-class MyScreenView(MDBoxLayout, MDScreen, Observer):
+class NotesView(MDBoxLayout, MDScreen, Observer):
     """"
-    A class that implements the visual presentation `MyScreenModel`.
+    A class that implements the visual presentation `NotesModel`.
 
     """
 
@@ -598,4 +598,4 @@ class MyScreenView(MDBoxLayout, MDScreen, Observer):
         # self.file_manager = self.get_file_manager()
 
 
-Builder.load_file(path.join(path.dirname(__file__), "myscreen.kv"))
+Builder.load_file(path.join(path.dirname(__file__), "notes_view.kv"))
