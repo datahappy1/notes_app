@@ -12,8 +12,10 @@ from typing import Tuple
 
 from notes_app.utils.time import format_epoch
 
-MODEL_STORAGE_FILE_PATH = f"{getcwd()}/model/notes.model"
-FALLBACK_NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
+# MODEL_STORAGE_FILE_PATH = f"{getcwd()}/model/notes.model"
+# FALLBACK_NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
+MODEL_STORAGE_FILE_PATH = "C:\\Users\\pavel.prudky\\PycharmProjects\\notes_app\\notes_app\model\\notes.model"
+FALLBACK_NOTES_FILE_PATH = "C:\\Users\\pavel.prudky\\PycharmProjects\\notes_app\\notes_app\\assets\\sample.txt"
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 

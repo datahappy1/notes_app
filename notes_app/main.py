@@ -1,10 +1,11 @@
 import os
 import sys
 
-from kivy.config import Config
+from kivy import Config
 from kivy.resources import resource_add_path
 
 Config.set("graphics", "window_state", "maximized")
+Config.set("graphics", "multisamples", "0")
 Config.set("input", "mouse", "mouse,multitouch_on_demand")
 
 from kivy.core.window import Window

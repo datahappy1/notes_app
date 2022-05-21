@@ -575,7 +575,8 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         output manager to the screen
         """
         self.file_manager = self.get_file_manager()
-        self.file_manager.show(os.getcwd())
+        #self.file_manager.show(os.getcwd())
+        self.file_manager.show("C:\\Users\\pavel.prudky\\PycharmProjects\\notes_app\\notes_app\\assets")
         self.manager_open = True
 
     def file_manager_select_path(self, path):

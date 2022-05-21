@@ -1,7 +1,8 @@
 from configparser import ConfigParser
 from os import getcwd
 
-SETTINGS_FILE_PATH = f"{getcwd()}/settings.conf"
+#SETTINGS_FILE_PATH = f"{getcwd()}/settings.conf"
+SETTINGS_FILE_PATH = "C:\\Users\\pavel.prudky\\PycharmProjects\\notes_app\\notes_app\\settings.conf"
 GENERAL_SETTINGS_SECTION_NAME = "general_settings"
 
 

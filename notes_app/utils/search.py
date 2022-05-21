@@ -115,7 +115,7 @@ def transform_position_text_placeholder_to_position(
 def transform_position_to_position_text_placeholder(position_start: int = 0) -> AnyStr:
     if position_start:
         return f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}"
-    return f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{0}"
+    return f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}0"
 
 
 def transform_section_text_placeholder_to_section_name(
