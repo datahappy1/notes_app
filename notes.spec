@@ -8,7 +8,7 @@ a = Analysis(
     ['notes_app\\main.py'],
     pathex=[],
     binaries=[],
-    datas=[('notes_app\\view\\*', 'notes_app\\view\\'), ('notes_app\\settings.conf', '.')],
+    datas=[('notes_app\\view\\notes_view.kv', 'notes_app\\view\\')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

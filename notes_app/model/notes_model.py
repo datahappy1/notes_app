@@ -5,17 +5,14 @@
 # model when they are notified (in this case, it is the `notify_model_is_changed`
 # method). For this, observers must be descendants of an abstract class,
 # inheriting which, the `notify_model_is_changed` method must be overridden.
-import base64
-import json
-from os import path, linesep, getcwd
+from os import path, linesep
 from typing import Tuple
 
 from notes_app.utils.time import format_epoch
 
-# MODEL_STORAGE_FILE_PATH = f"{getcwd()}/model/notes.model"
-# FALLBACK_NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
-MODEL_STORAGE_FILE_PATH = "C:\\Users\\pavel.prudky\\PycharmProjects\\notes_app\\notes_app\model\\notes.model"
+# TODO remove FALLBACK_NOTES_FILE_PATH ref. to local disk file
 FALLBACK_NOTES_FILE_PATH = "C:\\Users\\pavel.prudky\\PycharmProjects\\notes_app\\notes_app\\assets\\sample.txt"
+DEFAULT_MODEL_STORE_FILE_NAME = "model.json"
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -28,16 +25,6 @@ def get_additional_attributes_from_file_path(file_path: str) -> Tuple[int, str]:
     )
 
 
-def safe_load_model_data():
-    try:
-        with open(MODEL_STORAGE_FILE_PATH, "rb") as model_file:
-            decoded_data = base64.decodebytes(model_file.read())
-            json_data = json.loads(decoded_data)
-            return json_data
-    except (FileNotFoundError, json.JSONDecodeError):
-        return dict()
-
-
 class NotesModel:
     """
     The NotesModel class is a data model implementation. The model stores
@@ -46,9 +33,10 @@ class NotesModel:
     methods for registration, deletion and notification observers.
     """
 
-    model_data = safe_load_model_data()
+    def __init__(self, store, notes_file_path: str = None):
+        self.store = store(filename=DEFAULT_MODEL_STORE_FILE_NAME)
+        self._set_store_default_value_if_empty()
 
-    def __init__(self, notes_file_path: str = None):
         if notes_file_path and path.exists(notes_file_path):
             self._file_path = notes_file_path
             (
@@ -56,12 +44,12 @@ class NotesModel:
                 self._last_updated_on,
             ) = get_additional_attributes_from_file_path(self._file_path)
 
-        elif NotesModel.model_data.get("_file_path") and path.exists(
-            NotesModel.model_data["_file_path"]
+        elif self.store.get("_file_path")["value"] and path.exists(
+                self.store.get("_file_path")["value"]
         ):
-            self._file_path = NotesModel.model_data["_file_path"]
-            self._file_size = NotesModel.model_data.get("_file_size")
-            self._last_updated_on = NotesModel.model_data.get("_last_updated_on")
+            self._file_path = self.store.get("_file_path")["value"]
+            self._file_size = self.store.get("_file_size")["value"]
+            self._last_updated_on = self.store.get("_last_updated_on")["value"]
 
         else:
             self._file_path = FALLBACK_NOTES_FILE_PATH
@@ -78,6 +66,16 @@ class NotesModel:
             "_file_size": self._file_size,
             "_last_updated_on": self._last_updated_on,
         }
+
+    def _set_store_default_value_if_empty(self):
+        if not self.store.exists('_file_path') or self.store.get("_file_path")["value"] is None:
+            self.store.put("_file_path", value=FALLBACK_NOTES_FILE_PATH)
+
+        if not self.store.exists('_file_size') or self.store.get("_file_size")["value"] is None:
+            self.store.put("_file_size", value=0)
+
+        if not self.store.exists('_last_updated_on') or self.store.get("_last_updated_on")["value"] is None:
+            self.store.put("_last_updated_on", value="")
 
     @staticmethod
     def _get_attribute_to_formatted_name_map():
@@ -139,9 +137,7 @@ class NotesModel:
         for o in self.observers:
             o.notify_model_is_changed()
 
-    def dump_encoded(self):
-        json_data = json.dumps(self.__repr__()).encode()
-        encoded_data = base64.encodebytes(json_data)
-
-        with open(MODEL_STORAGE_FILE_PATH, "wb") as model_file:
-            model_file.write(encoded_data)
+    def dump(self):
+        self.store.put("_file_path", value=self._file_path)
+        self.store.put("_file_size", value=self._file_size)
+        self.store.put("_last_updated_on", value=self._last_updated_on)

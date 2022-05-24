@@ -5,7 +5,7 @@ from kivymd.app import MDApp
 
 from notes_app.controller.notes_controller import NotesController
 from notes_app.model.notes_model import NotesModel, FALLBACK_NOTES_FILE_PATH
-from notes_app.settings import Settings
+from notes_app.utils.settings import Settings
 from notes_app.view.notes_view import NotesView
 
 settings = Settings()

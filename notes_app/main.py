@@ -3,6 +3,7 @@ import sys
 
 from kivy import Config
 from kivy.resources import resource_add_path
+from kivy.storage.jsonstore import JsonStore
 
 Config.set("graphics", "window_state", "maximized")
 Config.set("graphics", "multisamples", "0")
@@ -11,17 +12,17 @@ Config.set("input", "mouse", "mouse,multitouch_on_demand")
 from kivy.core.window import Window
 from kivymd.app import MDApp
 
-from notes_app.settings import Settings
+from notes_app.utils.settings import Settings
 from notes_app.controller.notes_controller import NotesController
 from notes_app.model.notes_model import NotesModel
 
-settings = Settings()
+settings = Settings(store=JsonStore)
 
 
 class NotesApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.model = NotesModel()
+        self.model = NotesModel(store=JsonStore)
         self.controller = NotesController(settings=settings, model=self.model)
 
     def _on_request_close(self, *source, **args):

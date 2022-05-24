@@ -12,7 +12,7 @@ from kivymd.uix.menu import MDDropdownMenu
 
 from notes_app.controller.notes_controller import NotesController
 from notes_app.model.notes_model import NotesModel, FALLBACK_NOTES_FILE_PATH
-from notes_app.settings import Settings
+from notes_app.utils.settings import Settings
 from notes_app.utils.file import File, SectionIdentifier
 from notes_app.utils.search import Search
 from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT

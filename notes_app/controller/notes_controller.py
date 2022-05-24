@@ -25,7 +25,7 @@ class NotesController:
         self.model.file_path = file_path
         self.model.file_size = path.getsize(file_path)
         self.model.last_updated_on = path.getmtime(file_path)
-        self.model.dump_encoded()
+        self.model.dump()
 
     def read_file_data(self, file_path=None):
         f = open(file_path or self.model.file_path, "r")
@@ -40,7 +40,7 @@ class NotesController:
 
         self.model.file_size = path.getsize(self.model.file_path)
         self.model.last_updated_on = time.time()
-        self.model.dump_encoded()
+        self.model.dump()
 
     def get_screen(self):
         """The method creates get the view."""

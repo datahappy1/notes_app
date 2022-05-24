@@ -28,7 +28,7 @@ class TestModel:
             "_file_size": "File size (bytes)",
             "_last_updated_on": "Last updated on",
         }
-        model.dump_encoded()
+        model.dump()
 
     def test_set_get_file_path(self):
         model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
@@ -64,7 +64,7 @@ class TestModel:
 
     def test_dump_encoded(self):
         model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-        assert model.dump_encoded() is None
+        assert model.dump() is None
 
     def test_safe_load(self):
         with open(file=f"{getcwd()}/model/notes.model", mode="rb") as test_file:

@@ -123,7 +123,6 @@ class MenuSettingsItems(Enum):
     DecreaseFontSize = "Decrease font size"
     SetNextBackgroundColor = "Set next background color"
     SetNextForegroundColor = "Set next foreground color"
-    SaveSettings = "Save settings"
     ShowAppInfo = "Show application info"
 
 
@@ -288,9 +287,6 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             )
             self.text_section_view.foreground_color = next_foreground_color.rgba_value
             self.settings.foreground_color = next_foreground_color.name
-        elif text_item == MenuSettingsItems.SaveSettings.value:
-            self.settings.dump()
-            self.menu_settings.dismiss()
         elif text_item == MenuSettingsItems.ShowAppInfo.value:
             self.press_menu_item_show_app_metadata()
             self.menu_settings.dismiss()
