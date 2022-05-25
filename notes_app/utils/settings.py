@@ -9,20 +9,36 @@ DEFAULT_SETTINGS_VALUE_FOREGROUND_COLOR = "green"
 class Settings:
     def __init__(self, store):
         self.store = store(filename=DEFAULT_SETTINGS_STORE_FILE_NAME)
-        self._set_store_default_value_if_empty()
+        self._set_store_defaults_if_missing()
 
-    def _set_store_default_value_if_empty(self):
-        if not self.store.exists('font_name') or self.store.get("font_name")["value"] is None:
+    def _set_store_defaults_if_missing(self):
+        if (
+            not self.store.exists("font_name")
+            or self.store.get("font_name")["value"] is None
+        ):
             self.store.put("font_name", value=DEFAULT_SETTINGS_VALUE_FONT_NAME)
 
-        if not self.store.exists('font_size') or self.store.get("font_size")["value"] is None:
+        if (
+            not self.store.exists("font_size")
+            or self.store.get("font_size")["value"] is None
+        ):
             self.store.put("font_size", value=DEFAULT_SETTINGS_VALUE_FONT_SIZE)
 
-        if not self.store.exists('background_color') or self.store.get("background_color")["value"] is None:
-            self.store.put("background_color", value=DEFAULT_SETTINGS_VALUE_BACKGROUND_COLOR)
+        if (
+            not self.store.exists("background_color")
+            or self.store.get("background_color")["value"] is None
+        ):
+            self.store.put(
+                "background_color", value=DEFAULT_SETTINGS_VALUE_BACKGROUND_COLOR
+            )
 
-        if not self.store.exists('foreground_color') or self.store.get("foreground_color")["value"] is None:
-            self.store.put("foreground_color", value=DEFAULT_SETTINGS_VALUE_FOREGROUND_COLOR)
+        if (
+            not self.store.exists("foreground_color")
+            or self.store.get("foreground_color")["value"] is None
+        ):
+            self.store.put(
+                "foreground_color", value=DEFAULT_SETTINGS_VALUE_FOREGROUND_COLOR
+            )
 
     @property
     def font_name(self):

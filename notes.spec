@@ -5,10 +5,10 @@ block_cipher = None
 
 
 a = Analysis(
-    ['notes_app\\main.py'],
+    ["notes_app\\main.py"],
     pathex=[],
     binaries=[],
-    datas=[('notes_app\\view\\notes_view.kv', 'notes_app\\view\\')],
+    datas=[("notes_app\\view\\notes_view.kv", "notes_app\\view\\")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -21,17 +21,18 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-exe = EXE(pyz,
-          a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
-          *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
-          name='notes',
-          debug=False,
-          bootloader_ignore_signals=False,
-          upx=True,
-          console=False,
-          strip=False,
-          upx_exclude=[],
-          )
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
+    name="notes",
+    debug=False,
+    bootloader_ignore_signals=False,
+    upx=True,
+    console=False,
+    strip=False,
+    upx_exclude=[],
+)

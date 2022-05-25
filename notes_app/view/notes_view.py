@@ -152,15 +152,13 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
 
-        self.file = File(file_path=None, controller=self.controller)
-
-        self.current_section_identifier = self.file.default_section_identifier
         self.search = Search()
+        self.set_properties_from_settings()
 
+        self.file = File(file_path=None, controller=self.controller)
+        self.current_section_identifier = self.file.default_section_identifier
         self.filter_data_split_by_section()
         self.set_drawer_items(section_identifiers=self.file.section_identifiers)
-
-        self.set_properties_from_settings()
 
     @property
     def is_unsaved_change(self):
@@ -452,6 +450,10 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             not args[0]
             or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
             or args[0].isspace()
+            or args[0]
+            in [
+                si.section_name for si in self.file.section_identifiers
+            ]  # TODO cover by unit test
         ):
             self.dialog.content_cls.add_section_result_message = "Invalid name"
             return
@@ -571,8 +573,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         output manager to the screen
         """
         self.file_manager = self.get_file_manager()
-        #self.file_manager.show(os.getcwd())
-        self.file_manager.show("C:\\Users\\pavel.prudky\\PycharmProjects\\notes_app\\notes_app\\assets")
+        self.file_manager.show(os.getcwd())
         self.manager_open = True
 
     def file_manager_select_path(self, path):
@@ -592,7 +593,6 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         """
         self.manager_open = False
         self.file_manager.close()
-        # self.file_manager = self.get_file_manager()
 
 
 Builder.load_file(path.join(path.dirname(__file__), "notes_view.kv"))

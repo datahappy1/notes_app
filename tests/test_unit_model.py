@@ -47,11 +47,10 @@ class TestModel:
 
     def test_formatted(self):
         model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-        assert (
-            ' '.join(model.formatted.splitlines())
-            == """File path : {cwd}/assets/sample.txt File size (bytes) : {file_size} Last updated on : {dt_now}""".format(
-                cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on
-            )
+        assert " ".join(
+            model.formatted.splitlines()
+        ) == """File path : {cwd}/assets/sample.txt File size (bytes) : {file_size} Last updated on : {dt_now}""".format(
+            cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on
         )
 
     def test_set_get_observers(self):

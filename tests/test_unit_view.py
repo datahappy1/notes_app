@@ -704,13 +704,12 @@ class TestView:
 
         assert screen.press_menu_item_show_file_metadata() is None
 
-        assert (
-            ' '.join(screen.dialog.content_cls.show_file_metadata_label.splitlines())
-            == """File path : {cwd}/assets/sample.txt File size (bytes) : {file_size} Last updated on : {dt_now}""".strip().format(
-                cwd=getcwd(),
-                file_size=screen.model.file_size,
-                dt_now=screen.model.last_updated_on,
-            )
+        assert " ".join(
+            screen.dialog.content_cls.show_file_metadata_label.splitlines()
+        ) == """File path : {cwd}/assets/sample.txt File size (bytes) : {file_size} Last updated on : {dt_now}""".strip().format(
+            cwd=getcwd(),
+            file_size=screen.model.file_size,
+            dt_now=screen.model.last_updated_on,
         )
 
     def test_press_menu_item_show_app_metadata(self, get_app):

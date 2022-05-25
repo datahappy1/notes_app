@@ -6,22 +6,20 @@
 # method). For this, observers must be descendants of an abstract class,
 # inheriting which, the `notify_model_is_changed` method must be overridden.
 from os import path, linesep
-from typing import Tuple
 
 from notes_app.utils.time import format_epoch
 
-# TODO remove FALLBACK_NOTES_FILE_PATH ref. to local disk file
-FALLBACK_NOTES_FILE_PATH = "C:\\Users\\pavel.prudky\\PycharmProjects\\notes_app\\notes_app\\assets\\sample.txt"
-DEFAULT_MODEL_STORE_FILE_NAME = "model.json"
+DEFAULT_MODEL_STORE_FILE_NAME = "file_metadata.json"
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def get_additional_attributes_from_file_path(file_path: str) -> Tuple[int, str]:
-    return (
-        path.getsize(file_path),
-        format_epoch(
-            format=LAST_UPDATED_ON_TIME_FORMAT, epoch_time=path.getmtime(file_path)
-        ),
+def get_file_size(file_path):
+    return path.getsize(file_path)
+
+
+def get_formatted_epoch(file_path):
+    return format_epoch(
+        format=LAST_UPDATED_ON_TIME_FORMAT, epoch_time=path.getmtime(file_path)
     )
 
 
@@ -35,28 +33,24 @@ class NotesModel:
 
     def __init__(self, store, notes_file_path: str = None):
         self.store = store(filename=DEFAULT_MODEL_STORE_FILE_NAME)
-        self._set_store_default_value_if_empty()
+        self._set_store_defaults_if_missing()
 
         if notes_file_path and path.exists(notes_file_path):
             self._file_path = notes_file_path
-            (
-                self._file_size,
-                self._last_updated_on,
-            ) = get_additional_attributes_from_file_path(self._file_path)
+            self._file_size = get_file_size(file_path=notes_file_path)
+            self._last_updated_on = get_formatted_epoch(file_path=notes_file_path)
 
         elif self.store.get("_file_path")["value"] and path.exists(
-                self.store.get("_file_path")["value"]
+            self.store.get("_file_path")["value"]
         ):
             self._file_path = self.store.get("_file_path")["value"]
             self._file_size = self.store.get("_file_size")["value"]
             self._last_updated_on = self.store.get("_last_updated_on")["value"]
 
         else:
-            self._file_path = FALLBACK_NOTES_FILE_PATH
-            (
-                self._file_size,
-                self._last_updated_on,
-            ) = get_additional_attributes_from_file_path(self._file_path)
+            raise ValueError(
+                "Need to provide the file_path"
+            )  # TODO cover by test, catch exc
 
         self.observers = []
 
@@ -67,15 +61,38 @@ class NotesModel:
             "_last_updated_on": self._last_updated_on,
         }
 
-    def _set_store_default_value_if_empty(self):
-        if not self.store.exists('_file_path') or self.store.get("_file_path")["value"] is None:
-            self.store.put("_file_path", value=FALLBACK_NOTES_FILE_PATH)
+    @staticmethod
+    def _generate_your_first_file():
+        with open(file="my_first_file.txt", mode="w") as f:
+            f.write("<section=first> Your first section.")
+        return "my_first_file.txt"
 
-        if not self.store.exists('_file_size') or self.store.get("_file_size")["value"] is None:
-            self.store.put("_file_size", value=0)
+    def _set_store_defaults_if_missing(self):
+        if (
+            not self.store.exists("_file_path")
+            or self.store.get("_file_path")["value"] is None
+        ):
+            self.store.put("_file_path", value=self._generate_your_first_file())
 
-        if not self.store.exists('_last_updated_on') or self.store.get("_last_updated_on")["value"] is None:
-            self.store.put("_last_updated_on", value="")
+        if (
+            not self.store.exists("_file_size")
+            or self.store.get("_file_size")["value"] is None
+        ):
+            self.store.put(
+                "_file_size",
+                value=get_file_size(file_path=self.store.get("_file_path")["value"]),
+            )
+
+        if (
+            not self.store.exists("_last_updated_on")
+            or self.store.get("_last_updated_on")["value"] is None
+        ):
+            self.store.put(
+                "_last_updated_on",
+                value=get_formatted_epoch(
+                    file_path=self.store.get("_file_path")["value"]
+                ),
+            )
 
     @staticmethod
     def _get_attribute_to_formatted_name_map():
