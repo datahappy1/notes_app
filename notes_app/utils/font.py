@@ -1,4 +1,4 @@
-from typing import AnyStr
+from typing import AnyStr, List
 
 AVAILABLE_FONTS = [
     "DejaVuSans",
@@ -10,8 +10,8 @@ AVAILABLE_FONTS = [
 ]
 
 
-def get_next_font(font_name: AnyStr) -> AnyStr:
-    iterable_available_fonts = iter(AVAILABLE_FONTS)
+def get_next_font(fonts_list: List[AnyStr], font_name: AnyStr) -> AnyStr:
+    iterable_available_fonts = iter(fonts_list)
 
     for font in iterable_available_fonts:
         if font == font_name:

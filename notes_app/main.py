@@ -13,6 +13,10 @@ from kivy.core.window import Window
 from kivymd.app import MDApp
 
 from notes_app.utils.settings import Settings
+from notes_app.utils.default_notes_file import (
+    DEFAULT_NOTES_FILE_NAME,
+    DEFAULT_NOTES_FILE_CONTENT,
+)
 from notes_app.controller.notes_controller import NotesController
 from notes_app.model.notes_model import NotesModel
 
@@ -22,7 +26,12 @@ settings = Settings(store=JsonStore)
 class NotesApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.model = NotesModel(store=JsonStore)
+
+        self.model = NotesModel(
+            store=JsonStore,
+            default_notes_file_name=DEFAULT_NOTES_FILE_NAME,
+            default_notes_file_content=DEFAULT_NOTES_FILE_CONTENT,
+        )
         self.controller = NotesController(settings=settings, model=self.model)
 
     def _on_request_close(self, *source, **args):

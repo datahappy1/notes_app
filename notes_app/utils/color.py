@@ -27,17 +27,22 @@ AVAILABLE_COLORS = [
     Color("white", (1, 1, 1, 1)),
 ]
 
+AVAILABLE_SNACK_BAR_COLORS = [
+    Color("success_green", (0.3, 0.5, 0.3, 0.9)),
+    Color("failure_red", (0.9, 0.3, 0.3, 0.9)),
+]
 
-def get_color_by_name(color_name: AnyStr) -> Color:
-    for color in AVAILABLE_COLORS:
+
+def get_color_by_name(colors_list: List[Color], color_name: AnyStr) -> Color:
+    for color in colors_list:
         if color.name == color_name:
             return color
 
 
 def get_next_color_by_rgba(
-    rgba_value: List[int], skip_rgba_value: List[int] = None
+    colors_list: List[Color], rgba_value: List[int], skip_rgba_value: List[int] = None
 ) -> Color:
-    iterable_available_colors = iter(AVAILABLE_COLORS)
+    iterable_available_colors = iter(colors_list)
 
     for color in iterable_available_colors:
         if color.rgba_value == tuple(rgba_value):
@@ -45,7 +50,9 @@ def get_next_color_by_rgba(
 
             if skip_rgba_value and next_color.rgba_value == tuple(skip_rgba_value):
                 return get_next_color_by_rgba(
-                    rgba_value=next_color.rgba_value, skip_rgba_value=skip_rgba_value
+                    colors_list=AVAILABLE_COLORS,
+                    rgba_value=next_color.rgba_value,
+                    skip_rgba_value=skip_rgba_value,
                 )
 
             return next_color

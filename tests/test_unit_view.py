@@ -2,17 +2,12 @@ import os
 from copy import copy
 from os import getcwd, linesep
 
-import pytest
 from kivy.properties import ObjectProperty, StringProperty
-from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.filemanager import MDFileManager, FloatButton
 from kivymd.uix.menu import MDDropdownMenu
 
-from notes_app.controller.notes_controller import NotesController
-from notes_app.model.notes_model import NotesModel, FALLBACK_NOTES_FILE_PATH
-from notes_app.utils.settings import Settings
 from notes_app.utils.file import File, SectionIdentifier
 from notes_app.utils.search import Search
 from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
@@ -28,77 +23,17 @@ from notes_app.view.notes_view import (
     APP_METADATA_ROWS,
 )
 
-settings = Settings()
-
-SETTINGS_FILE_PATH = f"{getcwd()}/settings.conf"
-MODEL_FILE_PATH = f"{getcwd()}/model/notes.model"
-NOTES_FILE_PATH = f"{getcwd()}/assets/sample.txt"
-EMPTY_NOTES_FILE_PATH = f"{getcwd()}/assets/sample_empty.txt"
-
-
-def write_default_settings_file():
-    with open(file=SETTINGS_FILE_PATH, mode="w") as settings_file:
-        settings_file.write(
-            "\n".join(
-                [
-                    "[general_settings]",
-                    "font_name = RobotoMono-Regular",
-                    "font_size = 11.0",
-                    "background_color = black",
-                    "foreground_color = silver",
-                ]
-            )
-        )
-
-
-def write_default_notes_file():
-    with open(file=NOTES_FILE_PATH, mode="w") as notes_file:
-        notes_file.write(
-            "\n".join(
-                [
-                    "<section=first> Quod equidem non reprehendo",
-                    "<section=second> Quis istum dolorem timet",
-                ]
-            )
-        )
-
-
-def write_default_model_file():
-    with open(file=MODEL_FILE_PATH, mode="wb") as model_file:
-        model_file.write(
-            b"""eyJfZmlsZV9wYXRoIjogIkM6XFxVc2Vyc1xccGF2ZWwucHJ1ZGt5XFxQeWNoYXJtUHJvamVjdHNc
-XG5vdGVzX2FwcFxcdGVzdHMvYXNzZXRzL3NhbXBsZS50eHQiLCAiX2ZpbGVfc2l6ZSI6IDY5LCAi
-X2xhc3RfdXBkYXRlZF9vbiI6ICIyMDIyLTA0LTI2IDEwOjQ1OjU3In0="""
-        )
-
-
-@pytest.fixture
-def get_app():
-    class NotesApp(MDApp):
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-            self.controller = NotesController(settings=settings, model=self.model)
-
-    return NotesApp()
-
-
-@pytest.fixture(autouse=True)
-def get_default_test_files_state():
-    write_default_notes_file()
-    write_default_model_file()
-    yield
-    write_default_notes_file()
-    write_default_model_file()
+# MODEL_FILE_PATH = f"{getcwd()}/model/notes.model"
+# NOTES_FILE_PATH = f"{getcwd()}/TBD!!_xassets/sample.txt"
+# EMPTY_NOTES_FILE_PATH = f"{getcwd()}/TBD!!_xassets/sample_empty.txt"
+from tests.conftest import (
+    read_settings_file,
+    DEFAULT_NOTES_FILE_PATH,
+    DEFAULT_NOTES_EMPTY_FILE_PATH,
+)
 
 
 class TestView:
-    def setup_method(self, test_method):
-        write_default_settings_file()
-
-    def teardown_method(self, test_method):
-        write_default_settings_file()
-
     def test_view(self, get_app):
         assert get_app.model
         assert get_app.controller
@@ -128,10 +63,10 @@ class TestView:
         screen = get_app.controller.get_screen()
         screen.set_properties_from_settings()
 
-        assert screen.text_section_view.font_name == "RobotoMono-Regular"
-        assert screen.text_section_view.font_size == 11.0
-        assert screen.text_section_view.background_color == [0, 0, 0, 1]
-        assert screen.text_section_view.foreground_color == [0.75, 0.75, 0.75, 1]
+        assert screen.text_section_view.font_name == "Roboto-Bold"
+        assert screen.text_section_view.font_size == 14.0
+        assert screen.text_section_view.background_color == [0, 0, 1, 1]
+        assert screen.text_section_view.foreground_color == [0, 0.5, 0, 1]
 
     def test_filter_data_split_by_section(self, get_app):
         screen = get_app.controller.get_screen()
@@ -226,63 +161,73 @@ class TestView:
         screen = get_app.controller.get_screen()
 
         # change font name
-        assert screen.text_section_view.font_name == "RobotoMono-Regular"
-        assert screen.settings.font_name == "RobotoMono-Regular"
+        assert screen.text_section_view.font_name == "Roboto-Bold"
+        assert screen.settings.font_name == "Roboto-Bold"
 
         value = MenuSettingsItems.SetNextFont.value
         screen.press_menu_settings_item_callback(text_item=value)
         screen.press_menu_settings_item_callback(text_item=value)
 
-        assert screen.text_section_view.font_name == "Roboto-Bold"
-        assert screen.settings.font_name == "Roboto-Bold"
+        assert screen.text_section_view.font_name == "Roboto-Italic"
+        assert screen.settings.font_name == "Roboto-Italic"
 
         # increase font size
-        assert screen.text_section_view.font_size == 11.0
-        assert screen.settings.font_size == "11.0"
+        assert screen.text_section_view.font_size == 14.0
+        assert screen.settings.font_size == "14.0"
 
         value = MenuSettingsItems.IncreaseFontSize.value
         screen.press_menu_settings_item_callback(text_item=value)
         screen.press_menu_settings_item_callback(text_item=value)
 
-        assert screen.text_section_view.font_size == 13.0
-        assert screen.settings.font_size == "13.0"
+        assert screen.text_section_view.font_size == 16.0
+        assert screen.settings.font_size == "16.0"
 
         # decrease font size
-        assert screen.text_section_view.font_size == 13.0
-        assert screen.settings.font_size == "13.0"
+        assert screen.text_section_view.font_size == 16.0
+        assert screen.settings.font_size == "16.0"
 
         value = MenuSettingsItems.DecreaseFontSize.value
         screen.press_menu_settings_item_callback(text_item=value)
         screen.press_menu_settings_item_callback(text_item=value)
 
-        assert screen.text_section_view.font_size == 11.0
-        assert screen.settings.font_size == "11.0"
+        assert screen.text_section_view.font_size == 14.0
+        assert screen.settings.font_size == "14.0"
 
         # change background color
-        assert screen.text_section_view.background_color == [0, 0, 0, 1]
-        assert screen.settings.background_color == "black"
+        assert screen.text_section_view.background_color == [0, 0, 1, 1]
+        assert screen.settings.background_color == "blue"
 
         value = MenuSettingsItems.SetNextBackgroundColor.value
         screen.press_menu_settings_item_callback(text_item=value)
         screen.press_menu_settings_item_callback(text_item=value)
 
-        assert screen.text_section_view.background_color == [0, 0, 1, 1]
-        assert screen.settings.background_color == "blue"
+        assert screen.text_section_view.background_color == [0, 1, 0, 1]
+        assert screen.settings.background_color == "lime"
 
         # change foreground color
-        assert screen.text_section_view.foreground_color == [0.75, 0.75, 0.75, 1]
-        assert screen.settings.foreground_color == "silver"
+        assert screen.text_section_view.foreground_color == [0, 0.5, 0, 1]
+        assert screen.settings.foreground_color == "green"
 
         value = MenuSettingsItems.SetNextForegroundColor.value
         screen.press_menu_settings_item_callback(text_item=value)
         screen.press_menu_settings_item_callback(text_item=value)
 
-        assert screen.text_section_view.foreground_color == [1, 0, 1, 1]
-        assert screen.settings.foreground_color == "fuchsia"
+        assert screen.text_section_view.foreground_color == [0, 1, 1, 1]
+        assert screen.settings.foreground_color == "aqua"
 
         # save settings
-        value = MenuSettingsItems.SaveSettings.value
+        value = MenuSettingsItems.Save.value
         screen.press_menu_settings_item_callback(text_item=value)
+        assert get_app.controller.view.settings.font_name == "Roboto-Italic"
+        assert get_app.controller.view.settings.font_size == "14.0"
+        assert get_app.controller.view.settings.background_color == "lime"
+        assert get_app.controller.view.settings.foreground_color == "aqua"
+
+        settings_file_content = read_settings_file()
+        assert settings_file_content["font_name"] == {"value": "Roboto-Italic"}
+        assert settings_file_content["font_size"] == {"value": "14.0"}
+        assert settings_file_content["foreground_color"] == {"value": "aqua"}
+        assert settings_file_content["background_color"] == {"value": "lime"}
 
         # ShowAppInfo
         value = MenuSettingsItems.ShowAppInfo.value
@@ -325,14 +270,14 @@ class TestView:
         assert isinstance(screen.file_manager.children[1], MDBoxLayout)
 
         # NOTES_FILE_PATH
-        screen.execute_open_file(file_path=NOTES_FILE_PATH)
-        assert screen.file._file_path == NOTES_FILE_PATH
+        screen.execute_open_file(file_path=DEFAULT_NOTES_FILE_PATH)
+        assert screen.file._file_path == DEFAULT_NOTES_FILE_PATH
         assert isinstance(screen.ids.md_list.children[0], ItemDrawer)
         assert screen.ids.md_list.children[0].id == "<section=second> "
         assert screen.text_section_view.text == "Quod equidem non reprehendo\n"
 
         # EMPTY_NOTES_FILE_PATH
-        screen.execute_open_file(file_path=EMPTY_NOTES_FILE_PATH)
+        screen.execute_open_file(file_path=DEFAULT_NOTES_EMPTY_FILE_PATH)
         assert screen.file._section_identifiers == []
         assert screen.file._data_by_sections == {}
 
@@ -612,19 +557,24 @@ class TestView:
         assert screen.execute_add_section(section_name) is None
         assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
 
+        # duplicate section name
         section_name = "first"
         assert screen.execute_add_section(section_name) is None
-        assert screen.dialog.content_cls is None
+        assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
 
         section_name = "new section"
-        assert len(screen.file.section_identifiers) == 3
+        assert len(screen.file.section_identifiers) == 2
         assert screen.execute_add_section(section_name) is None
-        assert len(screen.file.section_identifiers) == 4
+
+        # add section dialog is closed
+        assert screen.dialog.content_cls is None
+
+        assert len(screen.file.section_identifiers) == 3
         assert (
-            screen.file.section_identifiers[3].section_file_separator
+            screen.file.section_identifiers[2].section_file_separator
             == "<section=new section> "
         )
-        assert screen.file.section_identifiers[3].section_name == "new section"
+        assert screen.file.section_identifiers[2].section_name == "new section"
         assert (
             screen.file.get_section_content(
                 section_file_separator="<section=new section> "
@@ -706,8 +656,8 @@ class TestView:
 
         assert " ".join(
             screen.dialog.content_cls.show_file_metadata_label.splitlines()
-        ) == """File path : {cwd}/assets/sample.txt File size (bytes) : {file_size} Last updated on : {dt_now}""".strip().format(
-            cwd=getcwd(),
+        ) == """File : {file_path} File size (bytes) : {file_size} Last updated on : {dt_now}""".strip().format(
+            file_path=DEFAULT_NOTES_FILE_PATH,
             file_size=screen.model.file_size,
             dt_now=screen.model.last_updated_on,
         )
@@ -820,7 +770,7 @@ class TestView:
         screen.file_manager.show(os.getcwd())
         screen.manager_open = True
 
-        screen.file_manager_select_path(path=NOTES_FILE_PATH)
+        screen.file_manager_select_path(path=DEFAULT_NOTES_FILE_PATH)
         assert screen.manager_open is False
         assert isinstance(screen.file_manager, MDFileManager)
         assert isinstance(screen.file_manager.children[0], FloatButton)

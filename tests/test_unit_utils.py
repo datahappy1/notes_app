@@ -1,13 +1,19 @@
 import uuid
-from os import getcwd
+
 import pytest
 
-from notes_app.controller.notes_controller import NotesController
-from notes_app.model.notes_model import NotesModel, FALLBACK_NOTES_FILE_PATH
-from notes_app.utils.settings import Settings
-from notes_app.utils.color import Color, get_color_by_name, get_next_color_by_rgba
+from notes_app.utils.color import (
+    Color,
+    get_color_by_name,
+    get_next_color_by_rgba,
+    AVAILABLE_COLORS,
+)
+from notes_app.utils.default_notes_file import (
+    DEFAULT_NOTES_FILE_CONTENT,
+    generate_default_file,
+)
 from notes_app.utils.file import SectionIdentifier, File
-from notes_app.utils.font import get_next_font
+from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
 from notes_app.utils.mark import _get_marked, get_marked_search_result
 from notes_app.utils.search import (
     Search,
@@ -24,18 +30,14 @@ from notes_app.utils.search import (
     transform_section_text_placeholder_to_section_name,
 )
 from notes_app.utils.time import format_epoch
-
-
-@pytest.fixture()
-def get_file():
-    settings = Settings()
-
-    controller = NotesController(
-        settings=settings, model=NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-    )
-
-    file = File(file_path=f"{getcwd()}/assets/sample.txt", controller=controller)
-    return file
+from tests.conftest import (
+    delete_default_notes_file,
+    read_default_notes_file,
+    read_settings_file,
+    DEFAULT_NOTES_FILE_PATH,
+    DEFAULT_NOTES_FILE_DIR_PATH,
+    create_default_notes_file,
+)
 
 
 class TestColor:
@@ -44,54 +46,81 @@ class TestColor:
         assert Color("white", (1, 1, 1, 1))
 
     def test_get_color_by_name(self):
-        assert get_color_by_name("black").name == "black"
-        assert get_color_by_name("black").rgba_value == (0, 0, 0, 1)
-        assert get_color_by_name("white").name == "white"
-        assert get_color_by_name("white").rgba_value == (1, 1, 1, 1)
+        assert (
+            get_color_by_name(colors_list=AVAILABLE_COLORS, color_name="black").name
+            == "black"
+        )
+        assert get_color_by_name(
+            colors_list=AVAILABLE_COLORS, color_name="black"
+        ).rgba_value == (0, 0, 0, 1)
+        assert (
+            get_color_by_name(colors_list=AVAILABLE_COLORS, color_name="white").name
+            == "white"
+        )
+        assert get_color_by_name(
+            colors_list=AVAILABLE_COLORS, color_name="white"
+        ).rgba_value == (1, 1, 1, 1)
 
     def test_get_last_color(self):
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1]).name == "black"
-        assert get_next_color_by_rgba(rgba_value=[1, 1, 1, 1]).rgba_value == (
-            0,
-            0,
-            0,
-            1,
-        )
-
         assert (
             get_next_color_by_rgba(
-                rgba_value=[1, 1, 1, 1], skip_rgba_value=[1, 1, 1, 1]
+                colors_list=AVAILABLE_COLORS, rgba_value=[1, 1, 1, 1]
             ).name
             == "black"
         )
         assert get_next_color_by_rgba(
-            rgba_value=[1, 1, 1, 1], skip_rgba_value=[1, 1, 1, 1]
+            colors_list=AVAILABLE_COLORS, rgba_value=[1, 1, 1, 1]
+        ).rgba_value == (0, 0, 0, 1,)
+
+        assert (
+            get_next_color_by_rgba(
+                colors_list=AVAILABLE_COLORS,
+                rgba_value=[1, 1, 1, 1],
+                skip_rgba_value=[1, 1, 1, 1],
+            ).name
+            == "black"
+        )
+        assert get_next_color_by_rgba(
+            colors_list=AVAILABLE_COLORS,
+            rgba_value=[1, 1, 1, 1],
+            skip_rgba_value=[1, 1, 1, 1],
         ).rgba_value == (0, 0, 0, 1)
 
         assert (
             get_next_color_by_rgba(
-                rgba_value=[1, 1, 1, 1], skip_rgba_value=[0, 0, 0, 1]
+                colors_list=AVAILABLE_COLORS,
+                rgba_value=[1, 1, 1, 1],
+                skip_rgba_value=[0, 0, 0, 1],
             ).name
             == "navy"
         )
         assert get_next_color_by_rgba(
-            rgba_value=[1, 1, 1, 1], skip_rgba_value=[0, 0, 0, 1]
+            colors_list=AVAILABLE_COLORS,
+            rgba_value=[1, 1, 1, 1],
+            skip_rgba_value=[0, 0, 0, 1],
         ).rgba_value == (0, 0, 0.5, 1)
 
         assert (
             get_next_color_by_rgba(
-                rgba_value=[1, 1, 0, 1], skip_rgba_value=[1, 1, 1, 1]
+                colors_list=AVAILABLE_COLORS,
+                rgba_value=[1, 1, 0, 1],
+                skip_rgba_value=[1, 1, 1, 1],
             ).name
             == "black"
         )
         assert get_next_color_by_rgba(
-            rgba_value=[1, 1, 0, 1], skip_rgba_value=[1, 1, 1, 1]
+            colors_list=AVAILABLE_COLORS,
+            rgba_value=[1, 1, 0, 1],
+            skip_rgba_value=[1, 1, 1, 1],
         ).rgba_value == (0, 0, 0, 1)
 
 
 class TestFont:
     def test_get_last_font(self):
-        assert get_next_font("RobotoMono-Regular") == "DejaVuSans"
+        assert (
+            get_next_font(fonts_list=AVAILABLE_FONTS, font_name="RobotoMono-Regular")
+            == "DejaVuSans"
+        )
 
 
 class TestTime:
@@ -304,13 +333,16 @@ class TestSectionIdentifier:
 
 class TestFile:
     def test_get_validated_file_path(self):
-        file_path = f"{getcwd()}/assets/sample.txt"
+        create_default_notes_file()
+        file_path = DEFAULT_NOTES_FILE_PATH
         assert File.get_validated_file_path(file_path=file_path) == file_path
         # results in FileNotFoundError
-        file_path = f"{getcwd()}/assets/sample_not_existing_{uuid.uuid4().hex}.txt"
+        file_path = (
+            f"{DEFAULT_NOTES_FILE_DIR_PATH}/sample_not_existing_{uuid.uuid4().hex}.txt"
+        )
         assert File.get_validated_file_path(file_path=file_path) is None
         # results in PermissionError
-        file_path = f"{getcwd()}/assets/"
+        file_path = DEFAULT_NOTES_FILE_DIR_PATH
         assert File.get_validated_file_path(file_path=file_path) is None
 
     def test_get_raw_data_content(self, get_file):
@@ -318,8 +350,7 @@ class TestFile:
         assert (
             raw_data
             == """<section=first> Quod equidem non reprehendo
-<section=second> Quis istum dolorem timet
-"""
+<section=second> Quis istum dolorem timet"""
         )
 
     def test__get_validated_raw_data(self, get_file):
@@ -327,8 +358,7 @@ class TestFile:
         assert (
             get_file._get_validated_raw_data(raw_data=raw_data)
             == """<section=first> Quod equidem non reprehendo
-<section=second> Quis istum dolorem timet
-"""
+<section=second> Quis istum dolorem timet"""
         )
 
     def test__get_section_identifiers_from_raw_data_content(self, get_file):
@@ -397,16 +427,73 @@ class TestFile:
     def test__transform_raw_data_content_to_data_by_sections(self, get_file):
         assert get_file._transform_raw_data_content_to_data_by_sections() == {
             "<section=first> ": "Quod equidem non reprehendo\n",
-            "<section=second> ": "Quis istum dolorem timet\n",
+            "<section=second> ": "Quis istum dolorem timet",
         }
 
     def test_transform_data_by_sections_to_raw_data_content(self, get_file):
         assert (
             get_file.transform_data_by_sections_to_raw_data_content()
             == """<section=first> Quod equidem non reprehendo
-<section=second> Quis istum dolorem timet
-"""
+<section=second> Quis istum dolorem timet"""
         )
+
+
+class TestDefaultFile:
+    def teardown_method(self, test_method):
+        delete_default_notes_file()
+
+    def test_generate_default_file(self):
+        generate_default_file(
+            file_name=DEFAULT_NOTES_FILE_PATH, file_content=DEFAULT_NOTES_FILE_CONTENT
+        )
+        assert read_default_notes_file() == DEFAULT_NOTES_FILE_CONTENT
+
+
+class TestSettings:
+    def test__set_missing_store_defaults(self, get_settings):
+        get_settings.store.font_name = None
+        get_settings.store.font_size = None
+        get_settings.store.background_color = None
+        get_settings.store.foreground_color = None
+
+        get_settings._set_missing_store_defaults()
+
+        json_data = read_settings_file()
+
+        assert json_data["font_name"] == {"value": "Roboto-Bold"}
+        assert json_data["font_size"] == {"value": "14.0"}
+        assert json_data["background_color"] == {"value": "blue"}
+        assert json_data["foreground_color"] == {"value": "green"}
+
+    def test_set_get_font_name(self, get_settings):
+        get_settings.font_name = "Roboto"
+        assert get_settings.font_name == "Roboto"
+
+    def test_set_get_font_size(self, get_settings):
+        get_settings.font_size = "20"
+        assert get_settings.font_size == "20"
+
+    def test_set_get_background_color(self, get_settings):
+        get_settings.background_color = "red"
+        assert get_settings.background_color == "red"
+
+    def test_set_get_foreground_color(self, get_settings):
+        get_settings.foreground_color = "yellow"
+        assert get_settings.foreground_color == "yellow"
+
+    def test_dump(self, get_settings):
+        get_settings.font_name = "arial"
+        get_settings.font_size = "50.0"
+        get_settings.background_color = "blue"
+        get_settings.foreground_color = "olive"
+        assert get_settings.dump() is None
+
+        json_data = read_settings_file()
+
+        assert json_data["font_name"] == {"value": "arial"}
+        assert json_data["font_size"] == {"value": "50.0"}
+        assert json_data["background_color"] == {"value": "blue"}
+        assert json_data["foreground_color"] == {"value": "olive"}
 
 
 class TestMark:

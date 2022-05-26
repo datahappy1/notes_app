@@ -1,25 +1,6 @@
-from os import getcwd
-
-import pytest
-from kivymd.app import MDApp
-
-from notes_app.controller.notes_controller import NotesController
-from notes_app.model.notes_model import NotesModel, FALLBACK_NOTES_FILE_PATH
-from notes_app.utils.settings import Settings
+from notes_app.model.notes_model import NotesModel
 from notes_app.view.notes_view import NotesView
-
-settings = Settings()
-
-
-@pytest.fixture
-def get_app():
-    class NotesApp(MDApp):
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-            self.controller = NotesController(settings=settings, model=self.model)
-
-    return NotesApp()
+from tests.conftest import DEFAULT_NOTES_FILE_PATH
 
 
 class TestController:
@@ -31,9 +12,7 @@ class TestController:
 
     def test_set_file_path(self, get_app):
         controller = get_app.controller
-        assert (
-            controller.set_file_path(file_path=f"{getcwd()}/assets/sample.txt") is None
-        )
+        assert controller.set_file_path(file_path=DEFAULT_NOTES_FILE_PATH) is None
 
     def test_read_file_data(self, get_app):
         controller = get_app.controller

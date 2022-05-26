@@ -19,14 +19,19 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.observer.notes_observer import Observer
-from notes_app.utils.color import get_color_by_name, get_next_color_by_rgba
+from notes_app.utils.color import (
+    get_color_by_name,
+    get_next_color_by_rgba,
+    AVAILABLE_COLORS,
+    AVAILABLE_SNACK_BAR_COLORS,
+)
 from notes_app.utils.file import (
     File,
     SectionIdentifier,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
-from notes_app.utils.font import get_next_font
+from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
 from notes_app.utils.mark import get_marked_search_result
 from notes_app.utils.search import (
     Search,
@@ -123,6 +128,7 @@ class MenuSettingsItems(Enum):
     DecreaseFontSize = "Decrease font size"
     SetNextBackgroundColor = "Set next background color"
     SetNextForegroundColor = "Set next foreground color"
+    Save = "Save settings"
     ShowAppInfo = "Show application info"
 
 
@@ -155,7 +161,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.search = Search()
         self.set_properties_from_settings()
 
-        self.file = File(file_path=None, controller=self.controller)
+        self.file = File(file_path=self.model.file_path, controller=self.controller)
         self.current_section_identifier = self.file.default_section_identifier
         self.filter_data_split_by_section()
         self.set_drawer_items(section_identifiers=self.file.section_identifiers)
@@ -168,10 +174,10 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.text_section_view.font_name = self.settings.font_name
         self.text_section_view.font_size = self.settings.font_size
         self.text_section_view.background_color = get_color_by_name(
-            self.settings.background_color
+            colors_list=AVAILABLE_COLORS, color_name=self.settings.background_color
         ).rgba_value
         self.text_section_view.foreground_color = get_color_by_name(
-            self.settings.foreground_color
+            colors_list=AVAILABLE_COLORS, color_name=self.settings.foreground_color
         ).rgba_value
 
     def filter_data_split_by_section(self, section_identifier=None):
@@ -262,7 +268,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
     def press_menu_settings_item_callback(self, text_item):
         if text_item == MenuSettingsItems.SetNextFont.value:
-            next_font = get_next_font(font_name=self.text_section_view.font_name)
+            next_font = get_next_font(
+                fonts_list=AVAILABLE_FONTS, font_name=self.text_section_view.font_name
+            )
             self.text_section_view.font_name = next_font
             self.settings.font_name = next_font
         elif text_item == MenuSettingsItems.IncreaseFontSize.value:
@@ -273,6 +281,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.settings.font_size = self.text_section_view.font_size
         elif text_item == MenuSettingsItems.SetNextBackgroundColor.value:
             next_background_color = get_next_color_by_rgba(
+                colors_list=AVAILABLE_COLORS,
                 rgba_value=self.text_section_view.background_color,
                 skip_rgba_value=self.text_section_view.foreground_color,
             )
@@ -280,11 +289,15 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.settings.background_color = next_background_color.name
         elif text_item == MenuSettingsItems.SetNextForegroundColor.value:
             next_foreground_color = get_next_color_by_rgba(
+                colors_list=AVAILABLE_COLORS,
                 rgba_value=self.text_section_view.foreground_color,
                 skip_rgba_value=self.text_section_view.background_color,
             )
             self.text_section_view.foreground_color = next_foreground_color.rgba_value
             self.settings.foreground_color = next_foreground_color.name
+        elif text_item == MenuSettingsItems.Save.value:
+            self.settings.dump()
+            self.menu_settings.dismiss()
         elif text_item == MenuSettingsItems.ShowAppInfo.value:
             self.press_menu_item_show_app_metadata()
             self.menu_settings.dismiss()
@@ -299,6 +312,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             icon="information",
             snackbar_x="10dp",
             snackbar_y="10dp",
+            bg_color=get_color_by_name(
+                colors_list=AVAILABLE_SNACK_BAR_COLORS, color_name="success_green"
+            ).rgba_value,
         )
         self.snackbar.size_hint_x = (
             Window.width - (self.snackbar.snackbar_x * 2)
@@ -315,6 +331,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             icon="alert-circle",
             snackbar_x="10dp",
             snackbar_y="10dp",
+            bg_color=get_color_by_name(
+                colors_list=AVAILABLE_SNACK_BAR_COLORS, color_name="failure_red"
+            ).rgba_value,
         )
         self.snackbar.size_hint_x = (
             Window.width - (self.snackbar.snackbar_x * 2)
@@ -450,10 +469,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             not args[0]
             or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
             or args[0].isspace()
-            or args[0]
-            in [
-                si.section_name for si in self.file.section_identifiers
-            ]  # TODO cover by unit test
+            or args[0] in [si.section_name for si in self.file.section_identifiers]
         ):
             self.dialog.content_cls.add_section_result_message = "Invalid name"
             return

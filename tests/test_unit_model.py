@@ -1,79 +1,98 @@
-import base64
 import json
 from os import getcwd
+from os.path import exists
 
 from dateutil.parser import parse
 
-from notes_app.model.notes_model import NotesModel, FALLBACK_NOTES_FILE_PATH
+from tests.conftest import read_model_file, DEFAULT_NOTES_FILE_PATH
 
 
 class TestModel:
-    def test_model(self):
-        model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-        assert model
-        assert model._file_path == f"{getcwd()}/assets/sample.txt"
-        assert type(model._file_size) == int
-        assert parse(model._last_updated_on)
+    def test_model(self, get_model):
+        assert get_model._file_path == DEFAULT_NOTES_FILE_PATH
+        assert isinstance(get_model._file_size, int)
+        assert parse(get_model._last_updated_on)
 
-        assert model.observers == []
+        assert get_model.observers == []
 
-        assert model.__repr__() == {
-            "_file_path": f"{getcwd()}/assets/sample.txt",
-            "_file_size": model.file_size,
-            "_last_updated_on": f"{model.last_updated_on}",
-        }
+        assert get_model.__repr__() == json.dumps(
+            {
+                "_file_path": DEFAULT_NOTES_FILE_PATH,
+                "_file_size": get_model.file_size,
+                "_last_updated_on": f"{get_model.last_updated_on}",
+            }
+        )
 
-        assert model._get_attribute_to_formatted_name_map() == {
-            "_file_path": "File path",
+        assert get_model._get_attribute_to_formatted_name_map() == {
+            "_file_path": "File",
             "_file_size": "File size (bytes)",
             "_last_updated_on": "Last updated on",
         }
-        model.dump()
+        assert get_model.dump() is None
 
-    def test_set_get_file_path(self):
-        model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-        model.file_path = "test"
-        assert model.file_path == "test"
+    def test__generate_default_file_if_file_path_missing_invalid_path(self, get_model):
+        get_model.file_path = "invalid_test_path"
+        get_model.dump()
+        get_model._generate_default_file_if_file_path_missing()
+        assert exists(f"{getcwd()}/my_first_file.txt")
 
-    def test_set_get_file_size(self):
-        model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-        model.file_size = 42
-        assert model.file_size == 42
+    def test__generate_default_file_if_file_path_missing_missing_path(self, get_model):
+        get_model.file_path = None
+        get_model.dump()
+        get_model._generate_default_file_if_file_path_missing()
+        assert exists(f"{getcwd()}/my_first_file.txt")
 
-    def test_set_get_last_updated_on(self):
-        model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-        model.last_updated_on = 1650621021
-        assert model.last_updated_on == "2022-04-22 11:50:21"
+    def test__set_missing_store_defaults(self, get_model):
+        get_model.file_path = None
+        get_model.file_size = None
+        get_model.last_updated_on = None
+        get_model.dump()
+        get_model._generate_default_file_if_file_path_missing()
 
-    def test_formatted(self):
-        model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
+        get_model._set_missing_store_defaults()
+
+        json_data = read_model_file()
+
+        assert json_data["_file_path"] == {"value": f"{getcwd()}/my_first_file.txt"}
+        assert json_data["_file_size"] == {"value": 86}
+        assert parse(json_data["_last_updated_on"]["value"])
+
+    def test_set_get_file_path(self, get_model):
+        get_model.file_path = "test"
+        assert get_model.file_path == "test"
+
+    def test_set_get_file_size(self, get_model):
+        get_model.file_size = 42
+        assert get_model.file_size == 42
+
+    def test_set_get_last_updated_on(self, get_model):
+        get_model.last_updated_on = 1650621021
+        assert get_model.last_updated_on == "2022-04-22 11:50:21"
+
+    def test_formatted(self, get_model):
         assert " ".join(
-            model.formatted.splitlines()
-        ) == """File path : {cwd}/assets/sample.txt File size (bytes) : {file_size} Last updated on : {dt_now}""".format(
-            cwd=getcwd(), file_size=model.file_size, dt_now=model.last_updated_on
+            get_model.formatted.splitlines()
+        ) == """File : {fp} File size (bytes) : {file_size} Last updated on : {dt_now}""".format(
+            fp=DEFAULT_NOTES_FILE_PATH,
+            file_size=get_model.file_size,
+            dt_now=get_model.last_updated_on,
         )
 
-    def test_set_get_observers(self):
-        model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
+    def test_set_get_observers(self, get_model):
         observer = dict()
-        model.add_observer(observer=observer)
-        assert model.observers
-        assert len(model.observers) == 1
-        assert model.observers[0] == observer
+        get_model.add_observer(observer=observer)
+        assert get_model.observers
+        assert len(get_model.observers) == 1
+        assert get_model.observers[0] == observer
 
-    def test_dump_encoded(self):
-        model = NotesModel(notes_file_path=FALLBACK_NOTES_FILE_PATH)
-        assert model.dump() is None
+    def test_dump(self, get_model):
+        get_model.file_path = "test"
+        get_model.file_size = 123
+        get_model.last_updated_on = 1653554504
+        assert get_model.dump() is None
 
-    def test_safe_load(self):
-        with open(file=f"{getcwd()}/model/notes.model", mode="rb") as test_file:
-            test_file_data = test_file.read()
-            assert test_file_data
-            decoded_data = base64.decodebytes(test_file_data)
-            assert type(test_file_data) == bytes
+        json_data = read_model_file()
 
-            json_data = json.loads(decoded_data)
-
-            assert json_data["_file_path"] == f"{getcwd()}/assets/sample.txt"
-            assert type(json_data["_file_size"]) == int
-            assert parse(json_data["_last_updated_on"])
+        assert json_data["_file_path"] == {"value": "test"}
+        assert json_data["_file_size"] == {"value": 123}
+        assert json_data["_last_updated_on"] == {"value": "2022-05-26 10:41:44"}

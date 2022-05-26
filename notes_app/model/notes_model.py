@@ -5,8 +5,10 @@
 # model when they are notified (in this case, it is the `notify_model_is_changed`
 # method). For this, observers must be descendants of an abstract class,
 # inheriting which, the `notify_model_is_changed` method must be overridden.
-from os import path, linesep
+import json
+from os import linesep, path
 
+from notes_app.utils.default_notes_file import generate_default_file
 from notes_app.utils.time import format_epoch
 
 DEFAULT_MODEL_STORE_FILE_NAME = "file_metadata.json"
@@ -31,48 +33,46 @@ class NotesModel:
     methods for registration, deletion and notification observers.
     """
 
-    def __init__(self, store, notes_file_path: str = None):
+    def __init__(self, store, default_notes_file_name, default_notes_file_content):
         self.store = store(filename=DEFAULT_MODEL_STORE_FILE_NAME)
-        self._set_store_defaults_if_missing()
+        self._default_notes_file_name = default_notes_file_name
+        self._default_notes_file_content = default_notes_file_content
+        self._generate_default_file_if_file_path_missing()
+        self._set_missing_store_defaults()
 
-        if notes_file_path and path.exists(notes_file_path):
-            self._file_path = notes_file_path
-            self._file_size = get_file_size(file_path=notes_file_path)
-            self._last_updated_on = get_formatted_epoch(file_path=notes_file_path)
-
-        elif self.store.get("_file_path")["value"] and path.exists(
-            self.store.get("_file_path")["value"]
-        ):
-            self._file_path = self.store.get("_file_path")["value"]
-            self._file_size = self.store.get("_file_size")["value"]
-            self._last_updated_on = self.store.get("_last_updated_on")["value"]
-
-        else:
-            raise ValueError(
-                "Need to provide the file_path"
-            )  # TODO cover by test, catch exc
+        self._file_path = self.store.get("_file_path")["value"]
+        self._file_size = self.store.get("_file_size")["value"]
+        self._last_updated_on = self.store.get("_last_updated_on")["value"]
 
         self.observers = []
 
     def __repr__(self):
-        return {
-            "_file_path": self.file_path,
-            "_file_size": self._file_size,
-            "_last_updated_on": self._last_updated_on,
-        }
+        return json.dumps(
+            {
+                "_file_path": self.file_path,
+                "_file_size": self._file_size,
+                "_last_updated_on": self._last_updated_on,
+            }
+        )
 
-    @staticmethod
-    def _generate_your_first_file():
-        with open(file="my_first_file.txt", mode="w") as f:
-            f.write("<section=first> Your first section.")
-        return "my_first_file.txt"
-
-    def _set_store_defaults_if_missing(self):
+    def _generate_default_file_if_file_path_missing(self):
         if (
             not self.store.exists("_file_path")
             or self.store.get("_file_path")["value"] is None
+            or not path.exists(self.store.get("_file_path")["value"])
         ):
-            self.store.put("_file_path", value=self._generate_your_first_file())
+            generate_default_file(
+                file_name=self._default_notes_file_name,
+                file_content=self._default_notes_file_content,
+            )
+
+    def _set_missing_store_defaults(self):
+        if (
+            not self.store.exists("_file_path")
+            or self.store.get("_file_path")["value"] is None
+            or not path.exists(self.store.get("_file_path")["value"])
+        ):
+            self.store.put("_file_path", value=self._default_notes_file_name)
 
         if (
             not self.store.exists("_file_size")
@@ -97,7 +97,7 @@ class NotesModel:
     @staticmethod
     def _get_attribute_to_formatted_name_map():
         return {
-            "_file_path": "File path",
+            "_file_path": "File",
             "_file_size": "File size (bytes)",
             "_last_updated_on": "Last updated on",
         }
