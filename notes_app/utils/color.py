@@ -46,11 +46,11 @@ def get_next_color_by_rgba(
 
     for color in iterable_available_colors:
         if color.rgba_value == tuple(rgba_value):
-            next_color = next(iterable_available_colors, next(iter(AVAILABLE_COLORS)))
+            next_color = next(iterable_available_colors, next(iter(colors_list)))
 
             if skip_rgba_value and next_color.rgba_value == tuple(skip_rgba_value):
                 return get_next_color_by_rgba(
-                    colors_list=AVAILABLE_COLORS,
+                    colors_list=colors_list,
                     rgba_value=next_color.rgba_value,
                     skip_rgba_value=skip_rgba_value,
                 )

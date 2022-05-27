@@ -8,8 +8,28 @@ notes app written in Python 3.8 + KivyMD
 ### development patterns
 
 ### building app
+#### Windows app from Windows environment:
+- prerequisites example:
+
 ```language="sh"
-(venv_notes_app) C:\Users\pavel.prudky\PycharmProjects\notes_app>PyInstaller C:\Users\pavel.prudky\PycharmProjects\notes_app\notes.spec
+cd C:\
+mkdir notes_app
+cd notes_app
+virtualenv venv_notes_app
+venv_notes_app\Scripts\activate.bat
+(venv_notes_app) python -m pip install --upgrade pip wheel setuptools
+(venv_notes_app) python -m pip install kivy docutils pygments pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.angle
+(venv_notes_app) python -m pip install PyInstaller
+(venv_notes_app) PyInstaller --name notes notes_app/main.py
+```
+
+- build command example:
+```language="sh"
+(venv_notes_app) PyInstaller c:\notes_app\notes_app\notes.spec
+```
+
+#### IOS app from Linux environment:
+```language="sh"
 ```
 
 ## useful links
