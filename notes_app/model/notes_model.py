@@ -8,7 +8,11 @@
 import json
 from os import linesep, path
 
+from notes_app.utils.file import SECTION_FILE_SEPARATOR
 from notes_app.utils.time import format_epoch
+
+DEFAULT_NOTES_FILE_NAME = "my_first_file.txt"
+DEFAULT_NOTES_FILE_CONTENT = f"{SECTION_FILE_SEPARATOR.format(name='first')} Your first section. Here you can write your notes."
 
 DEFAULT_MODEL_STORE_FILE_NAME = "file_metadata.json"
 LAST_UPDATED_ON_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -24,6 +28,26 @@ def get_formatted_epoch(file_path):
     )
 
 
+class DefaultNotesFile:
+    def __init__(self, notes_file_name=None, notes_file_content=None):
+        self._default_notes_file_name = notes_file_name or DEFAULT_NOTES_FILE_NAME
+        self._default_notes_file_content = (
+            notes_file_content or DEFAULT_NOTES_FILE_CONTENT
+        )
+
+    @property
+    def default_notes_file_name(self):
+        return self._default_notes_file_name
+
+    @property
+    def default_notes_file_content(self):
+        return self._default_notes_file_content
+
+    def generate(self) -> None:
+        with open(file=self.default_notes_file_name, mode="w") as f:
+            f.write(self._default_notes_file_content)
+
+
 class NotesModel:
     """
     The NotesModel class is a data model implementation. The model stores
@@ -32,9 +56,9 @@ class NotesModel:
     methods for registration, deletion and notification observers.
     """
 
-    def __init__(self, store, default_file):
+    def __init__(self, store, **kwargs):
         self.store = store(filename=DEFAULT_MODEL_STORE_FILE_NAME)
-        self._default_file = default_file
+        self._default_notes_file = DefaultNotesFile(**kwargs)
         self._generate_default_file_if_file_path_missing()
         self._set_missing_store_defaults()
 
@@ -55,25 +79,25 @@ class NotesModel:
 
     def _generate_default_file_if_file_path_missing(self):
         if (
-            not self.store.exists("_file_path")
-            or self.store.get("_file_path")["value"] is None
-            or not path.exists(self.store.get("_file_path")["value"])
+                not self.store.exists("_file_path")
+                or self.store.get("_file_path")["value"] is None
+                or not path.exists(self.store.get("_file_path")["value"])
         ):
-            self._default_file.generate_default_file()
+            self._default_notes_file.generate()
 
     def _set_missing_store_defaults(self):
         if (
-            not self.store.exists("_file_path")
-            or self.store.get("_file_path")["value"] is None
-            or not path.exists(self.store.get("_file_path")["value"])
+                not self.store.exists("_file_path")
+                or self.store.get("_file_path")["value"] is None
+                or not path.exists(self.store.get("_file_path")["value"])
         ):
             self.store.put(
-                "_file_path", value=self._default_file.default_notes_file_name
+                "_file_path", value=self._default_notes_file.default_notes_file_name
             )
 
         if (
-            not self.store.exists("_file_size")
-            or self.store.get("_file_size")["value"] is None
+                not self.store.exists("_file_size")
+                or self.store.get("_file_size")["value"] is None
         ):
             self.store.put(
                 "_file_size",
@@ -81,8 +105,8 @@ class NotesModel:
             )
 
         if (
-            not self.store.exists("_last_updated_on")
-            or self.store.get("_last_updated_on")["value"] is None
+                not self.store.exists("_last_updated_on")
+                or self.store.get("_last_updated_on")["value"] is None
         ):
             self.store.put(
                 "_last_updated_on",

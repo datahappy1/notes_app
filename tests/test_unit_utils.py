@@ -8,7 +8,7 @@ from notes_app.utils.color import (
     get_next_color_by_rgba,
     AVAILABLE_COLORS,
 )
-from notes_app.utils.default_notes_file import DefaultNotesFile, DEFAULT_NOTES_FILE_CONTENT, DEFAULT_NOTES_FILE_NAME
+from notes_app.model.notes_model import DefaultNotesFile, DEFAULT_NOTES_FILE_NAME, DEFAULT_NOTES_FILE_CONTENT
 from notes_app.utils.file import SectionIdentifier, File
 from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
 from notes_app.utils.mark import _get_marked, get_marked_search_result
@@ -28,14 +28,14 @@ from notes_app.utils.search import (
 )
 from notes_app.utils.time import format_epoch
 from tests.conftest import (
+    create_default_notes_file,
     delete_default_notes_file,
     read_default_notes_file,
     read_settings_file,
+    TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
     TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
     TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH,
-    create_default_notes_file,
     TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-    TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
 )
 
 
@@ -435,11 +435,11 @@ class TestFile:
         )
 
 
-class TestDefaultFile:
+class TestDefaultNotesFile:
     def teardown_method(self, test_method):
         delete_default_notes_file()
 
-    def test_default_file(self):
+    def test_default_notes_file(self):
         default_notes_file = DefaultNotesFile()
         assert default_notes_file.default_notes_file_name == DEFAULT_NOTES_FILE_NAME
         assert default_notes_file.default_notes_file_content == DEFAULT_NOTES_FILE_CONTENT
@@ -448,7 +448,7 @@ class TestDefaultFile:
         DefaultNotesFile(
             notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
             notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-        ).generate_default_file()
+        ).generate()
         assert read_default_notes_file() == TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
 
 

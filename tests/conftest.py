@@ -7,8 +7,7 @@ from kivy.storage.jsonstore import JsonStore
 from kivymd.app import MDApp
 
 from notes_app.controller.notes_controller import NotesController
-from notes_app.model.notes_model import DEFAULT_MODEL_STORE_FILE_NAME, NotesModel
-from notes_app.utils.default_notes_file import DefaultNotesFile
+from notes_app.model.notes_model import DEFAULT_MODEL_STORE_FILE_NAME, NotesModel, DefaultNotesFile
 from notes_app.utils.file import File
 from notes_app.utils.settings import DEFAULT_SETTINGS_STORE_FILE_NAME, Settings
 
@@ -22,9 +21,10 @@ TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_NAME = "empty.txt"
 TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/{TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_NAME}"
 TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_CONTENT = """"""
 
-default_notes_file = DefaultNotesFile()
-default_notes_file.default_notes_file_name = TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME
-default_notes_file.default_notes_file_content = TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+default_notes_file = DefaultNotesFile(
+    notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
+    notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+)
 
 
 def create_settings_file():
@@ -126,14 +126,22 @@ def get_default_test_files_state():
 
 @pytest.fixture
 def get_model():
-    return NotesModel(store=JsonStore, default_file=default_notes_file)
+    return NotesModel(
+        store=JsonStore,
+        notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
+        notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+    )
 
 
 @pytest.fixture()
 def get_file():
     controller = NotesController(
         settings=Settings(store=JsonStore),
-        model=NotesModel(store=JsonStore, default_file=default_notes_file),
+        model=NotesModel(
+            store=JsonStore,
+            notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
+            notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+        ),
     )
 
     file = File(file_path=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH, controller=controller)
@@ -150,7 +158,12 @@ def get_app():
     class NotesApp(MDApp):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
-            self.model = NotesModel(store=JsonStore, default_file=default_notes_file)
+
+            self.model = NotesModel(
+                store=JsonStore,
+                notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
+                notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+            )
             self.controller = NotesController(
                 settings=Settings(store=JsonStore), model=self.model
             )

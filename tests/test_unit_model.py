@@ -4,7 +4,7 @@ from os.path import exists
 
 from dateutil.parser import parse
 
-from tests.conftest import read_model_file, TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
+from tests.conftest import read_model_file, TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH, TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME
 
 
 class TestModel:
@@ -34,13 +34,13 @@ class TestModel:
         get_model.file_path = "invalid_test_path"
         get_model.dump()
         get_model._generate_default_file_if_file_path_missing()
-        assert exists(f"{getcwd()}/my_first_file.txt")
+        assert exists(f"{getcwd()}/{TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME}")
 
     def test__generate_default_file_if_file_path_missing_missing_path(self, get_model):
         get_model.file_path = None
         get_model.dump()
         get_model._generate_default_file_if_file_path_missing()
-        assert exists(f"{getcwd()}/my_first_file.txt")
+        assert exists(f"{getcwd()}/{TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME}")
 
     def test__set_missing_store_defaults(self, get_model):
         get_model.file_path = None
@@ -53,7 +53,7 @@ class TestModel:
 
         json_data = read_model_file()
 
-        assert json_data["_file_path"] == {"value": "my_first_file.txt"}
+        assert json_data["_file_path"] == {"value": f"{getcwd()}/{TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME}"}
         # file size differs between OS types
         assert isinstance(json_data["_file_size"]["value"], int)
         assert parse(json_data["_last_updated_on"]["value"])
