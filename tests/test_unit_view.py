@@ -28,8 +28,8 @@ from notes_app.view.notes_view import (
 # EMPTY_NOTES_FILE_PATH = f"{getcwd()}/TBD!!_xassets/sample_empty.txt"
 from tests.conftest import (
     read_settings_file,
-    DEFAULT_NOTES_FILE_PATH,
-    DEFAULT_NOTES_EMPTY_FILE_PATH,
+    TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
+    TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH,
 )
 
 
@@ -270,14 +270,14 @@ class TestView:
         assert isinstance(screen.file_manager.children[1], MDBoxLayout)
 
         # NOTES_FILE_PATH
-        screen.execute_open_file(file_path=DEFAULT_NOTES_FILE_PATH)
-        assert screen.file._file_path == DEFAULT_NOTES_FILE_PATH
+        screen.execute_open_file(file_path=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH)
+        assert screen.file._file_path == TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
         assert isinstance(screen.ids.md_list.children[0], ItemDrawer)
         assert screen.ids.md_list.children[0].id == "<section=second> "
         assert screen.text_section_view.text == "Quod equidem non reprehendo\n"
 
         # EMPTY_NOTES_FILE_PATH
-        screen.execute_open_file(file_path=DEFAULT_NOTES_EMPTY_FILE_PATH)
+        screen.execute_open_file(file_path=TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH)
         assert screen.file._section_identifiers == []
         assert screen.file._data_by_sections == {}
 
@@ -657,7 +657,7 @@ class TestView:
         assert " ".join(
             screen.dialog.content_cls.show_file_metadata_label.splitlines()
         ) == """File : {file_path} File size (bytes) : {file_size} Last updated on : {dt_now}""".strip().format(
-            file_path=DEFAULT_NOTES_FILE_PATH,
+            file_path=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
             file_size=screen.model.file_size,
             dt_now=screen.model.last_updated_on,
         )
@@ -770,7 +770,7 @@ class TestView:
         screen.file_manager.show(os.getcwd())
         screen.manager_open = True
 
-        screen.file_manager_select_path(path=DEFAULT_NOTES_FILE_PATH)
+        screen.file_manager_select_path(path=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH)
         assert screen.manager_open is False
         assert isinstance(screen.file_manager, MDFileManager)
         assert isinstance(screen.file_manager.children[0], FloatButton)

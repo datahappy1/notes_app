@@ -4,12 +4,12 @@ from os.path import exists
 
 from dateutil.parser import parse
 
-from tests.conftest import read_model_file, DEFAULT_NOTES_FILE_PATH
+from tests.conftest import read_model_file, TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
 
 
 class TestModel:
     def test_model(self, get_model):
-        assert get_model._file_path == DEFAULT_NOTES_FILE_PATH
+        assert get_model._file_path == TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
         assert isinstance(get_model._file_size, int)
         assert parse(get_model._last_updated_on)
 
@@ -17,7 +17,7 @@ class TestModel:
 
         assert get_model.__repr__() == json.dumps(
             {
-                "_file_path": DEFAULT_NOTES_FILE_PATH,
+                "_file_path": TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
                 "_file_size": get_model.file_size,
                 "_last_updated_on": f"{get_model.last_updated_on}",
             }
@@ -53,7 +53,7 @@ class TestModel:
 
         json_data = read_model_file()
 
-        assert json_data["_file_path"] == {"value": f"{getcwd()}/my_first_file.txt"}
+        assert json_data["_file_path"] == {"value": "my_first_file.txt"}
         # file size differs between OS types
         assert isinstance(json_data["_file_size"]["value"], int)
         assert parse(json_data["_last_updated_on"]["value"])
@@ -74,7 +74,7 @@ class TestModel:
         assert " ".join(
             get_model.formatted.splitlines()
         ) == """File : {fp} File size (bytes) : {file_size} Last updated on : {dt_now}""".format(
-            fp=DEFAULT_NOTES_FILE_PATH,
+            fp=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
             file_size=get_model.file_size,
             dt_now=get_model.last_updated_on,
         )

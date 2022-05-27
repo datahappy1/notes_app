@@ -1,6 +1,6 @@
 from notes_app.model.notes_model import NotesModel
 from notes_app.view.notes_view import NotesView
-from tests.conftest import DEFAULT_NOTES_FILE_PATH
+from tests.conftest import TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
 
 
 class TestController:
@@ -12,7 +12,10 @@ class TestController:
 
     def test_set_file_path(self, get_app):
         controller = get_app.controller
-        assert controller.set_file_path(file_path=DEFAULT_NOTES_FILE_PATH) is None
+        assert (
+            controller.set_file_path(file_path=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH)
+            is None
+        )
 
     def test_read_file_data(self, get_app):
         controller = get_app.controller

@@ -8,7 +8,6 @@
 import json
 from os import linesep, path
 
-from notes_app.utils.default_notes_file import generate_default_file
 from notes_app.utils.time import format_epoch
 
 DEFAULT_MODEL_STORE_FILE_NAME = "file_metadata.json"
@@ -33,10 +32,9 @@ class NotesModel:
     methods for registration, deletion and notification observers.
     """
 
-    def __init__(self, store, default_notes_file_name, default_notes_file_content):
+    def __init__(self, store, default_file):
         self.store = store(filename=DEFAULT_MODEL_STORE_FILE_NAME)
-        self._default_notes_file_name = default_notes_file_name
-        self._default_notes_file_content = default_notes_file_content
+        self._default_file = default_file
         self._generate_default_file_if_file_path_missing()
         self._set_missing_store_defaults()
 
@@ -61,10 +59,7 @@ class NotesModel:
             or self.store.get("_file_path")["value"] is None
             or not path.exists(self.store.get("_file_path")["value"])
         ):
-            generate_default_file(
-                file_name=self._default_notes_file_name,
-                file_content=self._default_notes_file_content,
-            )
+            self._default_file.generate_default_file()
 
     def _set_missing_store_defaults(self):
         if (
@@ -72,7 +67,9 @@ class NotesModel:
             or self.store.get("_file_path")["value"] is None
             or not path.exists(self.store.get("_file_path")["value"])
         ):
-            self.store.put("_file_path", value=self._default_notes_file_name)
+            self.store.put(
+                "_file_path", value=self._default_file.default_notes_file_name
+            )
 
         if (
             not self.store.exists("_file_size")
