@@ -4,7 +4,27 @@ from os.path import exists
 
 from dateutil.parser import parse
 
-from tests.conftest import read_model_file, TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH, TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME
+from notes_app.model.notes_model import DefaultNotesFile, DEFAULT_NOTES_FILE_NAME, DEFAULT_NOTES_FILE_CONTENT
+from tests.conftest import read_model_file, TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH, \
+    TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME, read_default_notes_file, delete_default_notes_file, \
+    TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+
+
+class TestDefaultNotesFile:
+    def teardown_method(self, test_method):
+        delete_default_notes_file()
+
+    def test_default_notes_file(self):
+        default_notes_file = DefaultNotesFile()
+        assert default_notes_file.default_notes_file_name == DEFAULT_NOTES_FILE_NAME
+        assert default_notes_file.default_notes_file_content == DEFAULT_NOTES_FILE_CONTENT
+
+    def test_generate_default_file(self):
+        DefaultNotesFile(
+            notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
+            notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
+        ).generate()
+        assert read_default_notes_file() == TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
 
 
 class TestModel:

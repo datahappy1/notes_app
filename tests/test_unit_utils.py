@@ -435,23 +435,6 @@ class TestFile:
         )
 
 
-class TestDefaultNotesFile:
-    def teardown_method(self, test_method):
-        delete_default_notes_file()
-
-    def test_default_notes_file(self):
-        default_notes_file = DefaultNotesFile()
-        assert default_notes_file.default_notes_file_name == DEFAULT_NOTES_FILE_NAME
-        assert default_notes_file.default_notes_file_content == DEFAULT_NOTES_FILE_CONTENT
-
-    def test_generate_default_file(self):
-        DefaultNotesFile(
-            notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
-            notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-        ).generate()
-        assert read_default_notes_file() == TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
-
-
 class TestSettings:
     def test__set_missing_store_defaults(self, get_settings):
         get_settings.store.font_name = None
