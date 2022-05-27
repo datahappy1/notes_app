@@ -39,10 +39,6 @@ class DefaultNotesFile:
     def default_notes_file_name(self):
         return self._default_notes_file_name
 
-    @property
-    def default_notes_file_content(self):
-        return self._default_notes_file_content
-
     def generate(self) -> None:
         with open(file=self.default_notes_file_name, mode="w") as f:
             f.write(self._default_notes_file_content)

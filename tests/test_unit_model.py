@@ -17,7 +17,7 @@ class TestDefaultNotesFile:
     def test_default_notes_file(self):
         default_notes_file = DefaultNotesFile()
         assert default_notes_file.default_notes_file_name == DEFAULT_NOTES_FILE_NAME
-        assert default_notes_file.default_notes_file_content == DEFAULT_NOTES_FILE_CONTENT
+        assert default_notes_file._default_notes_file_content == DEFAULT_NOTES_FILE_CONTENT
 
     def test_generate_default_file(self):
         DefaultNotesFile(

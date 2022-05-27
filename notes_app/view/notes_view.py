@@ -19,6 +19,7 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.observer.notes_observer import Observer
+
 from notes_app.utils.color import (
     get_color_by_name,
     get_next_color_by_rgba,
