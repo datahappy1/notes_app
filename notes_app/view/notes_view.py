@@ -38,6 +38,8 @@ from notes_app.utils.search import (
     Search,
     validate_search_input,
     SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT,
+    SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR,
+    SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
     transform_section_text_placeholder_to_section_name,
     transform_section_name_to_section_text_placeholder,
     transform_position_text_placeholder_to_position,
@@ -434,7 +436,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
                 found_string = text_data[position_start:position_end]
                 found_string_marked = get_marked_search_result(
-                    found_string=found_string
+                    found_string=found_string,
+                    highlight_style=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
+                    highlight_color=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR
                 )
 
                 found_string_extra_chars = text_data[

@@ -12,6 +12,7 @@ Config.set("input", "mouse", "mouse,multitouch_on_demand")
 from kivy.core.window import Window
 from kivymd.app import MDApp
 
+
 from notes_app.utils.settings import Settings
 from notes_app.controller.notes_controller import NotesController
 from notes_app.model.notes_model import NotesModel

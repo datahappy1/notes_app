@@ -8,10 +8,10 @@ from notes_app.utils.color import (
     get_next_color_by_rgba,
     AVAILABLE_COLORS,
 )
-from notes_app.model.notes_model import DefaultNotesFile, DEFAULT_NOTES_FILE_NAME, DEFAULT_NOTES_FILE_CONTENT
+
 from notes_app.utils.file import SectionIdentifier, File
 from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
-from notes_app.utils.mark import _get_marked, get_marked_search_result
+from notes_app.utils.mark import get_marked_search_result
 from notes_app.utils.search import (
     Search,
     validate_search_input,
@@ -29,13 +29,9 @@ from notes_app.utils.search import (
 from notes_app.utils.time import format_epoch
 from tests.conftest import (
     create_default_notes_file,
-    delete_default_notes_file,
-    read_default_notes_file,
     read_settings_file,
-    TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
     TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
     TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH,
-    TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
 )
 
 
@@ -483,18 +479,12 @@ class TestSettings:
 
 
 class TestMark:
-    def test__get_marked(self):
-        assert (
-                _get_marked(
-                    string="some string",
-                    highlight_style="some_style",
-                    highlight_color="some_color",
-                )
-                == "[some_style][color=some_color]some string[/color][/some_style]"
-        )
-
     def test_get_marked_search_result(self):
         assert (
-                get_marked_search_result(found_string="some string")
-                == "[b][color=ff0000]some string[/color][/b]"
+            get_marked_search_result(
+                found_string="some string",
+                highlight_style="some_style",
+                highlight_color="some_color"
+            )
+            == "[some_style][color=some_color]some string[/color][/some_style]"
         )

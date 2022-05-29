@@ -1,6 +1,6 @@
 import os
 from copy import copy
-from os import getcwd, linesep
+from os import linesep
 
 from kivy.properties import ObjectProperty, StringProperty
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -23,9 +23,6 @@ from notes_app.view.notes_view import (
     APP_METADATA_ROWS,
 )
 
-# MODEL_FILE_PATH = f"{getcwd()}/model/notes.model"
-# NOTES_FILE_PATH = f"{getcwd()}/TBD!!_xassets/sample.txt"
-# EMPTY_NOTES_FILE_PATH = f"{getcwd()}/TBD!!_xassets/sample_empty.txt"
 from tests.conftest import (
     read_settings_file,
     TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
