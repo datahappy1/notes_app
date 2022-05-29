@@ -1,10 +1,9 @@
 # notes_app
-![](https://github.com/datahappy1/notes_app/blob/master/notes_app/assets/notes_app_logo.png)
+![](https://github.com/datahappy1/notes_app/blob/main/notes_app/assets/notes_app_logo.png)
 
 Notes application written in Python 3.8 & KivyMD
-Version v1.0.0
 
-![](https://github.com/datahappy1/notes_app/blob/master/notes_app_scrn.png)
+![](https://github.com/datahappy1/notes_app/blob/main/notes_app_scrn.png)
 
 ## application description
 - OS independent
@@ -64,7 +63,7 @@ cd notes_app
 pip3 install pydeps
 pydeps notes_app --max-bacon 2 --cluster --rmprefix notes_app. --exclude-exact notes_app.utils notes_app.view notes_app.model notes_app.controller notes_app.observer
 ```
-![](https://github.com/datahappy1/notes_app/blob/master/notes_app.svg)
+![](https://github.com/datahappy1/notes_app/blob/main/notes_app.svg)
 
 - running unit tests using Pytest
 ```language="sh
