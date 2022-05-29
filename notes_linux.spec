@@ -61,7 +61,7 @@ block_cipher = None
 
 
 a = Analysis(['notes_app/main.py'],
-             pathex=['/home/pavelprudky/PycharmProjects/notes_app'],
+             pathex=['notes_app'],
              #binaries=[],
              datas=[("notes_app/view/notes_view.kv", "notes_app/view/")],
              #hiddenimports=[],
@@ -85,7 +85,7 @@ binaries = filter_binaries(a.binaries)
 
 
 exe = EXE(pyz,
-          Tree('/home/pavelprudky/PycharmProjects/notes_app'),
+          Tree('notes_app'),
           a.scripts,
           binaries,
           a.zipfiles,

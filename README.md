@@ -1,6 +1,4 @@
 # notes_app
-![](https://github.com/datahappy1/notes_app/blob/main/notes_app/assets/notes_app_logo.png)
-
 Notes application written in Python 3.8 & KivyMD
 
 ![](https://github.com/datahappy1/notes_app/blob/main/notes_app_scrn.png)
@@ -82,6 +80,7 @@ venv_notes_app\Scripts\activate.bat
 (venv_notes_app) python -m pip install kivy docutils pygments pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.angle
 (venv_notes_app) python -m pip install PyInstaller
 (venv_notes_app) PyInstaller --name notes notes_app/main.py
+ren "notes.spec" "notes_win.spec"
 ```
 
 - build command example:
