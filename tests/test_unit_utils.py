@@ -1,4 +1,6 @@
 import uuid
+import tempfile
+from datetime import datetime
 
 import pytest
 
@@ -8,15 +10,16 @@ from notes_app.utils.color import (
     get_next_color_by_rgba,
     AVAILABLE_COLORS,
 )
-
+from notes_app.utils.diff import merge_strings, _replace_line_endings, _merge
 from notes_app.utils.file import SectionIdentifier, File
 from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
 from notes_app.utils.mark import get_marked_search_result
+from notes_app.utils.path import get_file_updated_timestamp_as_epoch, get_file_size
 from notes_app.utils.search import (
     Search,
     validate_search_input,
-    regex_search_function,
-    full_words_search_function,
+    _basic_search_function,
+    _full_words_search_function,
     SEARCH_MINIMAL_CHAR_COUNT,
     DEFAULT_VALUE_SEARCH_CASE_SENSITIVE,
     DEFAULT_VALUE_SEARCH_ALL_SECTIONS,
@@ -25,8 +28,9 @@ from notes_app.utils.search import (
     transform_position_to_position_text_placeholder,
     transform_section_name_to_section_text_placeholder,
     transform_section_text_placeholder_to_section_name,
+    search_function,
 )
-from notes_app.utils.time import format_epoch
+from notes_app.utils.time import format_local_epoch
 from tests.conftest import (
     create_default_notes_file,
     read_settings_file,
@@ -42,15 +46,15 @@ class TestColor:
 
     def test_get_color_by_name(self):
         assert (
-                get_color_by_name(colors_list=AVAILABLE_COLORS, color_name="black").name
-                == "black"
+            get_color_by_name(colors_list=AVAILABLE_COLORS, color_name="black").name
+            == "black"
         )
         assert get_color_by_name(
             colors_list=AVAILABLE_COLORS, color_name="black"
         ).rgba_value == (0, 0, 0, 1)
         assert (
-                get_color_by_name(colors_list=AVAILABLE_COLORS, color_name="white").name
-                == "white"
+            get_color_by_name(colors_list=AVAILABLE_COLORS, color_name="white").name
+            == "white"
         )
         assert get_color_by_name(
             colors_list=AVAILABLE_COLORS, color_name="white"
@@ -58,22 +62,22 @@ class TestColor:
 
     def test_get_last_color(self):
         assert (
-                get_next_color_by_rgba(
-                    colors_list=AVAILABLE_COLORS, rgba_value=[1, 1, 1, 1]
-                ).name
-                == "black"
+            get_next_color_by_rgba(
+                colors_list=AVAILABLE_COLORS, rgba_value=[1, 1, 1, 1]
+            ).name
+            == "black"
         )
         assert get_next_color_by_rgba(
             colors_list=AVAILABLE_COLORS, rgba_value=[1, 1, 1, 1]
         ).rgba_value == (0, 0, 0, 1,)
 
         assert (
-                get_next_color_by_rgba(
-                    colors_list=AVAILABLE_COLORS,
-                    rgba_value=[1, 1, 1, 1],
-                    skip_rgba_value=[1, 1, 1, 1],
-                ).name
-                == "black"
+            get_next_color_by_rgba(
+                colors_list=AVAILABLE_COLORS,
+                rgba_value=[1, 1, 1, 1],
+                skip_rgba_value=[1, 1, 1, 1],
+            ).name
+            == "black"
         )
         assert get_next_color_by_rgba(
             colors_list=AVAILABLE_COLORS,
@@ -82,12 +86,12 @@ class TestColor:
         ).rgba_value == (0, 0, 0, 1)
 
         assert (
-                get_next_color_by_rgba(
-                    colors_list=AVAILABLE_COLORS,
-                    rgba_value=[1, 1, 1, 1],
-                    skip_rgba_value=[0, 0, 0, 1],
-                ).name
-                == "navy"
+            get_next_color_by_rgba(
+                colors_list=AVAILABLE_COLORS,
+                rgba_value=[1, 1, 1, 1],
+                skip_rgba_value=[0, 0, 0, 1],
+            ).name
+            == "navy"
         )
         assert get_next_color_by_rgba(
             colors_list=AVAILABLE_COLORS,
@@ -96,12 +100,12 @@ class TestColor:
         ).rgba_value == (0, 0, 0.5, 1)
 
         assert (
-                get_next_color_by_rgba(
-                    colors_list=AVAILABLE_COLORS,
-                    rgba_value=[1, 1, 0, 1],
-                    skip_rgba_value=[1, 1, 1, 1],
-                ).name
-                == "black"
+            get_next_color_by_rgba(
+                colors_list=AVAILABLE_COLORS,
+                rgba_value=[1, 1, 0, 1],
+                skip_rgba_value=[1, 1, 1, 1],
+            ).name
+            == "black"
         )
         assert get_next_color_by_rgba(
             colors_list=AVAILABLE_COLORS,
@@ -113,14 +117,126 @@ class TestColor:
 class TestFont:
     def test_get_last_font(self):
         assert (
-                get_next_font(fonts_list=AVAILABLE_FONTS, font_name="RobotoMono-Regular")
-                == "DejaVuSans"
+            get_next_font(fonts_list=AVAILABLE_FONTS, font_name="RobotoMono-Regular")
+            == "DejaVuSans"
         )
 
 
 class TestTime:
-    def test_format_epoch(self):
-        assert format_epoch("%Y-%m-%d %H:%M:%S", 1650362948) == "2022-04-19 12:09:08"
+    def test_format_local_epoch(self):
+        assert isinstance(
+            datetime.strptime(
+                format_local_epoch("%Y-%m-%d %H:%M:%S", 1650362948), "%Y-%m-%d %H:%M:%S"
+            ),
+            datetime,
+        )
+
+
+class TestPath:
+    def test_get_file_updated_timestamp_as_epoch(self):
+        tf = tempfile.NamedTemporaryFile()
+        assert datetime.fromtimestamp(get_file_updated_timestamp_as_epoch(tf.name))
+
+    def test_get_file_size(self):
+        tf = tempfile.NamedTemporaryFile()
+        assert get_file_size(tf.name) == 0
+
+
+class TestDiff:
+    @pytest.mark.parametrize(
+        "left, right, result",
+        [
+            (
+                "is",
+                "this is some section.yeah",
+                [["this"], ["is"], ["some", "section.yeah"]],
+            ),
+            (
+                "is",
+                "this some section.yeah",
+                [["is"], ["this", "some", "section.yeah"]],
+            ),
+            ("", "this is some section.yeah", [["this", "is", "some", "section.yeah"]]),
+            (
+                "<section=first>",
+                "<section=second>this is some section.yeah",
+                [
+                    ["<section=first>"],
+                    ["<section=second>this", "is", "some", "section.yeah"],
+                ],
+            ),
+            (
+                "<section=first> some section text",
+                "this is some section.yeah",
+                [
+                    ["<section=first>"],
+                    ["this", "is"],
+                    ["some"],
+                    ["section", "text"],
+                    ["section.yeah"],
+                ],
+            ),
+            (
+                "<section=first> some section text",
+                "<section=first> another text <section=second>this is some section.yeah",
+                [
+                    ["<section=first>"],
+                    ["another", "text", "<section=second>this", "is"],
+                    ["some"],
+                    ["section", "text"],
+                    ["section.yeah"],
+                ],
+            ),
+        ],
+    )
+    def test__merge(self, left, right, result):
+        assert [x for x in _merge(left.split(), right.split())] == result
+
+    def test__replace_line_endings(self):
+        assert (
+            _replace_line_endings(
+                input_text="ad \n na", line_ending="\n", line_ending_replacement="!@#"
+            )
+            == "ad !@# na"
+        )
+        assert (
+            _replace_line_endings(
+                input_text="ad na", line_ending="\n", line_ending_replacement="!@#"
+            )
+            == "ad na"
+        )
+
+    @pytest.mark.parametrize(
+        "before, after, result",
+        [
+            ("is", "this is some section.yeah", "this is some section.yeah"),
+            ("is", "this some section.yeah", "is this some section.yeah"),
+            ("", "this is some section.yeah", "this is some section.yeah"),
+            (
+                "<section=first>",
+                "<section=second>this is some section.yeah",
+                "<section=first> <section=second>this is some section.yeah",
+            ),
+            (
+                "<section=first> some section text",
+                "this is some section.yeah",
+                "<section=first> this is some section text section.yeah",
+            ),
+            (
+                "<section=first> some section text",
+                "<section=first> another text <section=second>this is some section.yeah",
+                "<section=first> another text <section=second>this is some section text section.yeah",
+            ),
+            (
+                "<section=first> some \n section text",
+                "this is some section.yeah",
+                """<section=first> this is some 
+ section text section.yeah""",
+            ),
+        ],
+    )
+    def test_merge_strings(self, before, after, result):
+        assert merge_strings(before, after) == result
 
 
 class TestSearch:
@@ -137,29 +253,59 @@ class TestSearch:
         assert validate_search_input(input_string) is is_valid
 
     @pytest.mark.parametrize(
-        "pattern, text, occurrences",
+        "pattern, text, case_sensitive,occurrences",
         [
-            ("is", "this is some section.yeah", [2, 5]),
-            ("is some", "this is some section.yeah", [5]),
-            ("his", "this is some section.yeah", [1]),
+            ("is", "this is some section.yeah", False, [2, 5]),
+            ("is some", "this is some section.yeah", False, [5]),
+            ("his", "this is some section.yeah", False, [1]),
+            ("is", "this is some section.yeah", True, [2, 5]),
+            ("is Some", "this is Some section.yeah", True, [5]),
+            ("hIs", "this is some section.yeah", True, []),
         ],
     )
-    def test_regex_search_function(self, pattern, text, occurrences):
-        assert regex_search_function(pattern, text) == occurrences
+    def test__basic_search_function(self, pattern, text, case_sensitive, occurrences):
+        assert _basic_search_function(pattern, text, case_sensitive) == occurrences
 
     @pytest.mark.parametrize(
-        "pattern, text, occurrences",
+        "pattern, text, case_sensitive, occurrences",
         [
-            ("is", "is some section.yeah", [0]),
-            ("is", "is is some is section.yeah", [0, 3, 11]),
-            ("is", "this is some is section.yeah", [5, 13]),
-            ("is", "this is some section.yeah", [5]),
-            ("is some", "this is some section.yeah", []),
-            ("his", "this is some section.yeah", []),
+            ("is", "this is some section.yeah", False, [5]),
+            ("is some", "this is some section.yeah", False, [5]),
+            ("his", "this is some section.yeah", False, []),
+            ("is", "this is some is section.yeah", True, [5, 13]),
+            ("is Some", "this is Some section.yeah", True, [5]),
+            ("hIs", "this is some section.yeah", True, []),
         ],
     )
-    def test_full_words_search_function(self, pattern, text, occurrences):
-        assert full_words_search_function(pattern, text) == occurrences
+    def test__full_words_search_function(
+        self, pattern, text, case_sensitive, occurrences
+    ):
+        assert _full_words_search_function(pattern, text, case_sensitive) == occurrences
+
+    @pytest.mark.parametrize(
+        "pattern, text, case_sensitive, full_words_search, occurrences",
+        [
+            ("is", "this is some section.yeah", False, True, [5]),
+            ("is some", "this is some section.yeah", False, True, [5]),
+            ("his", "this is some section.yeah", False, True, []),
+            ("is", "this is some section.yeah", True, True, [5]),
+            ("is Some", "this is Some section.yeah", True, True, [5]),
+            ("hIs", "this is some section.yeah", True, True, []),
+            ("is", "this is some section.yeah", False, False, [2, 5]),
+            ("is some", "this is some section.yeah", False, False, [5]),
+            ("his", "this is some section.yeah", False, False, [1]),
+            ("is", "this is some section.yeah", True, False, [2, 5]),
+            ("is Some", "this is Some section.yeah", True, False, [5]),
+            ("hIs", "this is some section.yeah", True, False, []),
+        ],
+    )
+    def test_search_function(
+        self, pattern, text, case_sensitive, full_words_search, occurrences
+    ):
+        assert (
+            search_function(pattern, text, case_sensitive, full_words_search)
+            == occurrences
+        )
 
     def test_search(self):
         search = Search()
@@ -202,12 +348,12 @@ class TestSearch:
         ) == {"<section=first> ": [25]}
 
         assert (
-                search.search_for_occurrences(
-                    pattern="dO",
-                    file=get_file,
-                    current_section_identifier=current_section_identifier,
-                )
-                == {}
+            search.search_for_occurrences(
+                pattern="dO",
+                file=get_file,
+                current_section_identifier=current_section_identifier,
+            )
+            == {}
         )
 
     def test_search_all_sections(self, get_file):
@@ -245,68 +391,68 @@ class TestSearch:
         ) == {"<section=first> ": [13]}
 
         assert (
-                search.search_for_occurrences(
-                    pattern="nonx",
-                    file=get_file,
-                    current_section_identifier=current_section_identifier,
-                )
-                == {}
+            search.search_for_occurrences(
+                pattern="nonx",
+                file=get_file,
+                current_section_identifier=current_section_identifier,
+            )
+            == {}
         )
 
     def test_transform_position_text_placeholder_to_position(self):
         assert (
-                transform_position_text_placeholder_to_position(
-                    position_text_placeholder="position 1"
-                )
-                == 1
+            transform_position_text_placeholder_to_position(
+                position_text_placeholder="position 1"
+            )
+            == 1
         )
         assert (
-                transform_position_text_placeholder_to_position(
-                    position_text_placeholder="position 0"
-                )
-                == 0
+            transform_position_text_placeholder_to_position(
+                position_text_placeholder="position 0"
+            )
+            == 0
         )
         assert (
-                transform_position_text_placeholder_to_position(
-                    position_text_placeholder=None
-                )
-                == 0
+            transform_position_text_placeholder_to_position(
+                position_text_placeholder=None
+            )
+            == 0
         )
 
     def test_transform_position_to_position_text_placeholder(self):
         assert (
-                transform_position_to_position_text_placeholder(position_start=1)
-                == "position 1"
+            transform_position_to_position_text_placeholder(position_start=1)
+            == "position 1"
         )
         assert transform_position_to_position_text_placeholder() == "position 0"
         assert (
-                transform_position_to_position_text_placeholder(position_start=None)
-                == "position 0"
+            transform_position_to_position_text_placeholder(position_start=None)
+            == "position 0"
         )
 
     def test_transform_section_text_placeholder_to_section_name(self):
         assert (
-                transform_section_text_placeholder_to_section_name(
-                    section_text_placeholder="section A"
-                )
-                == "A"
+            transform_section_text_placeholder_to_section_name(
+                section_text_placeholder="section A"
+            )
+            == "A"
         )
         assert (
-                transform_section_text_placeholder_to_section_name(
-                    section_text_placeholder=None
-                )
-                == ""
+            transform_section_text_placeholder_to_section_name(
+                section_text_placeholder=None
+            )
+            == ""
         )
 
     def test_transform_section_name_to_section_text_placeholder(self):
         assert (
-                transform_section_name_to_section_text_placeholder(section_name="A")
-                == "section A"
+            transform_section_name_to_section_text_placeholder(section_name="A")
+            == "section A"
         )
         assert transform_section_name_to_section_text_placeholder() == "section "
         assert (
-                transform_section_name_to_section_text_placeholder(section_name=None)
-                == "section "
+            transform_section_name_to_section_text_placeholder(section_name=None)
+            == "section "
         )
 
 
@@ -319,10 +465,10 @@ class TestSectionIdentifier:
             SectionIdentifier(section_file_separator="", section_name="")
 
         assert (
-                SectionIdentifier(section_file_separator="<section=a> ").section_name == "a"
+            SectionIdentifier(section_file_separator="<section=a> ").section_name == "a"
         )
         assert (
-                SectionIdentifier(section_name="a").section_file_separator == "<section=a> "
+            SectionIdentifier(section_name="a").section_file_separator == "<section=a> "
         )
 
 
@@ -341,18 +487,33 @@ class TestFile:
     def test_get_raw_data_content(self, get_file):
         raw_data = get_file.get_raw_data_content()
         assert (
-                raw_data
-                == """<section=first> Quod equidem non reprehendo
+            raw_data
+            == """<section=first> Quod equidem non reprehendo
 <section=second> Quis istum dolorem timet"""
         )
 
     def test__get_validated_raw_data(self, get_file):
         raw_data = get_file.get_raw_data_content()
         assert (
-                get_file._get_validated_raw_data(raw_data=raw_data)
-                == """<section=first> Quod equidem non reprehendo
+            get_file._get_validated_raw_data(raw_data=raw_data)
+            == """<section=first> Quod equidem non reprehendo
 <section=second> Quis istum dolorem timet"""
         )
+
+    def test_reload(self, get_file):
+        get_file.set_section_content(
+            section_file_separator="<section=third>", section_content="test"
+        )
+        assert get_file._data_by_sections == {
+            "<section=first> ": "Quod equidem non reprehendo\n",
+            "<section=second> ": "Quis istum dolorem timet",
+            "<section=third>": "test",
+        }
+        get_file.reload()
+        assert get_file._data_by_sections == {
+            "<section=first> ": "Quod equidem non reprehendo\n",
+            "<section=second> ": "Quis istum dolorem timet",
+        }
 
     def test__get_section_identifiers_from_raw_data_content(self, get_file):
         assert all(
@@ -372,8 +533,8 @@ class TestFile:
 
     def test_add_section_identifier(self, get_file):
         assert (
-                get_file.add_section_identifier(section_file_separator="<section=a> ")
-                is None
+            get_file.add_section_identifier(section_file_separator="<section=a> ")
+            is None
         )
         assert len(get_file.section_identifiers) == 3
         assert all(
@@ -382,8 +543,8 @@ class TestFile:
 
     def test_delete_section_identifier(self, get_file):
         assert (
-                get_file.delete_section_identifier(section_file_separator="<section=a> ")
-                is None
+            get_file.delete_section_identifier(section_file_separator="<section=a> ")
+            is None
         )
         assert len(get_file.section_identifiers) == 2
         assert all(
@@ -399,8 +560,8 @@ class TestFile:
             section_file_separator="<section=a> ", section_content="some content"
         )
         assert (
-                get_file.get_section_content(section_file_separator="<section=a> ")
-                == "some content"
+            get_file.get_section_content(section_file_separator="<section=a> ")
+            == "some content"
         )
 
     def test_delete_section_content(self, get_file):
@@ -425,8 +586,8 @@ class TestFile:
 
     def test_transform_data_by_sections_to_raw_data_content(self, get_file):
         assert (
-                get_file.transform_data_by_sections_to_raw_data_content()
-                == """<section=first> Quod equidem non reprehendo
+            get_file.transform_data_by_sections_to_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo
 <section=second> Quis istum dolorem timet"""
         )
 
@@ -484,7 +645,7 @@ class TestMark:
             get_marked_search_result(
                 found_string="some string",
                 highlight_style="some_style",
-                highlight_color="some_color"
+                highlight_color="some_color",
             )
             == "[some_style][color=some_color]some string[/color][/some_style]"
         )

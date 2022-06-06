@@ -7,7 +7,11 @@ from kivy.storage.jsonstore import JsonStore
 from kivymd.app import MDApp
 
 from notes_app.controller.notes_controller import NotesController
-from notes_app.model.notes_model import DEFAULT_MODEL_STORE_FILE_NAME, NotesModel, DefaultNotesFile
+from notes_app.model.notes_model import (
+    DEFAULT_MODEL_STORE_FILE_NAME,
+    NotesModel,
+    DefaultNotesFile,
+)
 from notes_app.utils.file import File
 from notes_app.utils.settings import DEFAULT_SETTINGS_STORE_FILE_NAME, Settings
 
@@ -23,7 +27,7 @@ TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_CONTENT = """"""
 
 default_notes_file = DefaultNotesFile(
     notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
-    notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+    notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
 )
 
 
@@ -60,7 +64,7 @@ def create_model_file():
                 {
                     "_file_path": {"value": TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH},
                     "_file_size": {"value": 0},
-                    "_last_updated_on": {"value": "2022-04-25 09:05:56"},
+                    "_last_updated_on": {"value": 1650870356},
                 }
             )
         )
@@ -129,7 +133,7 @@ def get_model():
     return NotesModel(
         store=JsonStore,
         notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-        notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+        notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
     )
 
 
@@ -140,7 +144,7 @@ def get_file():
         model=NotesModel(
             store=JsonStore,
             notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-            notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+            notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
         ),
     )
 
@@ -162,7 +166,7 @@ def get_app():
             self.model = NotesModel(
                 store=JsonStore,
                 notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-                notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+                notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
             )
             self.controller = NotesController(
                 settings=Settings(store=JsonStore), model=self.model

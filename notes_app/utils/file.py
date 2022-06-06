@@ -3,7 +3,7 @@ from typing import AnyStr, List, Dict
 
 SECTION_FILE_SEPARATOR = "<section={name}> "
 SECTION_FILE_SEPARATOR_DEFAULT_VALUE = "<section=default> "
-SECTION_FILE_SEPARATOR_REGEX = "<section=[a-zA-Z]+> "
+SECTION_FILE_SEPARATOR_REGEX = "<section=[a-z A-Z]+> "
 SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX = "<section=(.+?)> "
 SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
 SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
@@ -65,6 +65,19 @@ class File:
         except (PermissionError, FileNotFoundError, IsADirectoryError):
             return
         return file_path
+
+    def reload(self):
+        """
+        reload data from file to variables
+        """
+        self._raw_data_content = self._get_validated_raw_data(
+            raw_data=self.get_raw_data_content()
+        )
+
+        self._section_identifiers = (
+            self._get_section_identifiers_from_raw_data_content()
+        )
+        self._data_by_sections = self._transform_raw_data_content_to_data_by_sections()
 
     def get_raw_data_content(self) -> AnyStr:
         return self._controller.read_file_data(file_path=self._file_path)

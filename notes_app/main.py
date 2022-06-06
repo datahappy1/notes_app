@@ -23,7 +23,9 @@ class NotesApp(MDApp):
         super().__init__(**kwargs)
 
         self.model = NotesModel(store=JsonStore)
-        self.controller = NotesController(settings=Settings(store=JsonStore), model=self.model)
+        self.controller = NotesController(
+            settings=Settings(store=JsonStore), model=self.model
+        )
 
     def _on_request_close(self, *source, **args):
         if self.controller.view.is_unsaved_change:
@@ -32,6 +34,8 @@ class NotesApp(MDApp):
     def build(self):
         self.theme_cls.primary_palette = "DeepPurple"
         self.theme_cls.theme_style = "Light"
+
+        self.icon = "assets/notes_app_logo.png"
 
         Window.bind(on_request_close=self._on_request_close)
 

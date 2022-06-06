@@ -25,21 +25,32 @@ def validate_search_input(input_string):
     return True
 
 
-def regex_search_function(pattern, text):
+def _basic_search_function(pattern, text, case_sensitive_search):
+    if case_sensitive_search:
+        pass
+    else:
+        pattern = pattern.lower()
+        text = text.lower()
     return [m.start() for m in re.finditer(pattern, text)]
 
 
-def full_words_search_function(pattern, text):
-    words_split = text.split(" ")
+def _full_words_search_function(pattern, text, case_sensitive_search):
+    pattern = r"\b" + pattern + r"\b"
+    if case_sensitive_search:
+        regex = re.compile(pattern)
+    else:
+        regex = re.compile(pattern, re.IGNORECASE)
+    return [m.start() for m in regex.finditer(text)]
 
-    def _get_position(i):
-        return len(" ".join(words_split[0:i]))
 
-    return [
-        _get_position(i) + 1 if i > 0 else _get_position(i)
-        for i, word in enumerate(words_split)
-        if word == pattern
-    ]
+def search_function(pattern, text, case_sensitive_search, full_words_search):
+    if full_words_search:
+        return _full_words_search_function(
+            pattern=pattern, text=text, case_sensitive_search=case_sensitive_search
+        )
+    return _basic_search_function(
+        pattern=pattern, text=text, case_sensitive_search=case_sensitive_search
+    )
 
 
 class Search:
@@ -75,11 +86,6 @@ class Search:
     def search_for_occurrences(self, pattern, file, current_section_identifier):
         found_occurrences = dict()
 
-        if self.search_full_words:
-            search_function = full_words_search_function
-        else:
-            search_function = regex_search_function
-
         if self.search_all_sections:
             sections_to_search_in = file.section_identifiers
         else:
@@ -90,13 +96,12 @@ class Search:
                 section_file_separator=section.section_file_separator
             )
 
-            if self.search_case_sensitive:
-                pass
-            else:
-                pattern = pattern.lower()
-                text = text.lower()
-
-            search_result = search_function(pattern=pattern, text=text)
+            search_result = search_function(
+                pattern=pattern,
+                text=text,
+                case_sensitive_search=self.search_case_sensitive,
+                full_words_search=self.search_full_words,
+            )
             if search_result:
                 found_occurrences[section.section_file_separator] = search_result
 

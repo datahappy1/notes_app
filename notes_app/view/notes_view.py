@@ -438,7 +438,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 found_string_marked = get_marked_search_result(
                     found_string=found_string,
                     highlight_style=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
-                    highlight_color=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR
+                    highlight_color=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR,
                 )
 
                 found_string_extra_chars = text_data[
@@ -515,7 +515,14 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         text_data = self.file.transform_data_by_sections_to_raw_data_content()
 
-        self.controller.save_file_data(data=text_data)
+        is_external_update = self.controller.save_file_data(data=text_data)
+
+        if is_external_update:
+            self.file.reload()
+            self.text_section_view.text = self.file.get_section_content(
+                section_file_separator=self.text_section_view.section_file_separator
+            )
+            self.set_drawer_items(section_identifiers=self.file.section_identifiers)
 
     def press_menu_item_save_file(self, *args):
         self.save_current_section_to_file()

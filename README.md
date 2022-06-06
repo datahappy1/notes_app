@@ -27,6 +27,8 @@ The notes are stored in a defined text file where the notes sections are separat
 The model in the MVC is responsible for storing the metadata of this text file only. 
 When the notes text file content significantly changes causing last updated timestamp or file size model attributes to change, or when a different text file
 for storage is chosen, the view is notified through it's registered observer and displays a info message on the UI.
+The app uses `difflib` library to reasonably "version-control" notes in case the storage file was modified from another instance of the app using the same
+text file for notes storage. This can happen when using a shared DropBox folder for instance.
 
 When running the app for the first time, these needed files get auto-generated:
 - `file_metadata.json` - stores the notes text file metadata like it's file path, size and last updated timestamp
@@ -79,8 +81,10 @@ venv_notes_app\Scripts\activate.bat
 (venv_notes_app) python -m pip install --upgrade pip wheel setuptools
 (venv_notes_app) python -m pip install kivy docutils pygments pypiwin32 kivy.deps.sdl2 kivy.deps.glew kivy.deps.gstreamer kivy.deps.angle
 (venv_notes_app) python -m pip install PyInstaller
+(venv_notes_app) cd ..
 (venv_notes_app) PyInstaller --name notes notes_app/main.py
 ren "notes.spec" "notes_win.spec"
+change in the spec file the line datas=[] to datas=[("notes_app\\view\\notes_view.kv", "notes_app\\view\\")],
 ```
 
 - build command example:
