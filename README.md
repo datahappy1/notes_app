@@ -24,11 +24,13 @@ Notes application written in Python 3.8 & KivyMD
 ### information for developers
 The application design is based on the MVC architecture with the observer notification pattern. 
 The notes are stored in a defined text file where the notes sections are separated by the defined section separator pattern.  
+
 The model in the MVC is responsible for storing the metadata of this text file only. 
 When the notes text file content significantly changes causing last updated timestamp or file size model attributes to change, or when a different text file
 for storage is chosen, the view is notified through it's registered observer and displays a info message on the UI.
-The app uses `difflib` library to reasonably "version-control" notes in case the storage file was modified from another instance of the app using the same
-text file for notes storage. This can happen when using a shared DropBox folder for instance.
+
+The app uses `difflib` library to reasonably "version-control" notes in case the storage file was modified from another instance of the app that is using the same
+text file for notes storage. *This can happen when using a shared DropBox folder for example.*
 
 When running the app for the first time, these needed files get auto-generated:
 - `file_metadata.json` - stores the notes text file metadata like it's file path, size and last updated timestamp
