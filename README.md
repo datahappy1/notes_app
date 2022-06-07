@@ -11,6 +11,8 @@ Notes application written in Python 3.8 & KivyMD
 - Customizable fonts and colors, settings can be persisted
 - Notes text is auto-saved while typing
 
+![](https://github.com/datahappy1/notes_app/blob/main/notes_app_recording.gif)
+
 ## version history
 | version | date | description |
 | :---: | :---: | :---: |
