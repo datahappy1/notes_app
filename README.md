@@ -86,7 +86,7 @@ venv_notes_app\Scripts\activate.bat
 (venv_notes_app) cd ..
 (venv_notes_app) PyInstaller --name notes notes_app/main.py
 ren "notes.spec" "notes_win.spec"
-change in the spec file the line datas=[] to datas=[("notes_app\\view\\notes_view.kv", "notes_app\\view\\")],
+change in the spec file the line datas=[], to datas=[("notes_app\\view\\notes_view.kv", "notes_app\\view\\")],
 ```
 
 - build command example:
@@ -102,6 +102,8 @@ virtualenv venv_notes_app
 source bin/activate
 (venv_notes_app) python -m pip install --upgrade pip wheel setuptools
 (venv_notes_app) python -m pip install PyInstaller
+mv notes.spec notes_linux.spec
+change in the spec file the line datas=[], to datas=[("notes_app/view/notes_view.kv", "notes_app/view/")],
 ```
 
 - build command example:
