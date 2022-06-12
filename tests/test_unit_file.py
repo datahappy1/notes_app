@@ -3,6 +3,7 @@ import uuid
 import pytest
 
 from notes_app.file import File, SectionIdentifier
+
 # from tests.conftest import (
 #     create_default_notes_file,
 #     TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,

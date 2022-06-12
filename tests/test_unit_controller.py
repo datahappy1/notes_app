@@ -40,7 +40,9 @@ class TestController:
     def test_set_file_path(self, get_app):
         controller = get_app.controller
         assert (
-            controller.set_file_path(file_path=get_app.model.defaults.DEFAULT_NOTES_FILE_NAME)
+            controller.set_file_path(
+                file_path=get_app.model.defaults.DEFAULT_NOTES_FILE_NAME
+            )
             is None
         )
 

@@ -215,10 +215,16 @@ class TestView:
         assert get_app.controller.view.settings.background_color == "blue"
         assert get_app.controller.view.settings.foreground_color == "lime"
 
-        assert get_app.controller.view.settings.store["font_name"] == {"value": "Roboto-Bold"}
+        assert get_app.controller.view.settings.store["font_name"] == {
+            "value": "Roboto-Bold"
+        }
         assert get_app.controller.view.settings.store["font_size"] == {"value": "14.0"}
-        assert get_app.controller.view.settings.store["background_color"] == {"value": "blue"}
-        assert get_app.controller.view.settings.store["foreground_color"] == {"value": "lime"}
+        assert get_app.controller.view.settings.store["background_color"] == {
+            "value": "blue"
+        }
+        assert get_app.controller.view.settings.store["foreground_color"] == {
+            "value": "lime"
+        }
 
         # ShowAppInfo
         value = MenuSettingsItems.ShowAppInfo.value
@@ -261,8 +267,13 @@ class TestView:
         assert isinstance(screen.file_manager.children[1], MDBoxLayout)
 
         # NOTES_FILE_PATH
-        screen.execute_open_file(file_path=get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
-        assert screen.file._file_path == get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME
+        screen.execute_open_file(
+            file_path=get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME
+        )
+        assert (
+            screen.file._file_path
+            == get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME
+        )
         assert isinstance(screen.ids.md_list.children[0], ItemDrawer)
         assert screen.ids.md_list.children[0].id == "<section=second> "
         assert screen.text_section_view.text == "Quod equidem non reprehendo\n"
@@ -855,7 +866,9 @@ class TestView:
         screen.file_manager.show(os.getcwd())
         screen.manager_open = True
 
-        screen.file_manager_select_path(path=get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
+        screen.file_manager_select_path(
+            path=get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME
+        )
         assert screen.manager_open is False
         assert isinstance(screen.file_manager, MDFileManager)
         assert isinstance(screen.file_manager.children[0], FloatButton)

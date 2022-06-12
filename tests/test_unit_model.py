@@ -7,7 +7,8 @@ from notes_app.model.notes_model import (
     get_file_size,
     format_local_epoch,
     get_file_updated_timestamp_as_epoch,
-    get_current_epoch)
+    get_current_epoch,
+)
 
 
 def test_format_local_epoch():
@@ -59,7 +60,8 @@ class TestModel:
         # file size differs between OS types
         assert isinstance(get_model.store["_file_size"]["value"], int)
         assert isinstance(
-            datetime.fromtimestamp(get_model.store["_last_updated_on"]["value"]), datetime
+            datetime.fromtimestamp(get_model.store["_last_updated_on"]["value"]),
+            datetime,
         )
 
     def test_set_get_file_path(self, get_model):
@@ -103,6 +105,8 @@ class TestModel:
 
         assert get_model.dump() is None
 
-        assert get_model.store["_file_path"] == {"value": get_model.defaults.DEFAULT_NOTES_FILE_NAME}
+        assert get_model.store["_file_path"] == {
+            "value": get_model.defaults.DEFAULT_NOTES_FILE_NAME
+        }
         assert get_model.store["_file_size"] == {"value": 123}
         assert get_model.store["_last_updated_on"] == {"value": 1653554504}

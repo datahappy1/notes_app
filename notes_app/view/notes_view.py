@@ -48,7 +48,11 @@ from notes_app.search import (
 )
 
 APP_TITLE = "Notes"
-APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.8 & KivyMD", f"version {__version__}"]
+APP_METADATA_ROWS = [
+    "A simple notes application",
+    "built with Python 3.8 & KivyMD",
+    f"version {__version__}",
+]
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
 
