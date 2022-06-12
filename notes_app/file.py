@@ -1,18 +1,19 @@
 import re
 from typing import AnyStr, List, Dict
 
-SECTION_FILE_SEPARATOR = "<section={name}> "
-SECTION_FILE_SEPARATOR_DEFAULT_VALUE = "<section=default> "
-SECTION_FILE_SEPARATOR_REGEX = "<section=[a-z A-Z]+> "
-SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX = "<section=(.+?)> "
 SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
 SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
 
 
 class SectionIdentifier:
     def __init__(
-        self, section_file_separator: AnyStr = None, section_name: AnyStr = None
+        self,
+        defaults,
+        section_file_separator: AnyStr = None,
+        section_name: AnyStr = None,
     ):
+        self.defaults = defaults
+
         if not section_file_separator and not section_name:
             raise ValueError(
                 "Expected either section_file_separator or section_name args"
@@ -26,17 +27,20 @@ class SectionIdentifier:
 
     def _transform_separator_to_name(self) -> AnyStr:
         return re.search(
-            SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX, self.section_file_separator
+            self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX,
+            self.section_file_separator,
         ).group(1)
 
     def _transform_name_to_separator(self, section_name) -> AnyStr:
-        return SECTION_FILE_SEPARATOR.format(name=section_name)
+        return self.defaults.DEFAULT_SECTION_FILE_SEPARATOR.format(name=section_name)
 
 
 class File:
-    def __init__(self, file_path, controller):
+    def __init__(self, file_path, controller, defaults):
         self._file_path = file_path
         self._controller = controller
+
+        self.defaults = defaults
 
         self._raw_data_content: AnyStr = self._get_validated_raw_data(
             raw_data=self.get_raw_data_content()
@@ -51,13 +55,6 @@ class File:
         ] = self._transform_raw_data_content_to_data_by_sections()
 
     @staticmethod
-    def _get_validated_raw_data(raw_data) -> AnyStr:
-        matches = re.findall(SECTION_FILE_SEPARATOR_REGEX, raw_data)
-        if not matches:
-            raise ValueError("No section in file found")
-        return raw_data
-
-    @staticmethod
     def get_validated_file_path(file_path):
         try:
             with open(file=file_path, mode="r"):
@@ -65,6 +62,14 @@ class File:
         except (PermissionError, FileNotFoundError, IsADirectoryError):
             return
         return file_path
+
+    def _get_validated_raw_data(self, raw_data) -> AnyStr:
+        matches = re.findall(
+            self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, raw_data
+        )
+        if not matches:
+            raise ValueError("No section in file found")
+        return raw_data
 
     def reload(self):
         """
@@ -83,8 +88,13 @@ class File:
         return self._controller.read_file_data(file_path=self._file_path)
 
     def _get_section_identifiers_from_raw_data_content(self) -> List[SectionIdentifier]:
-        separators = re.findall(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)
-        return [SectionIdentifier(separator) for separator in separators]
+        separators = re.findall(
+            self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content
+        )
+        return [
+            SectionIdentifier(defaults=self.defaults, section_file_separator=separator)
+            for separator in separators
+        ]
 
     @property
     def default_section_identifier(self) -> SectionIdentifier:
@@ -95,7 +105,11 @@ class File:
         return self._section_identifiers
 
     def add_section_identifier(self, section_file_separator) -> None:
-        self._section_identifiers.append(SectionIdentifier(section_file_separator))
+        self._section_identifiers.append(
+            SectionIdentifier(
+                defaults=self.defaults, section_file_separator=section_file_separator
+            )
+        )
 
     def delete_all_section_identifiers(self) -> None:
         self._section_identifiers = []
@@ -123,7 +137,10 @@ class File:
         dict_data = dict()
         for item in zip(
             self._section_identifiers,
-            re.split(SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)[1:],
+            re.split(
+                self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX,
+                self._raw_data_content,
+            )[1:],
         ):
             dict_data[item[0].section_file_separator] = item[1]
 

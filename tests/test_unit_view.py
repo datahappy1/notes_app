@@ -10,9 +10,8 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.filemanager import MDFileManager, FloatButton
 from kivymd.uix.menu import MDDropdownMenu
 
-from notes_app.utils.file import File, SectionIdentifier
-from notes_app.utils.search import Search
-from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
+from notes_app.file import File, SectionIdentifier
+from notes_app.search import Search
 from notes_app.view.notes_view import (
     DrawerList,
     MenuSettingsItems,
@@ -23,12 +22,6 @@ from notes_app.view.notes_view import (
     CustomSnackbar,
     CustomListItem,
     APP_METADATA_ROWS,
-)
-
-from tests.conftest import (
-    read_settings_file,
-    TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-    TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH,
 )
 
 
@@ -62,9 +55,9 @@ class TestView:
         screen = get_app.controller.get_screen()
         screen.set_properties_from_settings()
 
-        assert screen.text_section_view.font_name == "Roboto-Bold"
+        assert screen.text_section_view.font_name == "RobotoMono-Regular"
         assert screen.text_section_view.font_size == 14.0
-        assert screen.text_section_view.background_color == [0, 0, 1, 1]
+        assert screen.text_section_view.background_color == [0, 0, 0, 1]
         assert screen.text_section_view.foreground_color == [0, 0.5, 0, 1]
 
     def test_filter_data_split_by_section(self, get_app):
@@ -160,15 +153,15 @@ class TestView:
         screen = get_app.controller.get_screen()
 
         # change font name
-        assert screen.text_section_view.font_name == "Roboto-Bold"
-        assert screen.settings.font_name == "Roboto-Bold"
+        assert screen.text_section_view.font_name == "RobotoMono-Regular"
+        assert screen.settings.font_name == "RobotoMono-Regular"
 
         value = MenuSettingsItems.SetNextFont.value
         screen.press_menu_settings_item_callback(text_item=value)
         screen.press_menu_settings_item_callback(text_item=value)
 
-        assert screen.text_section_view.font_name == "Roboto-Italic"
-        assert screen.settings.font_name == "Roboto-Italic"
+        assert screen.text_section_view.font_name == "Roboto-Bold"
+        assert screen.settings.font_name == "Roboto-Bold"
 
         # increase font size
         assert screen.text_section_view.font_size == 14.0
@@ -193,15 +186,15 @@ class TestView:
         assert screen.settings.font_size == "14.0"
 
         # change background color
-        assert screen.text_section_view.background_color == [0, 0, 1, 1]
-        assert screen.settings.background_color == "blue"
+        assert screen.text_section_view.background_color == [0, 0, 0, 1]
+        assert screen.settings.background_color == "black"
 
         value = MenuSettingsItems.SetNextBackgroundColor.value
         screen.press_menu_settings_item_callback(text_item=value)
         screen.press_menu_settings_item_callback(text_item=value)
 
-        assert screen.text_section_view.background_color == [0, 1, 0, 1]
-        assert screen.settings.background_color == "lime"
+        assert screen.text_section_view.background_color == [0, 0, 1, 1]
+        assert screen.settings.background_color == "blue"
 
         # change foreground color
         assert screen.text_section_view.foreground_color == [0, 0.5, 0, 1]
@@ -211,22 +204,21 @@ class TestView:
         screen.press_menu_settings_item_callback(text_item=value)
         screen.press_menu_settings_item_callback(text_item=value)
 
-        assert screen.text_section_view.foreground_color == [0, 1, 1, 1]
-        assert screen.settings.foreground_color == "aqua"
+        assert screen.text_section_view.foreground_color == [0, 1, 0, 1]
+        assert screen.settings.foreground_color == "lime"
 
         # save settings
         value = MenuSettingsItems.Save.value
         screen.press_menu_settings_item_callback(text_item=value)
-        assert get_app.controller.view.settings.font_name == "Roboto-Italic"
+        assert get_app.controller.view.settings.font_name == "Roboto-Bold"
         assert get_app.controller.view.settings.font_size == "14.0"
-        assert get_app.controller.view.settings.background_color == "lime"
-        assert get_app.controller.view.settings.foreground_color == "aqua"
+        assert get_app.controller.view.settings.background_color == "blue"
+        assert get_app.controller.view.settings.foreground_color == "lime"
 
-        settings_file_content = read_settings_file()
-        assert settings_file_content["font_name"] == {"value": "Roboto-Italic"}
-        assert settings_file_content["font_size"] == {"value": "14.0"}
-        assert settings_file_content["foreground_color"] == {"value": "aqua"}
-        assert settings_file_content["background_color"] == {"value": "lime"}
+        assert get_app.controller.view.settings.store["font_name"] == {"value": "Roboto-Bold"}
+        assert get_app.controller.view.settings.store["font_size"] == {"value": "14.0"}
+        assert get_app.controller.view.settings.store["background_color"] == {"value": "blue"}
+        assert get_app.controller.view.settings.store["foreground_color"] == {"value": "lime"}
 
         # ShowAppInfo
         value = MenuSettingsItems.ShowAppInfo.value
@@ -258,7 +250,7 @@ class TestView:
         assert isinstance(screen.snackbar, CustomSnackbar)
         assert screen.snackbar.text == "Cannot delete last section"
 
-    def test_execute_open_file(self, get_app):
+    def test_execute_open_file(self, get_app, get_empty_file_file_path):
         screen = get_app.controller.get_screen()
 
         assert screen.manager_open is False
@@ -269,14 +261,14 @@ class TestView:
         assert isinstance(screen.file_manager.children[1], MDBoxLayout)
 
         # NOTES_FILE_PATH
-        screen.execute_open_file(file_path=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH)
-        assert screen.file._file_path == TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
+        screen.execute_open_file(file_path=get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
+        assert screen.file._file_path == get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME
         assert isinstance(screen.ids.md_list.children[0], ItemDrawer)
         assert screen.ids.md_list.children[0].id == "<section=second> "
         assert screen.text_section_view.text == "Quod equidem non reprehendo\n"
 
         # EMPTY_NOTES_FILE_PATH
-        screen.execute_open_file(file_path=TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH)
+        screen.execute_open_file(file_path=get_empty_file_file_path)
         assert screen.file._section_identifiers == []
         assert screen.file._data_by_sections == {}
 
@@ -772,7 +764,9 @@ class TestView:
         }
 
         screen.filter_data_split_by_section(
-            section_identifier=SectionIdentifier(section_name="second")
+            section_identifier=SectionIdentifier(
+                defaults=get_app.model.defaults, section_name="second"
+            )
         )
 
         assert screen.press_delete_section(section_item=section_item) is None
@@ -800,7 +794,7 @@ class TestView:
         screen = get_app.controller.get_screen()
 
         screen.auto_save_text_input_change_counter = (
-            AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
+            get_app.controller.defaults.DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
         )
 
         # external update
@@ -828,7 +822,7 @@ class TestView:
         screen = get_app.controller.get_screen()
 
         screen.auto_save_text_input_change_counter = (
-            AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
+            get_app.controller.defaults.DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
         )
 
         screen.file._data_by_sections = {
@@ -861,7 +855,7 @@ class TestView:
         screen.file_manager.show(os.getcwd())
         screen.manager_open = True
 
-        screen.file_manager_select_path(path=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH)
+        screen.file_manager_select_path(path=get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
         assert screen.manager_open is False
         assert isinstance(screen.file_manager, MDFileManager)
         assert isinstance(screen.file_manager.children[0], FloatButton)

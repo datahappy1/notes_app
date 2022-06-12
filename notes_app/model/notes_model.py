@@ -7,34 +7,47 @@
 # inheriting which, the `notify_model_is_changed` method must be overridden.
 import json
 from os import linesep, path
+import time
+from typing import AnyStr
 
-from notes_app.utils.file import SECTION_FILE_SEPARATOR
-from notes_app.utils.path import get_file_size, get_file_updated_timestamp_as_epoch
-from notes_app.utils.time import (
-    format_local_epoch,
-    GENERAL_DATE_TIME_FORMAT,
-)
-
-DEFAULT_NOTES_FILE_NAME = "my_first_file.txt"
-DEFAULT_NOTES_FILE_CONTENT = f"{SECTION_FILE_SEPARATOR.format(name='first')} Your first section. Here you can write your notes."
-
-DEFAULT_MODEL_STORE_FILE_NAME = "file_metadata.json"
+GENERAL_DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-class DefaultNotesFile:
-    def __init__(self, notes_file_name=None, notes_file_content=None):
-        self._default_notes_file_name = notes_file_name or DEFAULT_NOTES_FILE_NAME
-        self._default_notes_file_content = (
-            notes_file_content or DEFAULT_NOTES_FILE_CONTENT
-        )
+def format_local_epoch(format: AnyStr, epoch_time: int) -> AnyStr:
+    """
+    format epoch in local time based on provided format
+    """
+    return time.strftime(format, time.localtime(epoch_time))
 
-    @property
-    def default_notes_file_name(self):
-        return self._default_notes_file_name
 
-    def generate(self) -> None:
-        with open(file=self.default_notes_file_name, mode="w") as f:
-            f.write(self._default_notes_file_content)
+def get_current_epoch() -> int:
+    """
+    get_current_epoch
+    """
+    return int(time.time())
+
+
+def check_file_path_is_valid(file_path: str) -> bool:
+    """
+    check_file_path_is_valid
+    :param file_path:
+    :return:
+    """
+    return path.exists(file_path)
+
+
+def get_file_updated_timestamp_as_epoch(file_path: str) -> int:
+    """
+    get file updated timestamp as epoch
+    """
+    return int(path.getmtime(file_path))
+
+
+def get_file_size(file_path: str) -> int:
+    """
+    get file size
+    """
+    return path.getsize(file_path)
 
 
 class NotesModel:
@@ -45,10 +58,10 @@ class NotesModel:
     methods for registration, deletion and notification observers.
     """
 
-    def __init__(self, store, **kwargs):
-        self.store = store(filename=DEFAULT_MODEL_STORE_FILE_NAME)
-        self._default_notes_file = DefaultNotesFile(**kwargs)
-        self._generate_default_file_if_file_path_missing()
+    def __init__(self, store, defaults):
+        self.defaults = defaults
+        self.store = store(filename=self.defaults.DEFAULT_MODEL_STORE_FILE_NAME)
+
         self._set_missing_store_defaults()
 
         self._file_path = self.store.get("_file_path")["value"]
@@ -68,43 +81,25 @@ class NotesModel:
             }
         )
 
-    def _generate_default_file_if_file_path_missing(self):
-        if (
-            not self.store.exists("_file_path")
-            or self.store.get("_file_path")["value"] is None
-            or not path.exists(self.store.get("_file_path")["value"])
-        ):
-            self._default_notes_file.generate()
-
     def _set_missing_store_defaults(self):
         if (
             not self.store.exists("_file_path")
             or self.store.get("_file_path")["value"] is None
-            or not path.exists(self.store.get("_file_path")["value"])
+            or check_file_path_is_valid(self.store.get("_file_path")["value"]) is False
         ):
-            self.store.put(
-                "_file_path", value=self._default_notes_file.default_notes_file_name
-            )
+            self.store.put("_file_path", value=self.defaults.DEFAULT_NOTES_FILE_NAME)
 
         if (
             not self.store.exists("_file_size")
             or self.store.get("_file_size")["value"] is None
         ):
-            self.store.put(
-                "_file_size",
-                value=get_file_size(file_path=self.store.get("_file_path")["value"]),
-            )
+            self.store.put("_file_size", value=0)
 
         if (
             not self.store.exists("_last_updated_on")
             or self.store.get("_last_updated_on")["value"] is None
         ):
-            self.store.put(
-                "_last_updated_on",
-                value=get_file_updated_timestamp_as_epoch(
-                    file_path=self.store.get("_file_path")["value"]
-                ),
-            )
+            self.store.put("_last_updated_on", value=0)
 
     @property
     def file_path(self):
@@ -113,30 +108,25 @@ class NotesModel:
     @file_path.setter
     def file_path(self, value):
         self._file_path = str(value)
-        self.notify_observers()
 
     @property
     def file_size(self):
         return self._file_size
 
-    @file_size.setter
-    def file_size(self, value):
-        self._file_size = int(value)
-        self.notify_observers()
-
     @property
     def last_updated_on(self):
         return self._last_updated_on
-
-    @last_updated_on.setter
-    def last_updated_on(self, value):
-        self._last_updated_on = int(value)
-        self.notify_observers()
 
     @property
     def formatted(self):
         return linesep.join(
             [f"{x[0]} : {x[1]}" for x in json.loads(self.__repr__()).items()]
+        )
+
+    @property
+    def external_update(self):
+        return (
+            get_file_updated_timestamp_as_epoch(self.file_path) > self.last_updated_on
         )
 
     def add_observer(self, observer):
@@ -149,7 +139,19 @@ class NotesModel:
         for o in self.observers:
             o.notify_model_is_changed()
 
-    def dump(self):
+    def update(self) -> None:
+        """
+        update file-path related file attributes and notify observers
+        """
+        self._file_size = get_file_size(self.file_path)
+        self._last_updated_on = get_current_epoch()
+
+        self.notify_observers()
+
+    def dump(self) -> None:
+        """
+        dump model variables into store
+        """
         self.store.put("_file_path", value=self._file_path)
         self.store.put("_file_size", value=self._file_size)
         self.store.put("_last_updated_on", value=self._last_updated_on)

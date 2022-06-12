@@ -1,45 +1,42 @@
 import json
+import tempfile
+import time
 from datetime import datetime
-from os import getcwd
-from os.path import exists
 
 from notes_app.model.notes_model import (
-    DefaultNotesFile,
-    DEFAULT_NOTES_FILE_NAME,
-    DEFAULT_NOTES_FILE_CONTENT,
-)
-from tests.conftest import (
-    read_model_file,
-    TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-    TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
-    read_default_notes_file,
-    delete_default_notes_file,
-    TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-)
+    get_file_size,
+    format_local_epoch,
+    get_file_updated_timestamp_as_epoch,
+    get_current_epoch)
 
 
-class TestDefaultNotesFile:
-    def teardown_method(self, test_method):
-        delete_default_notes_file()
+def test_format_local_epoch():
+    assert isinstance(
+        datetime.strptime(
+            format_local_epoch("%Y-%m-%d %H:%M:%S", 1650362948), "%Y-%m-%d %H:%M:%S"
+        ),
+        datetime,
+    )
 
-    def test_default_notes_file(self):
-        default_notes_file = DefaultNotesFile()
-        assert default_notes_file.default_notes_file_name == DEFAULT_NOTES_FILE_NAME
-        assert (
-            default_notes_file._default_notes_file_content == DEFAULT_NOTES_FILE_CONTENT
-        )
 
-    def test_generate_default_file(self):
-        DefaultNotesFile(
-            notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
-            notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-        ).generate()
-        assert read_default_notes_file() == TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
+def test_get_current_epoch():
+    assert isinstance(get_current_epoch(), int)
+    assert datetime.fromtimestamp(get_current_epoch())
+
+
+def test_get_file_updated_timestamp_as_epoch():
+    tf = tempfile.NamedTemporaryFile()
+    assert datetime.fromtimestamp(get_file_updated_timestamp_as_epoch(tf.name))
+
+
+def test_get_file_size():
+    tf = tempfile.NamedTemporaryFile()
+    assert get_file_size(tf.name) == 0
 
 
 class TestModel:
     def test_model(self, get_model):
-        assert get_model._file_path == TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
+        assert get_model._file_path == get_model.defaults.DEFAULT_NOTES_FILE_NAME
         assert isinstance(get_model._file_size, int)
         assert isinstance(datetime.fromtimestamp(get_model._last_updated_on), datetime)
 
@@ -48,53 +45,37 @@ class TestModel:
         assert isinstance(get_model.__repr__(), str)
         assert json.dumps(get_model.__repr__())
 
-    def test__generate_default_file_if_file_path_missing_invalid_path(self, get_model):
-        get_model.file_path = "invalid_test_path"
-        get_model.dump()
-        get_model._generate_default_file_if_file_path_missing()
-        assert exists(f"{getcwd()}/{TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME}")
-
-    def test__generate_default_file_if_file_path_missing_missing_path(self, get_model):
-        get_model.file_path = None
-        get_model.dump()
-        get_model._generate_default_file_if_file_path_missing()
-        assert exists(f"{getcwd()}/{TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME}")
-
     def test__set_missing_store_defaults(self, get_model):
         get_model.file_path = ""
-        get_model.file_size = 0
-        get_model.last_updated_on = 0
+        get_model._file_size = 0
+        get_model._last_updated_on = 0
         get_model.dump()
-        get_model._generate_default_file_if_file_path_missing()
 
         get_model._set_missing_store_defaults()
 
-        json_data = read_model_file()
-
-        assert json_data["_file_path"] == {
-            "value": f"{getcwd()}/{TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME}"
+        assert get_model.store["_file_path"] == {
+            "value": f"{get_model.defaults.DEFAULT_NOTES_FILE_NAME}"
         }
         # file size differs between OS types
-        assert isinstance(json_data["_file_size"]["value"], int)
+        assert isinstance(get_model.store["_file_size"]["value"], int)
         assert isinstance(
-            datetime.fromtimestamp(json_data["_last_updated_on"]["value"]), datetime
+            datetime.fromtimestamp(get_model.store["_last_updated_on"]["value"]), datetime
         )
 
     def test_set_get_file_path(self, get_model):
         get_model.file_path = "test"
         assert get_model.file_path == "test"
 
-    def test_set_get_file_size(self, get_model):
-        get_model.file_size = 42
-        assert get_model.file_size == 42
-
-    def test_set_get_last_updated_on(self, get_model):
-        get_model.last_updated_on = 1650621021
-        assert get_model.last_updated_on == 1650621021
-
     def test_formatted(self, get_model):
         assert isinstance(get_model.formatted, str)
         assert len(get_model.formatted.splitlines()) == 3
+
+    def test_external_update(self, get_model):
+        assert get_model.external_update is True
+
+        # now set model.last_updated_on to current epoch time
+        get_model._last_updated_on = time.time()
+        assert get_model.external_update is False
 
     def test_set_get_observers(self, get_model):
         observer = dict()
@@ -103,14 +84,25 @@ class TestModel:
         assert len(get_model.observers) == 1
         assert get_model.observers[0] == observer
 
+    def test_update(self, get_model):
+        get_model._file_size = 0
+        get_model._last_updated_on = 0
+
+        fs_before = get_model._file_size
+        ts_before = get_model._last_updated_on
+
+        get_model.update()
+
+        assert get_model._file_size > fs_before
+        assert get_model._last_updated_on > ts_before
+
     def test_dump(self, get_model):
-        get_model.file_path = "test"
-        get_model.file_size = 123
-        get_model.last_updated_on = 1653554504
+        get_model.file_path = get_model.defaults.DEFAULT_NOTES_FILE_NAME
+        get_model._file_size = 123
+        get_model._last_updated_on = 1653554504
+
         assert get_model.dump() is None
 
-        json_data = read_model_file()
-
-        assert json_data["_file_path"] == {"value": "test"}
-        assert json_data["_file_size"] == {"value": 123}
-        assert json_data["_last_updated_on"] == {"value": 1653554504}
+        assert get_model.store["_file_path"] == {"value": get_model.defaults.DEFAULT_NOTES_FILE_NAME}
+        assert get_model.store["_file_size"] == {"value": 123}
+        assert get_model.store["_last_updated_on"] == {"value": 1653554504}

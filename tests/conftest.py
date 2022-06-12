@@ -6,14 +6,11 @@ import pytest
 from kivy.storage.jsonstore import JsonStore
 from kivymd.app import MDApp
 
+from notes_app.defaults import Defaults
 from notes_app.controller.notes_controller import NotesController
-from notes_app.model.notes_model import (
-    DEFAULT_MODEL_STORE_FILE_NAME,
-    NotesModel,
-    DefaultNotesFile,
-)
-from notes_app.utils.file import File
-from notes_app.utils.settings import DEFAULT_SETTINGS_STORE_FILE_NAME, Settings
+from notes_app.model.notes_model import NotesModel
+from notes_app.file import File
+from notes_app.settings import Settings
 
 TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME = "my_first_file.txt"
 TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH = getcwd()
@@ -21,18 +18,20 @@ TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_
 TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT = """<section=first> Quod equidem non reprehendo
 <section=second> Quis istum dolorem timet"""
 
-TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_NAME = "empty.txt"
-TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/{TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_NAME}"
-TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_CONTENT = """"""
+EMPTY_FILE_NAME = "empty.txt"
+EMPTY_FILE_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/{EMPTY_FILE_NAME}"
+EMPTY_FILE_CONTENT = """"""
 
-default_notes_file = DefaultNotesFile(
-    notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME,
-    notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-)
+
+defaults = Defaults()
+defaults.DEFAULT_NOTES_FILE_NAME = TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
+defaults.DEFAULT_NOTES_FILE_CONTENT = TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
 
 
 def create_settings_file():
-    with open(file=f"{getcwd()}/{DEFAULT_SETTINGS_STORE_FILE_NAME}", mode="w") as f:
+    with open(
+        file=f"{getcwd()}/{defaults.DEFAULT_SETTINGS_STORE_FILE_NAME}", mode="w"
+    ) as f:
         f.write(
             json.dumps(
                 {
@@ -46,23 +45,19 @@ def create_settings_file():
 
 
 def delete_settings_file():
-    fp = f"{getcwd()}/{DEFAULT_SETTINGS_STORE_FILE_NAME}"
+    fp = f"{getcwd()}/{defaults.DEFAULT_SETTINGS_STORE_FILE_NAME}"
     if os.path.exists(fp):
         os.remove(fp)
 
 
-def read_settings_file():
-    with open(file=f"{getcwd()}/{DEFAULT_SETTINGS_STORE_FILE_NAME}", mode="r") as f:
-        json_data = json.loads(f.read())
-    return json_data
-
-
 def create_model_file():
-    with open(file=f"{getcwd()}/{DEFAULT_MODEL_STORE_FILE_NAME}", mode="w") as f:
+    with open(
+        file=f"{getcwd()}/{defaults.DEFAULT_MODEL_STORE_FILE_NAME}", mode="w"
+    ) as f:
         f.write(
             json.dumps(
                 {
-                    "_file_path": {"value": TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH},
+                    "_file_path": {"value": defaults.DEFAULT_NOTES_FILE_NAME},
                     "_file_size": {"value": 0},
                     "_last_updated_on": {"value": 1650870356},
                 }
@@ -71,105 +66,86 @@ def create_model_file():
 
 
 def delete_model_file():
-    fp = f"{getcwd()}/{DEFAULT_MODEL_STORE_FILE_NAME}"
+    fp = f"{getcwd()}/{defaults.DEFAULT_MODEL_STORE_FILE_NAME}"
     if os.path.exists(fp):
         os.remove(fp)
 
 
-def read_model_file():
-    with open(file=f"{getcwd()}/{DEFAULT_MODEL_STORE_FILE_NAME}", mode="r") as f:
-        json_data = json.loads(f.read())
-    return json_data
-
-
 def create_default_notes_file():
-    with open(file=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH, mode="w") as notes_file:
-        notes_file.write(TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT)
+    with open(file=defaults.DEFAULT_NOTES_FILE_NAME, mode="w") as notes_file:
+        notes_file.write(defaults.DEFAULT_NOTES_FILE_CONTENT)
 
 
 def delete_default_notes_file():
-    if os.path.exists(TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH):
-        os.remove(TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH)
+    if os.path.exists(defaults.DEFAULT_NOTES_FILE_NAME):
+        os.remove(defaults.DEFAULT_NOTES_FILE_NAME)
 
 
-def read_default_notes_file():
-    with open(file=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH, mode="r") as f:
-        text_data = f.read()
-    return text_data
+def create_default_notes_empty_file():
+    with open(file=EMPTY_FILE_PATH, mode="w") as notes_file:
+        notes_file.write(EMPTY_FILE_CONTENT)
 
 
-def create_default_empty_notes_file():
-    with open(file=TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH, mode="w") as notes_file:
-        notes_file.write(TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_CONTENT)
-
-
-def delete_default_empty_notes_file():
-    if os.path.exists(TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH):
-        os.remove(TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH)
-
-
-def read_default_empty_notes_file():
-    with open(file=TEST_OVERRIDE_DEFAULT_NOTES_EMPTY_FILE_PATH, mode="r") as f:
-        text_data = f.read()
-    return text_data
+def delete_default_notes_empty_file():
+    if os.path.exists(EMPTY_FILE_PATH):
+        os.remove(EMPTY_FILE_PATH)
 
 
 @pytest.fixture(autouse=True)
 def get_default_test_files_state():
     create_settings_file()
     create_model_file()
-    # commented out on purpose since the model initializer creates the default notes file if needed
-    # create_default_notes_file()
-    create_default_empty_notes_file()
+    create_default_notes_file()
+    create_default_notes_empty_file()
     yield
     delete_settings_file()
     delete_model_file()
     delete_default_notes_file()
-    delete_default_empty_notes_file()
+    delete_default_notes_empty_file()
+
+
+@pytest.fixture
+def get_empty_file_file_path():
+    return EMPTY_FILE_PATH
 
 
 @pytest.fixture
 def get_model():
-    return NotesModel(
-        store=JsonStore,
-        notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-        notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-    )
+    return NotesModel(store=JsonStore, defaults=defaults)
 
 
 @pytest.fixture()
 def get_file():
     controller = NotesController(
-        settings=Settings(store=JsonStore),
-        model=NotesModel(
-            store=JsonStore,
-            notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-            notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-        ),
+        settings=Settings(store=JsonStore, defaults=defaults),
+        model=NotesModel(store=JsonStore, defaults=defaults),
+        defaults=defaults,
     )
 
-    file = File(file_path=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH, controller=controller)
+    file = File(
+        file_path=defaults.DEFAULT_NOTES_FILE_NAME,
+        controller=controller,
+        defaults=defaults,
+    )
     return file
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def get_settings():
-    return Settings(store=JsonStore)
+    return Settings(store=JsonStore, defaults=defaults)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def get_app():
     class NotesApp(MDApp):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
 
-            self.model = NotesModel(
-                store=JsonStore,
-                notes_file_name=TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-                notes_file_content=TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT,
-            )
+            self.model = NotesModel(store=JsonStore, defaults=defaults)
             self.controller = NotesController(
-                settings=Settings(store=JsonStore), model=self.model
+                settings=Settings(store=JsonStore, defaults=defaults),
+                model=self.model,
+                defaults=defaults,
             )
 
     return NotesApp()

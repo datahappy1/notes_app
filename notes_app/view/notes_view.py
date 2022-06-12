@@ -20,21 +20,21 @@ from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app.observer.notes_observer import Observer
 
-from notes_app.utils.color import (
+from notes_app.color import (
     get_color_by_name,
     get_next_color_by_rgba,
     AVAILABLE_COLORS,
     AVAILABLE_SNACK_BAR_COLORS,
 )
-from notes_app.utils.file import (
+from notes_app.file import (
     File,
     SectionIdentifier,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
-from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
-from notes_app.utils.mark import get_marked_search_result
-from notes_app.utils.search import (
+from notes_app.font import get_next_font, AVAILABLE_FONTS
+from notes_app.mark import get_marked_text
+from notes_app.search import (
     Search,
     validate_search_input,
     SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT,
@@ -45,7 +45,6 @@ from notes_app.utils.search import (
     transform_position_text_placeholder_to_position,
     transform_position_to_position_text_placeholder,
 )
-from notes_app.utils.text_input import AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
 
 APP_TITLE = "Notes"
 APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.8 & KivyMD"]
@@ -142,6 +141,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
     """
 
     settings = ObjectProperty()
+    defaults = ObjectProperty()
 
     controller = ObjectProperty()
     model = ObjectProperty()
@@ -161,10 +161,14 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
 
-        self.search = Search()
+        self.search = Search(defaults=self.defaults)
         self.set_properties_from_settings()
 
-        self.file = File(file_path=self.model.file_path, controller=self.controller)
+        self.file = File(
+            file_path=self.model.file_path,
+            controller=self.controller,
+            defaults=self.defaults,
+        )
         self.current_section_identifier = self.file.default_section_identifier
         self.filter_data_split_by_section()
         self.set_drawer_items(section_identifiers=self.file.section_identifiers)
@@ -221,7 +225,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         if self.is_unsaved_change:
             self.save_current_section_to_file()
 
-        section_identifier = SectionIdentifier(section_file_separator=text_item.id)
+        section_identifier = SectionIdentifier(
+            defaults=self.defaults, section_file_separator=text_item.id
+        )
         self.current_section_identifier = section_identifier
         self.filter_data_split_by_section()
 
@@ -356,7 +362,11 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.controller.set_file_path(validated_file_path)
 
         try:
-            self.file = File(file_path=validated_file_path, controller=self.controller)
+            self.file = File(
+                file_path=validated_file_path,
+                controller=self.controller,
+                defaults=self.defaults,
+            )
             self.set_drawer_items(section_identifiers=self.file.section_identifiers)
             self.filter_data_split_by_section(
                 section_identifier=self.file.default_section_identifier
@@ -371,7 +381,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             section_text_placeholder=custom_list_item.secondary_text
         )
 
-        self.current_section_identifier = SectionIdentifier(section_name=section_name)
+        self.current_section_identifier = SectionIdentifier(
+            defaults=self.defaults, section_name=section_name
+        )
         self.filter_data_split_by_section()
 
         position = transform_position_text_placeholder_to_position(
@@ -435,8 +447,8 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 position_end = position_start + len(self.last_searched_string)
 
                 found_string = text_data[position_start:position_end]
-                found_string_marked = get_marked_search_result(
-                    found_string=found_string,
+                found_string_marked = get_marked_text(
+                    text=found_string,
                     highlight_style=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
                     highlight_color=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR,
                 )
@@ -447,7 +459,8 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 ]
 
                 section_identifier = SectionIdentifier(
-                    section_file_separator=section_file_separator
+                    defaults=self.defaults,
+                    section_file_separator=section_file_separator,
                 )
 
                 self.dialog.content_cls.results_list.add_widget(
@@ -480,7 +493,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             return
 
         section_name = args[0]
-        section_identifier = SectionIdentifier(section_name=section_name)
+        section_identifier = SectionIdentifier(
+            defaults=self.defaults, section_name=section_name
+        )
 
         if section_identifier.section_file_separator in self.file.section_identifiers:
             self.dialog.content_cls.add_section_result_message = "Name already exists"
@@ -515,9 +530,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         text_data = self.file.transform_data_by_sections_to_raw_data_content()
 
-        is_external_update = self.controller.save_file_data(data=text_data)
+        self.controller.save_file_data(data=text_data)
 
-        if is_external_update:
+        if self.model.external_update:
             self.file.reload()
             self.text_section_view.text = self.file.get_section_content(
                 section_file_separator=self.text_section_view.section_file_separator
@@ -591,7 +606,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         if (
             self.auto_save_text_input_change_counter
-            == AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
+            == self.defaults.DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT
         ):
             self.save_current_section_to_file()
             self.auto_save_text_input_change_counter = 0

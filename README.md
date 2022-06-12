@@ -1,7 +1,7 @@
 # notes_app
 Notes application written in Python 3.8 & KivyMD
 
-![](https://github.com/datahappy1/notes_app/blob/main/notes_app_scrn.png)
+![](https://github.com/datahappy1/notes_app/blob/main/notes_app_recording.gif)
 
 ## application description
 - OS independent
@@ -10,8 +10,6 @@ Notes application written in Python 3.8 & KivyMD
 - Full-text or word-based search capability across the current section or all sections
 - Customizable fonts and colors, settings can be persisted
 - Notes text is auto-saved while typing
-
-![](https://github.com/datahappy1/notes_app/blob/main/notes_app_recording.gif)
 
 ## version history
 | version | date | description |
@@ -31,16 +29,16 @@ The model in the MVC is responsible for storing the metadata of this text file o
 When the notes text file content significantly changes causing last updated timestamp or file size model attributes to change, or when a different text file
 for storage is chosen, the view is notified through it's registered observer and displays a info message on the UI.
 
-The app uses `difflib` library to reasonably "version-control" notes in case the storage file was modified from another instance of the app that is using the same
+The app uses `difflib` library to do the best effort to reasonably "version-control" notes in case the storage file was modified from another instance of the app that is using the same
 text file for notes storage. *This can happen when using a shared DropBox folder for example.*
 
 When running the app for the first time, these needed files get auto-generated:
-- `file_metadata.json` - stores the notes text file metadata like it's file path, size and last updated timestamp
+- `file_metadata.json` - stores the notes text file metadata like it's file path, size and last updated epoch timestamp
 ```json
 {
     "_file_path": {"value": "some/path/to/my_first_file.txt"}, 
     "_file_size": {"value": 42}, 
-    "_last_updated_on": {"value": "2022-05-28 12:37:56"}
+    "_last_updated_on": {"value": 1654674166}
 }
 ```
 - `my_first_file.txt` - this is the notes text file itself

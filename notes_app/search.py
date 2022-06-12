@@ -3,10 +3,6 @@ from typing import AnyStr
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
 
-DEFAULT_VALUE_SEARCH_CASE_SENSITIVE = False
-DEFAULT_VALUE_SEARCH_ALL_SECTIONS = False
-DEFAULT_VALUE_SEARCH_FULL_WORDS = False
-
 SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
 SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE = "section "
 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
@@ -54,10 +50,10 @@ def search_function(pattern, text, case_sensitive_search, full_words_search):
 
 
 class Search:
-    def __init__(self):
-        self._search_case_sensitive = DEFAULT_VALUE_SEARCH_CASE_SENSITIVE
-        self._search_all_sections = DEFAULT_VALUE_SEARCH_ALL_SECTIONS
-        self._search_full_words = DEFAULT_VALUE_SEARCH_FULL_WORDS
+    def __init__(self, defaults):
+        self._search_case_sensitive = defaults.DEFAULT_VALUE_SEARCH_CASE_SENSITIVE
+        self._search_all_sections = defaults.DEFAULT_VALUE_SEARCH_ALL_SECTIONS
+        self._search_full_words = defaults.DEFAULT_VALUE_SEARCH_FULL_WORDS
 
     @property
     def search_case_sensitive(self):

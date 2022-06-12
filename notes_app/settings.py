@@ -1,14 +1,7 @@
-DEFAULT_SETTINGS_STORE_FILE_NAME = "settings.json"
-
-DEFAULT_SETTINGS_VALUE_FONT_NAME = "RobotoMono-Regular"
-DEFAULT_SETTINGS_VALUE_FONT_SIZE = "14.0"
-DEFAULT_SETTINGS_VALUE_BACKGROUND_COLOR = "black"
-DEFAULT_SETTINGS_VALUE_FOREGROUND_COLOR = "green"
-
-
 class Settings:
-    def __init__(self, store):
-        self.store = store(filename=DEFAULT_SETTINGS_STORE_FILE_NAME)
+    def __init__(self, store, defaults):
+        self.defaults = defaults
+        self.store = store(filename=self.defaults.DEFAULT_SETTINGS_STORE_FILE_NAME)
         self._set_missing_store_defaults()
 
         self._font_name = self.store.get("font_name")["value"]
@@ -21,20 +14,25 @@ class Settings:
             not self.store.exists("font_name")
             or self.store.get("font_name")["value"] is None
         ):
-            self.store.put("font_name", value=DEFAULT_SETTINGS_VALUE_FONT_NAME)
+            self.store.put(
+                "font_name", value=self.defaults.DEFAULT_SETTINGS_VALUE_FONT_NAME
+            )
 
         if (
             not self.store.exists("font_size")
             or self.store.get("font_size")["value"] is None
         ):
-            self.store.put("font_size", value=DEFAULT_SETTINGS_VALUE_FONT_SIZE)
+            self.store.put(
+                "font_size", value=self.defaults.DEFAULT_SETTINGS_VALUE_FONT_SIZE
+            )
 
         if (
             not self.store.exists("background_color")
             or self.store.get("background_color")["value"] is None
         ):
             self.store.put(
-                "background_color", value=DEFAULT_SETTINGS_VALUE_BACKGROUND_COLOR
+                "background_color",
+                value=self.defaults.DEFAULT_SETTINGS_VALUE_BACKGROUND_COLOR,
             )
 
         if (
@@ -42,7 +40,8 @@ class Settings:
             or self.store.get("foreground_color")["value"] is None
         ):
             self.store.put(
-                "foreground_color", value=DEFAULT_SETTINGS_VALUE_FOREGROUND_COLOR
+                "foreground_color",
+                value=self.defaults.DEFAULT_SETTINGS_VALUE_FOREGROUND_COLOR,
             )
 
     @property
