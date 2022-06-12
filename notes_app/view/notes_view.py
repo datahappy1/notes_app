@@ -18,6 +18,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
+from notes_app import __version__
 from notes_app.observer.notes_observer import Observer
 
 from notes_app.color import (
@@ -47,7 +48,7 @@ from notes_app.search import (
 )
 
 APP_TITLE = "Notes"
-APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.8 & KivyMD"]
+APP_METADATA_ROWS = ["A simple notes application", "built with Python 3.8 & KivyMD", f"version {__version__}"]
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
 
