@@ -141,6 +141,37 @@ class TestFile:
         assert not get_file.delete_all_sections_content()
         assert not get_file.transform_data_by_sections_to_raw_data_content()
 
+    def test_rename_section(self, get_file):
+        assert (
+            get_file.add_section_identifier(section_file_separator="<section=a> ")
+            is None
+        )
+
+        assert not get_file.set_section_content(
+            section_file_separator="<section=a> ", section_content="some content"
+        )
+
+        assert [si.section_name for si in get_file._section_identifiers] == [
+            "first",
+            "second",
+            "a",
+        ]
+
+        assert not get_file.rename_section(
+            old_section_file_separator="<section=a> ",
+            new_section_file_separator="<section=b> ",
+        )
+        assert (
+            get_file.get_section_content(section_file_separator="<section=b> ")
+            == "some content"
+        )
+
+        assert [si.section_name for si in get_file._section_identifiers] == [
+            "first",
+            "second",
+            "b",
+        ]
+
     def test__transform_raw_data_content_to_data_by_sections(self, get_file):
         assert get_file._transform_raw_data_content_to_data_by_sections() == {
             "<section=first> ": "Quod equidem non reprehendo\n",

@@ -68,6 +68,7 @@ class NotesController:
             before = f.read() or ""
             f.close()
 
+            # TODO try merge strings one section loaded from file at a time
             data = merge_strings(before=before, after=data)
 
         f = open(self.model.file_path, "w")

@@ -247,7 +247,9 @@ class TestView:
     def test_show_error_bar(self, get_app):
         screen = get_app.controller.get_screen()
 
-        section_item = ItemDrawer(id="<section=first> ")
+        section_item = ItemDrawer(
+            id="<section=first> ", text="", edit=None, delete=None
+        )
 
         screen.file.delete_all_section_identifiers()
         screen.file.add_section_identifier(section_file_separator="<section=first> ")
@@ -589,6 +591,71 @@ class TestView:
         assert screen.text_section_view.text == f""
         assert screen.ids.toolbar.title == "Notes section: new section"
 
+    def test_execute_edit_section(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        class _EditSectionDialogContent(MDBoxLayout):
+            edit_section_result_message = StringProperty(None)
+            execute_edit_section = ObjectProperty(None)
+            cancel = ObjectProperty(None)
+
+        def _(*args):
+            return True
+
+        content = _EditSectionDialogContent(
+            edit_section_result_message="", execute_edit_section=_, cancel=_
+        )
+
+        screen.dialog = MDDialog(title="test title", content_cls=content)
+        screen.dialog.open()
+
+        old_section_name = ""
+        new_section_name = ""
+        assert screen.execute_edit_section(old_section_name, new_section_name) is None
+        assert screen.dialog.content_cls.edit_section_result_message == "Invalid name"
+
+        old_section_name = None
+        new_section_name = ""
+        assert screen.execute_edit_section(old_section_name, new_section_name) is None
+        assert screen.dialog.content_cls.edit_section_result_message == "Invalid name"
+
+        old_section_name = "first"
+        new_section_name = "first"
+        assert screen.execute_edit_section(old_section_name, new_section_name) is None
+        assert screen.dialog.content_cls.edit_section_result_message == "Invalid name"
+
+        old_section_name = "first"
+        new_section_name = "updated section name"
+        assert len(screen.file.section_identifiers) == 2
+        assert screen.execute_edit_section(old_section_name, new_section_name) is None
+
+        # add section dialog is closed
+        assert screen.dialog.content_cls is None
+
+        assert len(screen.file.section_identifiers) == 2
+        assert (
+            screen.file.section_identifiers[0].section_file_separator
+            == "<section=updated section name> "
+        )
+        assert screen.file.section_identifiers[0].section_name == "updated section name"
+        assert (
+            screen.file.get_section_content(
+                section_file_separator="<section=updated section name> "
+            )
+            == """Quod equidem non reprehendo
+"""
+        )
+        assert (
+            screen.text_section_view.section_file_separator
+            == "<section=updated section name> "
+        )
+        assert (
+            screen.text_section_view.text
+            == """Quod equidem non reprehendo
+"""
+        )
+        assert screen.ids.toolbar.title == "Notes section: updated section name"
+
     def test_goto_external_url(self, get_app):
         # opens browser
         # screen = get_app.controller.get_screen()
@@ -757,6 +824,23 @@ class TestView:
         assert screen.dialog.content_cls.add_section_result_message == ""
         assert screen.dialog.content_cls.execute_add_section.__str__().startswith(
             "<bound method NotesView.execute_add_section of <Screen name=''>>"
+        )
+        assert screen.dialog.content_cls.cancel.__str__().startswith(
+            "<bound method NotesView.cancel_dialog of <Screen name=''>>"
+        )
+
+    def test_press_edit_section(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        screen.press_edit_section(
+            section_item=ItemDrawer(
+                id="<section=first> ", text="", edit=None, delete=None
+            )
+        )
+
+        assert screen.dialog.content_cls.edit_section_result_message == ""
+        assert screen.dialog.content_cls.execute_edit_section.__str__().startswith(
+            "<bound method NotesView.execute_edit_section of <Screen name=''>>"
         )
         assert screen.dialog.content_cls.cancel.__str__().startswith(
             "<bound method NotesView.cancel_dialog of <Screen name=''>>"

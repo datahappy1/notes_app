@@ -13,7 +13,12 @@ from kivymd.theming import ThemableBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.filemanager import MDFileManager
-from kivymd.uix.list import MDList, OneLineAvatarIconListItem, ThreeLineListItem
+from kivymd.uix.list import (
+    MDList,
+    OneLineAvatarIconListItem,
+    ThreeLineListItem,
+    IRightBodyTouch,
+)
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
@@ -56,11 +61,15 @@ APP_METADATA_ROWS = [
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
 
+class IconsContainer(IRightBodyTouch, MDBoxLayout):
+    pass
+
+
 class ItemDrawer(OneLineAvatarIconListItem):
-    icon = StringProperty()
-    id = StringProperty()
-    text = StringProperty()
-    delete = ObjectProperty()
+    id = StringProperty(None)
+    text = StringProperty(None)
+    edit = ObjectProperty(None)
+    delete = ObjectProperty(None)
 
 
 class ContentNavigationDrawer(MDBoxLayout):
@@ -98,6 +107,13 @@ class ShowAppMetadataDialogContent(MDBoxLayout):
 class AddSectionDialogContent(MDBoxLayout):
     add_section_result_message = StringProperty(None)
     execute_add_section = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
+class EditSectionDialogContent(MDBoxLayout):
+    old_section_name = StringProperty(None)
+    edit_section_result_message = StringProperty(None)
+    execute_edit_section = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
@@ -216,12 +232,12 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         for section_identifier in section_identifiers:
             self.ids.md_list.add_widget(
                 ItemDrawer(
-                    icon="bookmark-outline",
                     id=section_identifier.section_file_separator,
-                    text=f"section: {section_identifier.section_name}",
+                    text=section_identifier.section_name,
                     on_release=lambda x=f"{section_identifier.section_file_separator}": self.press_drawer_item_callback(
                         x
                     ),
+                    edit=self.press_edit_section,
                     delete=self.press_delete_section,
                 )
             )
@@ -488,23 +504,20 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         )
 
     def execute_add_section(self, *args):
+        section_name = args[0]
+
         if (
-            not args[0]
-            or len(args[0]) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
-            or args[0].isspace()
-            or args[0] in [si.section_name for si in self.file.section_identifiers]
+            not section_name
+            or len(section_name) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+            or section_name.isspace()
+            or section_name in [si.section_name for si in self.file.section_identifiers]
         ):
             self.dialog.content_cls.add_section_result_message = "Invalid name"
             return
 
-        section_name = args[0]
         section_identifier = SectionIdentifier(
             defaults=self.defaults, section_name=section_name
         )
-
-        if section_identifier.section_file_separator in self.file.section_identifiers:
-            self.dialog.content_cls.add_section_result_message = "Name already exists"
-            return
 
         self.file.add_section_identifier(
             section_file_separator=section_identifier.section_file_separator
@@ -515,6 +528,39 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         )
 
         self.filter_data_split_by_section(section_identifier=section_identifier)
+
+        self.set_drawer_items(section_identifiers=self.file.section_identifiers)
+
+        self.cancel_dialog()
+
+    def execute_edit_section(self, *args):
+        old_section_name, new_section_name = args
+
+        if (
+            not new_section_name
+            or len(new_section_name) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+            or new_section_name.isspace()
+            or new_section_name
+            in [si.section_name for si in self.file.section_identifiers]
+            or old_section_name == new_section_name
+        ):
+            self.dialog.content_cls.edit_section_result_message = "Invalid name"
+            return
+
+        new_section_identifier = SectionIdentifier(
+            defaults=self.defaults, section_name=new_section_name
+        )
+
+        old_section_identifier = SectionIdentifier(
+            defaults=self.defaults, section_name=old_section_name
+        )
+
+        self.file.rename_section(
+            old_section_file_separator=old_section_identifier.section_file_separator,
+            new_section_file_separator=new_section_identifier.section_file_separator,
+        )
+
+        self.filter_data_split_by_section(section_identifier=new_section_identifier)
 
         self.set_drawer_items(section_identifiers=self.file.section_identifiers)
 
@@ -590,6 +636,23 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             cancel=self.cancel_dialog,
         )
         self.dialog = MDDialog(title="Add section:", type="custom", content_cls=content)
+        self.dialog.open()
+
+    def press_edit_section(self, section_item):
+        section_name = SectionIdentifier(
+            section_file_separator=section_item.id, defaults=self.defaults
+        ).section_name
+
+        content = EditSectionDialogContent(
+            old_section_name=section_name,
+            edit_section_result_message="",
+            execute_edit_section=self.execute_edit_section,
+            cancel=self.cancel_dialog,
+        )
+
+        self.dialog = MDDialog(
+            title=f"Edit section {section_name}:", type="custom", content_cls=content
+        )
         self.dialog.open()
 
     def press_delete_section(self, section_item):

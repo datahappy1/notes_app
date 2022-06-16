@@ -131,6 +131,28 @@ class File:
     def delete_section_content(self, section_file_separator) -> None:
         self._data_by_sections.pop(section_file_separator)
 
+    def rename_section(
+        self, old_section_file_separator, new_section_file_separator
+    ) -> None:
+        """
+        rename_section method abstracts all section renaming actions
+        by renaming the section identifier in the _section_identifiers list
+        and by replacing the key in the _data_by_sections dict
+        """
+        idx = 0
+        for idx, section_identifier in enumerate(self._section_identifiers):
+            if section_identifier.section_file_separator == old_section_file_separator:
+                break
+
+        self._section_identifiers[idx] = SectionIdentifier(
+            defaults=self.defaults, section_file_separator=new_section_file_separator
+        )
+
+        self._data_by_sections[new_section_file_separator] = self._data_by_sections[
+            old_section_file_separator
+        ]
+        del self._data_by_sections[old_section_file_separator]
+
     def _transform_raw_data_content_to_data_by_sections(
         self,
     ) -> Dict[SectionIdentifier, AnyStr]:

@@ -19,16 +19,22 @@
     text: root.text
     theme_text_color: "Custom"
     on_release: self.parent.set_color_item(self)
+    on_size:
+        self.ids._right_container.width = icons_container.width
+        self.ids._right_container.x = icons_container.width
 
-    IconLeftWidget:
-        id: icon
-        icon: root.icon
-        theme_text_color: "Custom"
+    IconsContainer:
+        id: icons_container
 
-    IconRightWidget:
-        icon: 'trash-can-outline'
-        on_release: root.delete(section_item)
-        theme_text_color: "Custom"
+        MDIconButton:
+            icon: 'file-document-edit-outline'
+            on_release: root.edit(section_item)
+            theme_text_color: "Custom"
+
+        MDIconButton:
+            icon: 'trash-can-outline'
+            on_release: root.delete(section_item)
+            theme_text_color: "Custom"
 
 <NotesView>:
     orientation: "vertical"
@@ -219,7 +225,7 @@
 
         MDTextField:
             id: section_name_input_value
-            hint_text: "What section name to add?"
+            hint_text: "Enter section name"
             max_text_length: 20
 
         BoxLayout:
@@ -231,5 +237,39 @@
                 on_release: root.cancel()
             MDRectangleFlatButton:
                 size_hint: (.5, .8)
-                text: "Add"
+                text: "Save"
                 on_release: root.execute_add_section(section_name_input_value.text)
+
+<EditSectionDialogContent>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "500dp"
+
+    MDBoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+
+        MDLabel:
+            font_style: "H6"
+            halign: "center"
+            valign: "center"
+            text: root.edit_section_result_message
+
+        MDTextField:
+            id: section_name_input_value
+            hint_text: "Enter new section name"
+            max_text_length: 20
+
+        BoxLayout:
+            size_hint_y: None
+            height: 40
+            MDFlatButton:
+                size_hint: (.5, .8)
+                text: "Cancel"
+                on_release: root.cancel()
+            MDRectangleFlatButton:
+                size_hint: (.5, .8)
+                text: "Save"
+                on_release: root.execute_edit_section(root.old_section_name, section_name_input_value.text)

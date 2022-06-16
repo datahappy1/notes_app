@@ -5,7 +5,7 @@ Notes application written in Python 3.8 & KivyMD
 
 ## application description
 - OS independent
-- Notes can be grouped in separate sections, these sections can be further added and removed
+- Notes can be grouped in separate sections, these sections can be added, renamed or removed
 - Notes storage file can be placed anywhere on the local drive but can also be placed in a DropBox shared folder for example to synchronize notes across devices
 - Full-text or word-based search capability across the current section or all sections
 - Customizable fonts and colors, settings can be persisted
@@ -112,13 +112,14 @@ change in the spec file the line datas=[], to datas=[("notes_app/view/notes_view
 ```
 
 ## useful links
-- development 
+- app development 
   - https://kivymd.readthedocs.io/en/latest/components/
   - https://www.tutorialspoint.com/design_pattern/mvc_pattern.htm
   - https://github.com/HeaTTheatR/Kivy_MVC_Template/tree/main
   - https://github.com/thebjorn/pydeps
+  - https://github.com/kivymd/KivyMD/blob/master/kivymd/icon_definitions.py
   
-- app building
+- building the app
   - https://pyinstaller.org/en/stable/when-things-go-wrong.html
   - https://dev.to/ngonidzashe/using-pyinstaller-to-package-kivy-and-kivymd-desktop-apps-2fmj
   - https://github.com/devgiordane/kivy-md-build
