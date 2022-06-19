@@ -4,12 +4,6 @@ import pytest
 
 from notes_app.file import File, SectionIdentifier
 
-# from tests.conftest import (
-#     create_default_notes_file,
-#     TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH,
-#     TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH,
-# )
-
 from notes_app.defaults import Defaults
 
 defaults = Defaults()
