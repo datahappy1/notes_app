@@ -19,18 +19,16 @@ class TestDiff:
             ),
             ("", "this is some section.yeah", [["this", "is", "some", "section.yeah"]]),
             (
-                "<section=first>",
-                "<section=second>this is some section.yeah",
+                "",
+                "this is some section.yeah",
                 [
-                    ["<section=first>"],
-                    ["<section=second>this", "is", "some", "section.yeah"],
+                    ["this", "is", "some", "section.yeah"],
                 ],
             ),
             (
-                "<section=first> some section text",
+                "some section text",
                 "this is some section.yeah",
                 [
-                    ["<section=first>"],
                     ["this", "is"],
                     ["some"],
                     ["section", "text"],
@@ -38,14 +36,12 @@ class TestDiff:
                 ],
             ),
             (
-                "<section=first> some section text",
-                "<section=first> another text <section=second>this is some section.yeah",
+                "some section text",
+                "another text",
                 [
-                    ["<section=first>"],
-                    ["another", "text", "<section=second>this", "is"],
-                    ["some"],
-                    ["section", "text"],
-                    ["section.yeah"],
+                    ["some", "section"],
+                    ["another"],
+                    ["text"],
                 ],
             ),
         ],
@@ -74,24 +70,24 @@ class TestDiff:
             ("is", "this some section.yeah", "is this some section.yeah"),
             ("", "this is some section.yeah", "this is some section.yeah"),
             (
-                "<section=first>",
-                "<section=second>this is some section.yeah",
-                "<section=first> <section=second>this is some section.yeah",
-            ),
-            (
-                "<section=first> some section text",
+                "",
                 "this is some section.yeah",
-                "<section=first> this is some section text section.yeah",
-            ),
-            (
-                "<section=first> some section text",
-                "<section=first> another text <section=second>this is some section.yeah",
-                "<section=first> another text <section=second>this is some section text section.yeah",
-            ),
-            (
-                "<section=first> some \n section text",
                 "this is some section.yeah",
-                """<section=first> this is some 
+            ),
+            (
+                "some section text",
+                "this is some section.yeah",
+                "this is some section text section.yeah",
+            ),
+            (
+                "some section text",
+                "another text this is some section.yeah",
+                "another text this is some section text section.yeah",
+            ),
+            (
+                "some \n section text",
+                "this is some section.yeah",
+                """this is some 
  section text section.yeah""",
             ),
         ],
