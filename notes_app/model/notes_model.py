@@ -6,8 +6,8 @@
 # method). For this, observers must be descendants of an abstract class,
 # inheriting which, the `notify_model_is_changed` method must be overridden.
 import json
-from os import linesep, path
 import time
+from os import linesep, path
 from typing import AnyStr
 
 GENERAL_DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -126,7 +126,9 @@ class NotesModel:
     @property
     def external_update(self):
         return (
-            get_file_updated_timestamp_as_epoch(self.file_path) > self.last_updated_on
+            get_file_updated_timestamp_as_epoch(self.file_path)
+            > self.last_updated_on
+            > 0
         )
 
     def add_observer(self, observer):

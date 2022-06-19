@@ -79,6 +79,10 @@ class TestModel:
         get_model._last_updated_on = time.time()
         assert get_model.external_update is False
 
+        # now set model.last_updated_on to 0
+        get_model._last_updated_on = 0
+        assert get_model.external_update is False
+
     def test_set_get_observers(self, get_model):
         observer = dict()
         get_model.add_observer(observer=observer)

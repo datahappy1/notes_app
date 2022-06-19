@@ -83,7 +83,7 @@ class Search:
         found_occurrences = dict()
 
         if self.search_all_sections:
-            sections_to_search_in = file.section_identifiers
+            sections_to_search_in = file.section_identifiers_sorted_by_name
         else:
             sections_to_search_in = [current_section_identifier]
 

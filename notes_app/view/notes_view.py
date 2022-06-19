@@ -24,6 +24,7 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
 from notes_app import __version__
+from notes_app.diff import merge_strings
 from notes_app.observer.notes_observer import Observer
 
 from notes_app.color import (
@@ -192,7 +193,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         )
         self.current_section_identifier = self.file.default_section_identifier
         self.filter_data_split_by_section()
-        self.set_drawer_items(section_identifiers=self.file.section_identifiers)
+        self.set_drawer_items(
+            section_identifiers=self.file.section_identifiers_sorted_by_name
+        )
 
     @property
     def is_unsaved_change(self):
@@ -388,7 +391,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 controller=self.controller,
                 defaults=self.defaults,
             )
-            self.set_drawer_items(section_identifiers=self.file.section_identifiers)
+            self.set_drawer_items(
+                section_identifiers=self.file.section_identifiers_sorted_by_name
+            )
             self.filter_data_split_by_section(
                 section_identifier=self.file.default_section_identifier
             )
@@ -510,7 +515,8 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             not section_name
             or len(section_name) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
             or section_name.isspace()
-            or section_name in [si.section_name for si in self.file.section_identifiers]
+            or section_name
+            in [si.section_name for si in self.file.section_identifiers_sorted_by_name]
         ):
             self.dialog.content_cls.add_section_result_message = "Invalid name"
             return
@@ -529,7 +535,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.filter_data_split_by_section(section_identifier=section_identifier)
 
-        self.set_drawer_items(section_identifiers=self.file.section_identifiers)
+        self.set_drawer_items(
+            section_identifiers=self.file.section_identifiers_sorted_by_name
+        )
 
         self.cancel_dialog()
 
@@ -541,7 +549,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             or len(new_section_name) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
             or new_section_name.isspace()
             or new_section_name
-            in [si.section_name for si in self.file.section_identifiers]
+            in [si.section_name for si in self.file.section_identifiers_sorted_by_name]
             or old_section_name == new_section_name
         ):
             self.dialog.content_cls.edit_section_result_message = "Invalid name"
@@ -562,7 +570,11 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.filter_data_split_by_section(section_identifier=new_section_identifier)
 
-        self.set_drawer_items(section_identifiers=self.file.section_identifiers)
+        self.set_drawer_items(
+            section_identifiers=self.file.section_identifiers_sorted_by_name
+        )
+
+        self.current_section_identifier = new_section_identifier
 
         self.cancel_dialog()
 
@@ -574,21 +586,45 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.dialog = MDDialog()
 
     def save_current_section_to_file(self):
+        merged_current_section_text_data = None
+
+        if self.model.external_update:
+            self.file.reload()
+            try:
+                current_section_text_before = self.file.get_section_content(
+                    section_file_separator=self.text_section_view.section_file_separator
+                )
+            # KeyError raised if the current section was removed or renamed by a external update
+            except KeyError:
+                # merge_strings prioritizes current_section_text_after over current_section_text_before
+                # so empty string placeholder is set to current_section_text_before
+                current_section_text_before = ""
+                # self.file.reload() will remove the current section identifier from self.file.section_identifiers
+                # in case it was deleted or renamed so the current section identifier is added back
+                self.file.add_section_identifier(
+                    section_file_separator=self.text_section_view.section_file_separator
+                )
+
+            current_section_text_after = self.text_section_view.text
+
+            merged_current_section_text_data = merge_strings(
+                before=current_section_text_before, after=current_section_text_after
+            )
+
+            self.text_section_view.text = merged_current_section_text_data
+            self.set_drawer_items(
+                section_identifiers=self.file.section_identifiers_sorted_by_name
+            )
+
         self.file.set_section_content(
             section_file_separator=self.text_section_view.section_file_separator,
-            section_content=self.text_section_view.text,
+            section_content=merged_current_section_text_data
+            or self.text_section_view.text,
         )
 
         text_data = self.file.transform_data_by_sections_to_raw_data_content()
 
         self.controller.save_file_data(data=text_data)
-
-        if self.model.external_update:
-            self.file.reload()
-            self.text_section_view.text = self.file.get_section_content(
-                section_file_separator=self.text_section_view.section_file_separator
-            )
-            self.set_drawer_items(section_identifiers=self.file.section_identifiers)
 
     def press_menu_item_save_file(self, *args):
         self.save_current_section_to_file()
@@ -656,7 +692,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.dialog.open()
 
     def press_delete_section(self, section_item):
-        if len(self.file.section_identifiers) == 1:
+        if len(self.file.section_identifiers_sorted_by_name) == 1:
             self.show_error_bar(error_message="Cannot delete last section")
             return
 

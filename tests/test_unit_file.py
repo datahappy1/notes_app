@@ -89,19 +89,29 @@ class TestFile:
     def test_default_section_identifier(self, get_file):
         assert isinstance(get_file.default_section_identifier, SectionIdentifier)
 
-    def test_section_identifiers(self, get_file):
+    def test_section_identifiers_sorted_by_name(self, get_file):
         assert all(
-            [isinstance(x, SectionIdentifier) for x in get_file.section_identifiers]
+            [
+                isinstance(x, SectionIdentifier)
+                for x in get_file.section_identifiers_sorted_by_name
+            ]
         )
+
+        assert [
+            x.section_name for x in get_file.section_identifiers_sorted_by_name
+        ] == ["first", "second"]
 
     def test_add_section_identifier(self, get_file):
         assert (
             get_file.add_section_identifier(section_file_separator="<section=a> ")
             is None
         )
-        assert len(get_file.section_identifiers) == 3
+        assert len(get_file.section_identifiers_sorted_by_name) == 3
         assert all(
-            [isinstance(x, SectionIdentifier) for x in get_file.section_identifiers]
+            [
+                isinstance(x, SectionIdentifier)
+                for x in get_file.section_identifiers_sorted_by_name
+            ]
         )
 
     def test_delete_section_identifier(self, get_file):
@@ -109,14 +119,17 @@ class TestFile:
             get_file.delete_section_identifier(section_file_separator="<section=a> ")
             is None
         )
-        assert len(get_file.section_identifiers) == 2
+        assert len(get_file.section_identifiers_sorted_by_name) == 2
         assert all(
-            [isinstance(x, SectionIdentifier) for x in get_file.section_identifiers]
+            [
+                isinstance(x, SectionIdentifier)
+                for x in get_file.section_identifiers_sorted_by_name
+            ]
         )
 
     def test_delete_all_section_identifiers(self, get_file):
         assert get_file.delete_all_section_identifiers() is None
-        assert get_file.section_identifiers == []
+        assert get_file.section_identifiers_sorted_by_name == []
 
     def test_set_get_section_content(self, get_file):
         assert not get_file.set_section_content(

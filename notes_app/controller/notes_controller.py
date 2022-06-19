@@ -1,4 +1,3 @@
-from notes_app.diff import merge_strings
 from notes_app.view.notes_view import NotesView
 
 
@@ -56,21 +55,10 @@ class NotesController:
         f.close()
         return s
 
-    def save_file_data(self, data):
+    def save_file_data(self, data) -> None:
         """
-        save_file_data saves provided data to the file with location set in model.file_path,
-        if the file was updated by another instance of the notes app, check if model property external_update
-        evaluates to True, the code-path goes through difflib merge_string to save the merged string data to the file
+        save_file_data saves provided data to the file with location set in model.file_path
         """
-        if self.model.external_update:
-            f = open(self.model.file_path, "r")
-            # in case deleted file content fallback to empty string
-            before = f.read() or ""
-            f.close()
-
-            # TODO try merge strings one section loaded from file at a time
-            data = merge_strings(before=before, after=data)
-
         f = open(self.model.file_path, "w")
         f.write(data)
         f.close()
@@ -79,5 +67,7 @@ class NotesController:
         self.model.dump()
 
     def get_screen(self):
-        """The method creates get the view."""
+        """
+        The method creates get the view.
+        """
         return self.view

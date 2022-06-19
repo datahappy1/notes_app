@@ -76,7 +76,9 @@ class TestView:
         children_before = copy(screen.ids.md_list.children)
         assert len(children_before) == 2
 
-        screen.set_drawer_items(section_identifiers=screen.file.section_identifiers)
+        screen.set_drawer_items(
+            section_identifiers=screen.file.section_identifiers_sorted_by_name
+        )
 
         children_after = copy(screen.ids.md_list.children)
         assert len(children_after) == 2
@@ -567,18 +569,21 @@ class TestView:
         assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
 
         section_name = "new section"
-        assert len(screen.file.section_identifiers) == 2
+        assert len(screen.file.section_identifiers_sorted_by_name) == 2
         assert screen.execute_add_section(section_name) is None
 
         # add section dialog is closed
         assert screen.dialog.content_cls is None
 
-        assert len(screen.file.section_identifiers) == 3
+        assert len(screen.file.section_identifiers_sorted_by_name) == 3
         assert (
-            screen.file.section_identifiers[2].section_file_separator
+            screen.file.section_identifiers_sorted_by_name[1].section_file_separator
             == "<section=new section> "
         )
-        assert screen.file.section_identifiers[2].section_name == "new section"
+        assert (
+            screen.file.section_identifiers_sorted_by_name[1].section_name
+            == "new section"
+        )
         assert (
             screen.file.get_section_content(
                 section_file_separator="<section=new section> "
@@ -626,18 +631,22 @@ class TestView:
 
         old_section_name = "first"
         new_section_name = "updated section name"
-        assert len(screen.file.section_identifiers) == 2
+        assert screen.current_section_identifier.section_name == "first"
+        assert len(screen.file.section_identifiers_sorted_by_name) == 2
         assert screen.execute_edit_section(old_section_name, new_section_name) is None
 
         # add section dialog is closed
         assert screen.dialog.content_cls is None
-
-        assert len(screen.file.section_identifiers) == 2
+        assert screen.current_section_identifier.section_name == "updated section name"
+        assert len(screen.file.section_identifiers_sorted_by_name) == 2
         assert (
-            screen.file.section_identifiers[0].section_file_separator
+            screen.file.section_identifiers_sorted_by_name[1].section_file_separator
             == "<section=updated section name> "
         )
-        assert screen.file.section_identifiers[0].section_name == "updated section name"
+        assert (
+            screen.file.section_identifiers_sorted_by_name[1].section_name
+            == "updated section name"
+        )
         assert (
             screen.file.get_section_content(
                 section_file_separator="<section=updated section name> "
@@ -689,7 +698,7 @@ class TestView:
         assert _dialog_id_prev != id(screen.dialog)
 
     def test_save_current_section_to_file_is_not_external_update(self, get_app):
-        # setting model._last_updated_on manually will guarantee controller _check_is_external_update returns False
+        # setting model._last_updated_on manually will guarantee model.external_update returns False
         get_app.controller.model._last_updated_on = int(time.time())
 
         screen = get_app.controller.get_screen()
@@ -710,10 +719,6 @@ class TestView:
         )
 
     def test_save_current_section_to_file_is_external_update(self, get_app):
-        # setting model._last_updated_on manually to the past will guarantee controller _check_is_external_update returns True
-        d = datetime.today() - timedelta(hours=1)
-        get_app.controller.model._last_updated_on = int(d.timestamp())
-
         screen = get_app.controller.get_screen()
 
         assert (
@@ -727,14 +732,112 @@ class TestView:
 
         screen.text_section_view.text = "test text"
 
+        # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
+        d = datetime.today() - timedelta(hours=1)
+        get_app.controller.model._last_updated_on = int(d.timestamp())
+
         assert screen.save_current_section_to_file() is None
         assert (
             screen.file.get_raw_data_content()
-            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet timet<section=a> test text"""
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=a> test text"""
+        )
+
+    def test_save_current_section_to_file_is_external_update_with_changes_to_current_section(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        assert (
+            screen.file.get_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
+        )
+
+        screen.file.add_section_identifier(section_file_separator="<section=a> ")
+
+        screen.text_section_view.section_file_separator = "<section=a> "
+
+        screen.text_section_view.text = "test text"
+
+        # external update to the current section=a that will be merged
+        screen.file._data_by_sections = {
+            "<section=first> ": "Quod equidem non reprehendo\n",
+            "<section=second> ": "Quis istum dolorem timet",
+            "<section=a> ": "test text mod",
+        }
+        text_data = screen.file.transform_data_by_sections_to_raw_data_content()
+        screen.controller.save_file_data(data=text_data)
+
+        # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
+        d = datetime.today() - timedelta(hours=1)
+        get_app.controller.model._last_updated_on = int(d.timestamp())
+
+        assert screen.save_current_section_to_file() is None
+        assert (
+            screen.file.get_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=a> test text mod"""
+        )
+
+    def test_save_current_section_to_file_is_external_update_delete_current_section(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        assert (
+            screen.file.get_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
+        )
+
+        screen.file.add_section_identifier(section_file_separator="<section=a> ")
+
+        screen.text_section_view.section_file_separator = "<section=a> "
+
+        screen.text_section_view.text = "test text"
+
+        # external delete of the current section=a that will be recovered during the merge
+        screen.file._data_by_sections = {
+            "<section=first> ": "Quod equidem non reprehendo\n",
+            "<section=second> ": "Quis istum dolorem timet",
+        }
+        text_data = screen.file.transform_data_by_sections_to_raw_data_content()
+        screen.controller.save_file_data(data=text_data)
+
+        # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
+        d = datetime.today() - timedelta(hours=1)
+        get_app.controller.model._last_updated_on = int(d.timestamp())
+
+        assert screen.save_current_section_to_file() is None
+        assert (
+            screen.file.get_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=a> test text"""
+        )
+
+    def test_save_current_section_to_file_is_external_update_with_changes_to_different_section(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        assert (
+            screen.file.get_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
+        )
+
+        screen.text_section_view.section_file_separator = "<section=first> "
+
+        # external update
+        screen.file._data_by_sections = {
+            "<section=first> ": "Quod equidem non reprehendo\n",
+            "<section=second> ": "Quis istum dolorem timet",
+            "<section=test> ": "test data",
+        }
+        text_data = screen.file.transform_data_by_sections_to_raw_data_content()
+        screen.controller.save_file_data(data=text_data)
+
+        # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
+        d = datetime.today() - timedelta(hours=1)
+        get_app.controller.model._last_updated_on = int(d.timestamp())
+
+        assert screen.save_current_section_to_file() is None
+        assert (
+            screen.file.get_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=test> test data"""
         )
 
     def test_press_menu_item_save_file_is_not_external_update(self, get_app):
-        # setting model._last_updated_on manually will guarantee controller _check_is_external_update returns False
+        # setting model._last_updated_on manually will guarantee model.external_update returns False
         get_app.controller.model._last_updated_on = int(time.time())
 
         screen = get_app.controller.get_screen()
@@ -755,7 +858,7 @@ class TestView:
         )
 
     def test_press_menu_item_save_file_is_external_update(self, get_app):
-        # setting model._last_updated_on manually to the past will guarantee controller _check_is_external_update returns True
+        # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
         d = datetime.today() - timedelta(hours=1)
         get_app.controller.model._last_updated_on = int(d.timestamp())
 
@@ -775,7 +878,7 @@ class TestView:
         assert screen.press_menu_item_save_file() is None
         assert (
             screen.file.get_raw_data_content()
-            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet timet<section=a> test text"""
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=a> test text"""
         )
 
     def test_press_menu_item_show_file_metadata(self, get_app):
@@ -868,9 +971,9 @@ class TestView:
 
         assert len(screen.ids.md_list.children) == 1
 
-        assert screen.file.section_identifiers[0].section_name == "first"
+        assert screen.file.section_identifiers_sorted_by_name[0].section_name == "first"
         assert (
-            screen.file.section_identifiers[0].section_file_separator
+            screen.file.section_identifiers_sorted_by_name[0].section_file_separator
             == "<section=first> "
         )
         assert screen.file._data_by_sections == {
@@ -882,7 +985,7 @@ class TestView:
         assert screen.snackbar.text == "Cannot delete last section"
 
     def test_text_input_changed_callback_is_external_update(self, get_app):
-        # setting model._last_updated_on manually to the past will guarantee controller _check_is_external_update returns True
+        # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
         d = datetime.today() - timedelta(hours=1)
         get_app.controller.model._last_updated_on = int(d.timestamp())
 
@@ -898,20 +1001,24 @@ class TestView:
             "<section=second> ": "Quis istum dolorem timet",
             "<section=test>": "test data",
         }
+
+        text_data = screen.file.transform_data_by_sections_to_raw_data_content()
+        screen.controller.save_file_data(data=text_data)
+
         assert screen.text_input_changed_callback() is None
         assert screen.auto_save_text_input_change_counter == 0
 
         assert (
             screen.controller.read_file_data()
             == """<section=first> Quod equidem non reprehendo
-<section=second> Quis istum dolorem timet timet<section=test>test data"""
+<section=second> Quis istum dolorem timet<section=test>test data"""
         )
 
         assert screen.text_input_changed_callback() is None
         assert screen.auto_save_text_input_change_counter == 1
 
     def test_text_input_changed_callback_is_not_external_update(self, get_app):
-        # setting model._last_updated_on manually will guarantee controller _check_is_external_update returns False
+        # setting model._last_updated_on manually will guarantee model.external_update returns False
         get_app.controller.model._last_updated_on = int(time.time())
 
         screen = get_app.controller.get_screen()
