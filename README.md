@@ -14,7 +14,7 @@ Notes application written in Python 3.8 & KivyMD
 ## version history
 | version | date | description |
 | :---: | :---: | :---: |
-| v1.0.0  | 29/5/2022  | initial release |
+| 0.1.0  | 19/6/2022  | initial release |
 
 ## FAQ
 - I need to synchronize my notes file across devices, how do I achieve that?
