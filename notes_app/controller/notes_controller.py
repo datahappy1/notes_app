@@ -1,3 +1,5 @@
+from typing import AnyStr
+
 from notes_app.view.notes_view import NotesView
 
 
@@ -17,39 +19,27 @@ class NotesController:
         """
         self.defaults = defaults
         self.model = model
-        self._generate_default_file_if_file_path_missing()
+        self._generate_default_file_if_not_exists()
 
         self.view = NotesView(
             settings=settings, controller=self, model=self.model, defaults=self.defaults
         )
 
-    def _generate_default_file_if_file_path_missing(self):
+    def _generate_default_file_if_not_exists(self) -> None:
         """
-        when the model is not associated with any file to store notes in,
-        it gets automatically created during the controller initialization
+        when the model is not associated with any existing file to store the notes in,
+        such default file gets automatically created
         """
-        if (
-            not self.model.store.exists("_file_path")
-            or self.model.store.get("_file_path")["value"] is None
-            or (
-                any(
-                    x == 0
-                    for x in [
-                        self.model.store.get("_file_size")["value"],
-                        self.model.store.get("_last_updated_on")["value"],
-                    ]
-                )
-            )
-        ):
+        if not self.model.file_path_exists:
             with open(file=self.defaults.DEFAULT_NOTES_FILE_NAME, mode="w") as f:
                 f.write(self.defaults.DEFAULT_NOTES_FILE_CONTENT)
 
-    def set_file_path(self, file_path):
+    def set_file_path(self, file_path) -> None:
         self.model.file_path = file_path
         self.model.update()
         self.model.dump()
 
-    def read_file_data(self, file_path=None):
+    def read_file_data(self, file_path=None) -> AnyStr:
         f = open(file_path or self.model.file_path, "r")
         s = f.read()
         f.close()

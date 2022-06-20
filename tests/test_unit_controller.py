@@ -1,6 +1,6 @@
-import time
+from time import sleep
 from datetime import datetime
-from os import path
+from os import path, remove
 from os.path import exists
 
 from notes_app.defaults import Defaults
@@ -16,22 +16,18 @@ class TestController:
         assert isinstance(controller.view, NotesView)
         assert isinstance(controller.defaults, Defaults)
 
-    def test__generate_default_file_if_file_path_missing(self, get_app):
-        assert get_app.model._file_size == 0
-        assert get_app.model._last_updated_on == 0
-
+    def test__generate_default_file_if_not_exists(self, get_app):
         assert exists(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
         ts_before = path.getmtime(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
 
-        get_app.model.dump()
+        remove(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
+        assert not exists(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
 
-        time.sleep(0.1)
+        sleep(0.1)
 
-        get_app.controller._generate_default_file_if_file_path_missing()
+        get_app.controller._generate_default_file_if_not_exists()
+
         assert exists(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
-
-        assert get_app.model._file_size == 0
-        assert get_app.model._last_updated_on == 0
 
         ts_after = path.getmtime(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME)
 

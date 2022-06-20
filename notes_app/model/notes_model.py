@@ -27,27 +27,11 @@ def get_current_epoch() -> int:
     return int(time.time())
 
 
-def check_file_path_is_valid(file_path: str) -> bool:
-    """
-    check_file_path_is_valid
-    :param file_path:
-    :return:
-    """
-    return path.exists(file_path)
-
-
 def get_file_updated_timestamp_as_epoch(file_path: str) -> int:
     """
     get file updated timestamp as epoch
     """
     return int(path.getmtime(file_path))
-
-
-def get_file_size(file_path: str) -> int:
-    """
-    get file size
-    """
-    return path.getsize(file_path)
 
 
 class NotesModel:
@@ -85,10 +69,8 @@ class NotesModel:
         if (
             not self.store.exists("_file_path")
             or self.store.get("_file_path")["value"] is None
-            or check_file_path_is_valid(self.store.get("_file_path")["value"]) is False
         ):
             self.store.put("_file_path", value=self.defaults.DEFAULT_NOTES_FILE_NAME)
-
         if (
             not self.store.exists("_file_size")
             or self.store.get("_file_size")["value"] is None
@@ -108,6 +90,10 @@ class NotesModel:
     @file_path.setter
     def file_path(self, value):
         self._file_path = str(value)
+
+    @property
+    def file_path_exists(self):
+        return path.exists(self._file_path)
 
     @property
     def file_size(self):
@@ -145,7 +131,7 @@ class NotesModel:
         """
         update file-path related file attributes and notify observers
         """
-        self._file_size = get_file_size(self.file_path)
+        self._file_size = path.getsize(self.file_path)
         self._last_updated_on = get_current_epoch()
 
         self.notify_observers()

@@ -2,9 +2,9 @@ import json
 import tempfile
 import time
 from datetime import datetime
+from os import remove
 
 from notes_app.model.notes_model import (
-    get_file_size,
     format_local_epoch,
     get_file_updated_timestamp_as_epoch,
     get_current_epoch,
@@ -30,11 +30,6 @@ def test_get_file_updated_timestamp_as_epoch():
     assert datetime.fromtimestamp(get_file_updated_timestamp_as_epoch(tf.name))
 
 
-def test_get_file_size():
-    tf = tempfile.NamedTemporaryFile()
-    assert get_file_size(tf.name) == 0
-
-
 class TestModel:
     def test_model(self, get_model):
         assert get_model._file_path == get_model.defaults.DEFAULT_NOTES_FILE_NAME
@@ -47,10 +42,9 @@ class TestModel:
         assert json.dumps(get_model.__repr__())
 
     def test__set_missing_store_defaults(self, get_model):
-        get_model.file_path = ""
-        get_model._file_size = 0
-        get_model._last_updated_on = 0
-        get_model.dump()
+        get_model.store.put("_file_path", value=None)
+        get_model.store.put("_file_size", value=0)
+        get_model.store.put("_last_updated_on", value=0)
 
         get_model._set_missing_store_defaults()
 
@@ -67,6 +61,13 @@ class TestModel:
     def test_set_get_file_path(self, get_model):
         get_model.file_path = "test"
         assert get_model.file_path == "test"
+
+    def test_file_path_exists(self, get_model):
+        assert get_model.file_path
+        assert get_model.file_path_exists is True
+
+        remove(get_model.file_path)
+        assert get_model.file_path_exists is False
 
     def test_formatted(self, get_model):
         assert isinstance(get_model.formatted, str)
