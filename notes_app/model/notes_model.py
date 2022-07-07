@@ -8,12 +8,11 @@
 import json
 import time
 from os import linesep, path
-from typing import AnyStr
 
 GENERAL_DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def format_local_epoch(format: AnyStr, epoch_time: int) -> AnyStr:
+def format_local_epoch(format: str, epoch_time: int) -> str:
     """
     format epoch in local time based on provided format
     """

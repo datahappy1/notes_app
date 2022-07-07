@@ -1,5 +1,4 @@
 import difflib
-from typing import AnyStr
 
 TEXT_FILE_LINE_BREAK_CHAR = "\n"
 # TEXT_FILE_LINE_BREAK_CHAR_TEMP_REPLACEMENT is used because difflib SequenceMatcher consumes line endings
@@ -27,15 +26,15 @@ def _merge(left, right):
 
 
 def _replace_line_endings(
-    input_text: AnyStr, line_ending: AnyStr, line_ending_replacement: AnyStr
-) -> AnyStr:
+    input_text: str, line_ending: str, line_ending_replacement: str
+) -> str:
     """
     _replace_line_endings
     """
     return input_text.replace(line_ending, line_ending_replacement)
 
 
-def merge_strings(before: AnyStr, after: AnyStr) -> AnyStr:
+def merge_strings(before: str, after: str) -> str:
     """
     merge_strings
     """

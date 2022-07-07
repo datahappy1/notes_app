@@ -1,5 +1,5 @@
 import re
-from typing import AnyStr, List, Dict
+from typing import List, Dict
 
 SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
 SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
@@ -7,10 +7,7 @@ SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
 
 class SectionIdentifier:
     def __init__(
-        self,
-        defaults,
-        section_file_separator: AnyStr = None,
-        section_name: AnyStr = None,
+        self, defaults, section_file_separator: str = None, section_name: str = None,
     ):
         self.defaults = defaults
 
@@ -25,13 +22,13 @@ class SectionIdentifier:
         )
         self.section_name = section_name or self._transform_separator_to_name()
 
-    def _transform_separator_to_name(self) -> AnyStr:
+    def _transform_separator_to_name(self) -> str:
         return re.search(
             self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX,
             self.section_file_separator,
         ).group(1)
 
-    def _transform_name_to_separator(self, section_name) -> AnyStr:
+    def _transform_name_to_separator(self, section_name) -> str:
         return self.defaults.DEFAULT_SECTION_FILE_SEPARATOR.format(name=section_name)
 
 
@@ -42,7 +39,7 @@ class File:
 
         self.defaults = defaults
 
-        self._raw_data_content: AnyStr = self._get_validated_raw_data(
+        self._raw_data_content: str = self._get_validated_raw_data(
             raw_data=self.get_raw_data_content()
         )
 
@@ -51,7 +48,7 @@ class File:
         ] = self._get_section_identifiers_from_raw_data_content()
 
         self._data_by_sections: Dict[
-            AnyStr, AnyStr
+            str, str
         ] = self._transform_raw_data_content_to_data_by_sections()
 
     @staticmethod
@@ -63,7 +60,7 @@ class File:
             return
         return file_path
 
-    def _get_validated_raw_data(self, raw_data) -> AnyStr:
+    def _get_validated_raw_data(self, raw_data) -> str:
         matches = re.findall(
             self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, raw_data
         )
@@ -84,7 +81,7 @@ class File:
         )
         self._data_by_sections = self._transform_raw_data_content_to_data_by_sections()
 
-    def get_raw_data_content(self) -> AnyStr:
+    def get_raw_data_content(self) -> str:
         return self._controller.read_file_data(file_path=self._file_path)
 
     def _get_section_identifiers_from_raw_data_content(self) -> List[SectionIdentifier]:
@@ -123,7 +120,7 @@ class File:
     def set_section_content(self, section_file_separator, section_content) -> None:
         self._data_by_sections[section_file_separator] = section_content
 
-    def get_section_content(self, section_file_separator) -> AnyStr:
+    def get_section_content(self, section_file_separator) -> str:
         return self._data_by_sections[section_file_separator]
 
     def delete_all_sections_content(self) -> None:
@@ -140,14 +137,14 @@ class File:
         by replacing the section identifier in the _section_identifiers list
         and by replacing the key in the _data_by_sections dict
         """
-        idx = 0
-        for idx, section_identifier in enumerate(self._section_identifiers):
-            if section_identifier.section_file_separator == old_section_file_separator:
-                break
 
         # need to preserve the order of the _section_identifiers list item
         # and the _data_by_sections dict items so that new items are placed at the end
-        self._section_identifiers.pop(idx)
+
+        for idx, section_identifier in enumerate(self._section_identifiers):
+            if section_identifier.section_file_separator == old_section_file_separator:
+                self._section_identifiers.pop(idx)
+
         self._section_identifiers.append(
             SectionIdentifier(
                 defaults=self.defaults,
@@ -160,7 +157,7 @@ class File:
         ]
         del self._data_by_sections[old_section_file_separator]
 
-    def _transform_raw_data_content_to_data_by_sections(self) -> Dict[AnyStr, AnyStr]:
+    def _transform_raw_data_content_to_data_by_sections(self) -> Dict[str, str]:
         dict_data = dict()
         for item in zip(
             self._section_identifiers,
@@ -172,7 +169,7 @@ class File:
             dict_data[item[0].section_file_separator] = item[1]
         return dict_data
 
-    def transform_data_by_sections_to_raw_data_content(self) -> AnyStr:
+    def transform_data_by_sections_to_raw_data_content(self) -> str:
         text_data = str()
         for k, v in self._data_by_sections.items():
             text_data += k

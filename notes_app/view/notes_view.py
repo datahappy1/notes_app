@@ -78,15 +78,17 @@ class ContentNavigationDrawer(MDBoxLayout):
 
 
 class DrawerList(ThemableBehavior, MDList):
-    def set_color_item(self, instance_item):
-        """Called when tap on a menu item.
-        Set the color of the icon and text for the menu item.
-        """
-        for item in self.children:
-            if item.text_color == self.theme_cls.primary_color:
-                item.text_color = self.theme_cls.text_color
-                break
-        instance_item.text_color = self.theme_cls.primary_color
+    pass  # set_color_item causing app crashes hard to reproduce
+
+    # def set_color_item(self, instance_item):
+    #     """Called when tap on a menu item.
+    #     Set the color of the icon and text for the menu item.
+    #     """
+    #     for item in self.children:
+    #         if item.text_color == self.theme_cls.primary_color:
+    #             item.text_color = self.theme_cls.text_color
+    #             break
+    #     instance_item.text_color = self.theme_cls.primary_color
 
 
 class OpenFileDialogContent(MDBoxLayout):
