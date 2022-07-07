@@ -27,7 +27,7 @@ The application design is based on the MVC architecture with the observer notifi
 The notes are stored in a defined text file where the notes sections are separated by the defined section separator pattern.  
 
 The model in the MVC is responsible for storing the metadata of this text file only. 
-When the notes text file content significantly changes causing last updated timestamp or file size model attributes to change, or when a different text file
+When the notes text file content significantly changes or when a different text file
 for storage is chosen, the view is notified through it's registered observer and displays a info message on the UI.
 
 The app uses `difflib` library to do the best effort to reasonably "version-control" notes in case the storage file was modified from another instance of the app that is using the same
