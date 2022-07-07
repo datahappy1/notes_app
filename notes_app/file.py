@@ -5,6 +5,15 @@ SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
 SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
 
 
+def get_validated_file_path(file_path):
+    try:
+        with open(file=file_path, mode="r"):
+            pass
+    except (PermissionError, FileNotFoundError, IsADirectoryError):
+        return
+    return file_path
+
+
 class SectionIdentifier:
     def __init__(
         self, defaults, section_file_separator: str = None, section_name: str = None,
@@ -60,7 +69,7 @@ class File:
             return
         return file_path
 
-    def _get_validated_raw_data(self, raw_data) -> str:
+    def _get_validated_raw_data(self, raw_data) -> AnyStr:
         matches = re.findall(
             self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, raw_data
         )

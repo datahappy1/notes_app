@@ -2,11 +2,19 @@ import uuid
 
 import pytest
 
-from notes_app.file import File, SectionIdentifier
+from notes_app.file import SectionIdentifier, get_validated_file_path
 
 from notes_app.defaults import Defaults
 
 defaults = Defaults()
+
+
+def test_get_validated_file_path():
+    file_path = defaults.DEFAULT_NOTES_FILE_NAME
+    assert get_validated_file_path(file_path=file_path) == file_path
+
+    file_path = f"sample_not_existing_{uuid.uuid4().hex}.txt"
+    assert get_validated_file_path(file_path=file_path) is None
 
 
 class TestSectionIdentifier:
@@ -34,13 +42,6 @@ class TestSectionIdentifier:
 
 
 class TestFile:
-    def test_get_validated_file_path(self):
-        file_path = defaults.DEFAULT_NOTES_FILE_NAME
-        assert File.get_validated_file_path(file_path=file_path) == file_path
-
-        file_path = f"sample_not_existing_{uuid.uuid4().hex}.txt"
-        assert File.get_validated_file_path(file_path=file_path) is None
-
     def test_get_raw_data_content(self, get_file):
         raw_data = get_file.get_raw_data_content()
         assert (

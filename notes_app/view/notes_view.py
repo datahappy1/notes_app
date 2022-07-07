@@ -34,6 +34,7 @@ from notes_app.color import (
     AVAILABLE_SNACK_BAR_COLORS,
 )
 from notes_app.file import (
+    get_validated_file_path,
     File,
     SectionIdentifier,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
@@ -380,7 +381,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.show_error_bar(error_message="Invalid file")
             return
 
-        validated_file_path = File.get_validated_file_path(file_path)
+        validated_file_path = get_validated_file_path(file_path=file_path)
         if not validated_file_path:
             self.show_error_bar(error_message=f"Cannot open the file {file_path}")
             return
