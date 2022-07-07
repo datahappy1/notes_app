@@ -69,7 +69,7 @@ class File:
             return
         return file_path
 
-    def _get_validated_raw_data(self, raw_data) -> AnyStr:
+    def _get_validated_raw_data(self, raw_data) -> str:
         matches = re.findall(
             self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, raw_data
         )
