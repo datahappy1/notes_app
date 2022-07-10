@@ -60,15 +60,6 @@ class File:
             str, str
         ] = self._transform_raw_data_content_to_data_by_sections()
 
-    @staticmethod
-    def get_validated_file_path(file_path):
-        try:
-            with open(file=file_path, mode="r"):
-                pass
-        except (PermissionError, FileNotFoundError, IsADirectoryError):
-            return
-        return file_path
-
     def _get_validated_raw_data(self, raw_data) -> str:
         matches = re.findall(
             self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, raw_data
