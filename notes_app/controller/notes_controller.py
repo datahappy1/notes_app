@@ -1,5 +1,3 @@
-from typing import AnyStr
-
 from notes_app.view.notes_view import NotesView
 
 
@@ -39,7 +37,7 @@ class NotesController:
         self.model.update()
         self.model.dump()
 
-    def read_file_data(self, file_path=None) -> AnyStr:
+    def read_file_data(self, file_path=None) -> str:
         f = open(file_path or self.model.file_path, "r")
         s = f.read()
         f.close()
