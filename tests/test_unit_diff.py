@@ -64,9 +64,9 @@ class TestDiff:
         [
             (
                 "this is some section.yeah",
-                ["this", "is", "some", "section", ".", "yeah"],
+                ["this", " ", "is", " ", "some", " ", "section", ".", "yeah"],
             ),
-            ("another text", ["another", "text",],),
+            ("another text", ["another", " ", "text"],),
         ],
     )
     def test__split(self, input_text, result):
