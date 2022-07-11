@@ -6,7 +6,6 @@ from notes_app.diff import (
     _split,
     _join,
     merge_strings,
-    SEPARATORS,
 )
 
 
@@ -80,7 +79,7 @@ class TestDiff:
         ],
     )
     def test__join(self, input_list, result):
-        assert _join(input_list, SEPARATORS[0]) == result
+        assert _join(input_list, separator=" ") == result
 
     @pytest.mark.parametrize(
         "before, after, result",

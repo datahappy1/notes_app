@@ -35,7 +35,7 @@ def _replace_line_endings(
     return input_text.replace(line_ending, line_ending_replacement)
 
 
-SEPARATORS = [
+SEPARATORS = {
     " ",  # (blank space)
     "~",  # (tilde)
     "`",  # (grave accent)
@@ -67,7 +67,7 @@ SEPARATORS = [
     ".",  # (period)
     "?",  # (question mark)
     "/",  # (forward slash)
-]
+}
 
 
 def _split(input_text: str) -> List:
@@ -105,7 +105,7 @@ def merge_strings(before: str, after: str) -> str:
     """
     merge_strings
     """
-    base_separator = SEPARATORS[0]  # blank space
+    default_separator = " "
     merged = _merge(
         _split(
             _replace_line_endings(
@@ -126,7 +126,7 @@ def merge_strings(before: str, after: str) -> str:
     merged_result_list = [el for sublist in merged for el in sublist]
 
     return _replace_line_endings(
-        input_text=_join(input_list=merged_result_list, separator=base_separator),
+        input_text=_join(input_list=merged_result_list, separator=default_separator),
         line_ending=TEXT_FILE_LINE_BREAK_CHAR_TEMP_REPLACEMENT,
         line_ending_replacement=TEXT_FILE_LINE_BREAK_CHAR,
     )
