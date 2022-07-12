@@ -66,6 +66,7 @@ class TestView:
 
         assert screen.text_section_view.section_file_separator == "<section=first> "
         assert screen.text_section_view.text == f"Quod equidem non reprehendo\n"
+        assert screen.text_section_view.selection_text == ""
         assert screen.ids.toolbar.title == "Notes section: first"
 
     def test_set_drawer_items(self, get_app):
@@ -741,6 +742,8 @@ class TestView:
             screen.file.get_raw_data_content()
             == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=a> test text"""
         )
+
+        assert screen.text_section_view.focus is False
 
     def test_save_current_section_to_file_is_external_update_with_changes_to_current_section(self, get_app):
         screen = get_app.controller.get_screen()

@@ -1,5 +1,4 @@
 import re
-from typing import AnyStr
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
 
@@ -105,7 +104,7 @@ class Search:
 
 
 def transform_position_text_placeholder_to_position(
-    position_text_placeholder: AnyStr = None,
+    position_text_placeholder: str = None,
 ) -> int:
     if position_text_placeholder:
         return int(
@@ -116,15 +115,15 @@ def transform_position_text_placeholder_to_position(
     return 0
 
 
-def transform_position_to_position_text_placeholder(position_start: int = 0) -> AnyStr:
+def transform_position_to_position_text_placeholder(position_start: int = 0) -> str:
     if position_start:
         return f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}{position_start}"
     return f"{SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE}0"
 
 
 def transform_section_text_placeholder_to_section_name(
-    section_text_placeholder: AnyStr = None,
-) -> AnyStr:
+    section_text_placeholder: str = None,
+) -> str:
     if section_text_placeholder:
         return section_text_placeholder.replace(
             SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE, ""
@@ -132,9 +131,7 @@ def transform_section_text_placeholder_to_section_name(
     return ""
 
 
-def transform_section_name_to_section_text_placeholder(
-    section_name: AnyStr = "",
-) -> AnyStr:
+def transform_section_name_to_section_text_placeholder(section_name: str = "",) -> str:
     if section_name:
         return f"{SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE}{section_name}"
     return f"{SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE}"

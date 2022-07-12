@@ -1,4 +1,4 @@
-from typing import AnyStr, List
+from typing import List
 
 
 class Color:
@@ -33,7 +33,7 @@ AVAILABLE_SNACK_BAR_COLORS = [
 ]
 
 
-def get_color_by_name(colors_list: List[Color], color_name: AnyStr) -> Color:
+def get_color_by_name(colors_list: List[Color], color_name: str) -> Color:
     for color in colors_list:
         if color.name == color_name:
             return color

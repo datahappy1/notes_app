@@ -1,4 +1,5 @@
 import os
+import re
 import webbrowser
 from enum import Enum
 from os import path, linesep
@@ -12,6 +13,7 @@ from kivy.uix.scrollview import ScrollView
 from kivymd.theming import ThemableBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
+from kivymd.uix.textfield import TextInput
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.list import (
     MDList,
@@ -22,6 +24,9 @@ from kivymd.uix.list import (
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
+
+from kivy.base import EventLoop
+from kivy.uix.textinput import FL_IS_LINEBREAK
 
 from notes_app import __version__
 from notes_app.diff import merge_strings
@@ -34,6 +39,7 @@ from notes_app.color import (
     AVAILABLE_SNACK_BAR_COLORS,
 )
 from notes_app.file import (
+    get_validated_file_path,
     File,
     SectionIdentifier,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
@@ -62,6 +68,80 @@ APP_METADATA_ROWS = [
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
 
+class CustomTextInput(TextInput):
+    # overriding TextInput.insert_text() with added extra condition and (len(_lines_flags) - 1 >= row + 1)
+    # to handle a edge case when external update adds multiple line breaks and results in uncaught index error
+    def insert_text(self, substring, from_undo=False):
+        '''Insert new text at the current cursor position. Override this
+        function in order to pre-process text for input validation.
+        '''
+        _lines = self._lines
+        _lines_flags = self._lines_flags
+
+        if self.readonly or not substring or not self._lines:
+            return
+
+        if isinstance(substring, bytes):
+            substring = substring.decode('utf8')
+
+        if self.replace_crlf:
+            substring = substring.replace(u'\r\n', u'\n')
+
+        self._hide_handles(EventLoop.window)
+
+        if not from_undo and self.multiline and self.auto_indent \
+                and substring == u'\n':
+            substring = self._auto_indent(substring)
+
+        mode = self.input_filter
+        if mode not in (None, 'int', 'float'):
+            substring = mode(substring, from_undo)
+            if not substring:
+                return
+
+        col, row = self.cursor
+        cindex = self.cursor_index()
+        text = _lines[row]
+        len_str = len(substring)
+        new_text = text[:col] + substring + text[col:]
+        if mode is not None:
+            if mode == 'int':
+                if not re.match(self._insert_int_pat, new_text):
+                    return
+            elif mode == 'float':
+                if not re.match(self._insert_float_pat, new_text):
+                    return
+        self._set_line_text(row, new_text)
+
+        if len_str > 1 or substring == u'\n' or\
+            (substring == u' ' and _lines_flags[row] != FL_IS_LINEBREAK) or\
+            (row + 1 < len(_lines) and (len(_lines_flags) - 1 >= row + 1) and
+             _lines_flags[row + 1] != FL_IS_LINEBREAK) or\
+            (self._get_text_width(
+                new_text,
+                self.tab_width,
+                self._label_cached) > (self.width - self.padding[0] -
+                                       self.padding[2])):
+            # Avoid refreshing text on every keystroke.
+            # Allows for faster typing of text when the amount of text in
+            # TextInput gets large.
+
+            (
+                start, finish, lines, lines_flags, len_lines
+            ) = self._get_line_from_cursor(row, new_text)
+
+            # calling trigger here could lead to wrong cursor positioning
+            # and repeating of text when keys are added rapidly in a automated
+            # fashion. From Android Keyboard for example.
+            self._refresh_text_from_property(
+                'insert', start, finish, lines, lines_flags, len_lines
+            )
+
+        self.cursor = self.get_cursor_from_index(cindex + len_str)
+        # handle undo and redo
+        self._set_unredo_insert(cindex, cindex + len_str, substring, from_undo)
+
+
 class IconsContainer(IRightBodyTouch, MDBoxLayout):
     pass
 
@@ -78,15 +158,17 @@ class ContentNavigationDrawer(MDBoxLayout):
 
 
 class DrawerList(ThemableBehavior, MDList):
-    def set_color_item(self, instance_item):
-        """Called when tap on a menu item.
-        Set the color of the icon and text for the menu item.
-        """
-        for item in self.children:
-            if item.text_color == self.theme_cls.primary_color:
-                item.text_color = self.theme_cls.text_color
-                break
-        instance_item.text_color = self.theme_cls.primary_color
+    pass  # set_color_item causing app crashes hard to reproduce
+
+    # def set_color_item(self, instance_item):
+    #     """Called when tap on a menu item.
+    #     Set the color of the icon and text for the menu item.
+    #     """
+    #     for item in self.children:
+    #         if item.text_color == self.theme_cls.primary_color:
+    #             item.text_color = self.theme_cls.text_color
+    #             break
+    #     instance_item.text_color = self.theme_cls.primary_color
 
 
 class OpenFileDialogContent(MDBoxLayout):
@@ -224,6 +306,12 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         # setting self.text_section_view.text invokes the on_text event method
         # but changing the section without any actual typing is not an unsaved change
         self.auto_save_text_input_change_counter = 0
+
+        # de-select text to cover edge case when
+        # the search result is selected even after the related section is deleted
+        self.text_section_view.select_text(
+            0, 0
+        )
 
         self.ids.toolbar.title = (
             f"{APP_TITLE} section: {section_identifier.section_name}"
@@ -378,7 +466,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.show_error_bar(error_message="Invalid file")
             return
 
-        validated_file_path = File.get_validated_file_path(file_path)
+        validated_file_path = get_validated_file_path(file_path=file_path)
         if not validated_file_path:
             self.show_error_bar(error_message=f"Cannot open the file {file_path}")
             return
@@ -612,6 +700,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             )
 
             self.text_section_view.text = merged_current_section_text_data
+            # un-focus the TextInput so that the cursor is not offset by the external update
+            self.text_section_view.focus = False
+
             self.set_drawer_items(
                 section_identifiers=self.file.section_identifiers_sorted_by_name
             )

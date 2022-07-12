@@ -1,9 +1,4 @@
-from typing import AnyStr
-
-
-def get_marked_text(
-    text: AnyStr, highlight_style: AnyStr, highlight_color: AnyStr
-) -> AnyStr:
+def get_marked_text(text: str, highlight_style: str, highlight_color: str) -> str:
     return (
         f"[{highlight_style}]"
         f"[color={highlight_color}]"
