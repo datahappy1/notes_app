@@ -113,9 +113,9 @@ class File:
         self._section_identifiers = []
 
     def delete_section_identifier(self, section_file_separator) -> None:
-        for section in self._section_identifiers:
-            if section.section_file_separator == section_file_separator:
-                self._section_identifiers.remove(section)
+        for section_identifier in self._section_identifiers[:]:
+            if section_identifier.section_file_separator == section_file_separator:
+                self._section_identifiers.remove(section_identifier)
 
     def set_section_content(self, section_file_separator, section_content) -> None:
         self._data_by_sections[section_file_separator] = section_content
@@ -140,10 +140,9 @@ class File:
 
         # need to preserve the order of the _section_identifiers list item
         # and the _data_by_sections dict items so that new items are placed at the end
-
-        for idx, section_identifier in enumerate(self._section_identifiers):
+        for section_identifier in self._section_identifiers[:]:
             if section_identifier.section_file_separator == old_section_file_separator:
-                self._section_identifiers.pop(idx)
+                self._section_identifiers.remove(section_identifier)
 
         self._section_identifiers.append(
             SectionIdentifier(

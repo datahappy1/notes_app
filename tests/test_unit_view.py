@@ -737,6 +737,8 @@ class TestView:
         d = datetime.today() - timedelta(hours=1)
         get_app.controller.model._last_updated_on = int(d.timestamp())
 
+        screen.text_section_view.focus = True
+
         assert screen.save_current_section_to_file() is None
         assert (
             screen.file.get_raw_data_content()
