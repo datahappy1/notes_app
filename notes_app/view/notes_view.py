@@ -307,6 +307,12 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         # but changing the section without any actual typing is not an unsaved change
         self.auto_save_text_input_change_counter = 0
 
+        # de-select text to cover edge case when
+        # the search result is selected even after the related section is deleted
+        self.text_section_view.select_text(
+            0, 0
+        )
+
         self.ids.toolbar.title = (
             f"{APP_TITLE} section: {section_identifier.section_name}"
         )
@@ -694,6 +700,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             )
 
             self.text_section_view.text = merged_current_section_text_data
+            # un-focus the TextInput so that the cursor is not offset by the external update
+            self.text_section_view.focus = False
+
             self.set_drawer_items(
                 section_identifiers=self.file.section_identifiers_sorted_by_name
             )

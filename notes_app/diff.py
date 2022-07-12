@@ -75,15 +75,12 @@ def _split(input_text: str) -> List:
     offset = 0
     for idx, string in enumerate(input_text):
         if string in SEPARATORS:
-            _string_to_append = input_text[offset:idx]
-            result.append(_string_to_append)
+            result.append(input_text[offset:idx])
             result.append(string)
             offset = idx + 1
         # the last word in the enumerated input text
-        elif idx + 1 == len(input_text):
-            _string_to_append = input_text[offset : idx + 1]
-            if _string_to_append != "":
-                result.append(_string_to_append)
+        if idx + 1 == len(input_text):
+            result.append(input_text[offset : idx + 1])
     return result
 
 
