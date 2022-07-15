@@ -127,9 +127,9 @@ class TestFile:
         assert get_file.section_identifiers_sorted_by_name == []
 
     def test_set_get_section_content(self, get_file):
-        assert not get_file.set_section_content(
+        assert get_file.set_section_content(
             section_file_separator="<section=a> ", section_content="some content"
-        )
+        ) is None
         assert (
             get_file.get_section_content(section_file_separator="<section=a> ")
             == "some content"
@@ -139,15 +139,15 @@ class TestFile:
         get_file.set_section_content(
             section_file_separator="<section=a> ", section_content="some content"
         )
-        assert not get_file.delete_section_content(
+        assert get_file.delete_section_content(
             section_file_separator="<section=a> "
-        )
+        ) is None
         with pytest.raises(KeyError):
             get_file.get_section_content(section_file_separator="<section=a> ")
 
     def test_delete_all_sections_content(self, get_file):
-        assert not get_file.delete_all_sections_content()
-        assert not get_file.transform_data_by_sections_to_raw_data_content()
+        assert get_file.delete_all_sections_content() is None
+        assert get_file.transform_data_by_sections_to_raw_data_content() == ""
 
     def test_rename_section(self, get_file):
         assert (
@@ -155,9 +155,9 @@ class TestFile:
             is None
         )
 
-        assert not get_file.set_section_content(
+        assert get_file.set_section_content(
             section_file_separator="<section=a> ", section_content="some content"
-        )
+        ) is None
 
         assert [si.section_name for si in get_file._section_identifiers] == [
             "first",
@@ -165,10 +165,11 @@ class TestFile:
             "a",
         ]
 
-        assert not get_file.rename_section(
+        assert get_file.rename_section(
             old_section_file_separator="<section=a> ",
             new_section_file_separator="<section=b> ",
-        )
+        ) is None
+
         assert (
             get_file.get_section_content(section_file_separator="<section=b> ")
             == "some content"
