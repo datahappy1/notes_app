@@ -301,8 +301,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         )
 
         self.text_section_view.text = self.file.get_section_content(
-            section_file_separator=section_identifier.section_file_separator
+            section_identifier=section_identifier
         )
+
         # setting self.text_section_view.text invokes the on_text event method
         # but changing the section without any actual typing is not an unsaved change
         self.auto_save_text_input_change_counter = 0
@@ -486,7 +487,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 section_identifier=self.file.default_section_identifier
             )
         except ValueError:
-            self.file.delete_all_section_identifiers()
+            #self.file.delete_all_section_identifiers()
             self.file.delete_all_sections_content()
             self.press_add_section()
 
@@ -613,11 +614,8 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             defaults=self.defaults, section_name=section_name
         )
 
-        self.file.add_section_identifier(
-            section_file_separator=section_identifier.section_file_separator
-        )
         self.file.set_section_content(
-            section_file_separator=section_identifier.section_file_separator,
+            section_identifier=section_identifier,
             section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
         )
 
@@ -679,8 +677,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         if self.model.external_update:
             self.file.reload()
             try:
+                si = SectionIdentifier(section_file_separator=self.text_section_view.section_file_separator, defaults=self.defaults)
                 current_section_text_before = self.file.get_section_content(
-                    section_file_separator=self.text_section_view.section_file_separator
+                    section_identifier=si
                 )
             # KeyError raised if the current section was removed or renamed by a external update
             except KeyError:
@@ -689,9 +688,11 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 current_section_text_before = ""
                 # self.file.reload() will remove the current section identifier from self.file.section_identifiers
                 # in case it was deleted or renamed so the current section identifier is added back
-                self.file.add_section_identifier(
-                    section_file_separator=self.text_section_view.section_file_separator
-                )
+                # si = SectionIdentifier(section_file_separator=self.text_section_view.section_file_separator, defaults=self.defaults)
+                #
+                # self.file.add_section_identifier(
+                #     section_file_separator=self.text_section_view.section_file_separator
+                # )
 
             current_section_text_after = self.text_section_view.text
 
@@ -708,7 +709,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             )
 
         self.file.set_section_content(
-            section_file_separator=self.text_section_view.section_file_separator,
+            section_identifier=SectionIdentifier(section_file_separator=self.text_section_view.section_file_separator, defaults=self.defaults),
             section_content=merged_current_section_text_data
             or self.text_section_view.text,
         )
@@ -789,8 +790,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.ids.md_list.remove_widget(section_item)
 
-        self.file.delete_section_identifier(section_file_separator=section_item.id)
-        self.file.delete_section_content(section_file_separator=section_item.id)
+        # self.file.delete_section_identifier(section_file_separator=section_item.id)
+        si = SectionIdentifier(section_file_separator=section_item.id, defaults=self.defaults)
+        self.file.delete_section_content(section_identifier=si)
 
         self.filter_data_split_by_section(
             section_identifier=self.file.default_section_identifier

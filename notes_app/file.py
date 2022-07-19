@@ -29,9 +29,11 @@ class SectionIdentifier:
             section_file_separator
             or self._transform_name_to_separator(section_name=section_name)
         )
+        print(">>>", section_file_separator, "<<<", section_name)
         self.section_name = section_name or self._transform_separator_to_name()
 
     def _transform_separator_to_name(self) -> str:
+        print("___", self.section_file_separator, "-",self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX,":::")
         return re.search(
             self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX,
             self.section_file_separator,
@@ -52,12 +54,8 @@ class File:
             raw_data=self.get_raw_data_content()
         )
 
-        self._section_identifiers: List[
-            SectionIdentifier
-        ] = self._get_section_identifiers_from_raw_data_content()
-
         self._data_by_sections: Dict[
-            str, str
+            SectionIdentifier, str
         ] = self._transform_raw_data_content_to_data_by_sections()
 
     def _get_validated_raw_data(self, raw_data) -> str:
@@ -76,96 +74,76 @@ class File:
             raw_data=self.get_raw_data_content()
         )
 
-        self._section_identifiers = (
-            self._get_section_identifiers_from_raw_data_content()
-        )
         self._data_by_sections = self._transform_raw_data_content_to_data_by_sections()
 
     def get_raw_data_content(self) -> str:
         return self._controller.read_file_data(file_path=self._file_path)
 
-    def _get_section_identifiers_from_raw_data_content(self) -> List[SectionIdentifier]:
-        separators = re.findall(
-            self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content
-        )
-        return [
-            SectionIdentifier(defaults=self.defaults, section_file_separator=separator)
-            for separator in separators
-        ]
-
     @property
     def default_section_identifier(self) -> SectionIdentifier:
-        return self._section_identifiers[0]
+        return [k for k in self._data_by_sections.keys()][0]
 
     @property
     def section_identifiers_sorted_by_name(self) -> List[SectionIdentifier]:
-        self._section_identifiers.sort(key=lambda x: x.section_name)
-        return self._section_identifiers
+        section_identifiers = [k for k in self._data_by_sections.keys()]
+        section_identifiers.sort(key=lambda x: x.section_name)
+        return section_identifiers
 
-    def add_section_identifier(self, section_file_separator) -> None:
-        self._section_identifiers.append(
-            SectionIdentifier(
-                defaults=self.defaults, section_file_separator=section_file_separator
-            )
-        )
+    def set_section_content(self, section_identifier, section_content) -> None:
+        self._data_by_sections[section_identifier] = section_content
 
-    def delete_all_section_identifiers(self) -> None:
-        self._section_identifiers = []
-
-    def delete_section_identifier(self, section_file_separator) -> None:
-        for section_identifier in self._section_identifiers[:]:
-            if section_identifier.section_file_separator == section_file_separator:
-                self._section_identifiers.remove(section_identifier)
-
-    def set_section_content(self, section_file_separator, section_content) -> None:
-        self._data_by_sections[section_file_separator] = section_content
-
-    def get_section_content(self, section_file_separator) -> str:
-        return self._data_by_sections[section_file_separator]
+    def get_section_content(self, section_identifier) -> str:
+        return self._data_by_sections[section_identifier]
 
     def delete_all_sections_content(self) -> None:
         self._data_by_sections = dict()
 
-    def delete_section_content(self, section_file_separator) -> None:
-        self._data_by_sections.pop(section_file_separator)
+    def delete_section_content(self, section_identifier) -> None:
+        self._data_by_sections.pop(section_identifier)
 
     def rename_section(
         self, old_section_file_separator, new_section_file_separator
     ) -> None:
-        """
-        rename_section method abstracts all section renaming actions
-        by replacing the section identifier in the _section_identifiers list
-        and by replacing the key in the _data_by_sections dict
-        """
 
-        # need to preserve the order of the _section_identifiers list item
-        # and the _data_by_sections dict items so that new items are placed at the end
-        for section_identifier in self._section_identifiers[:]:
-            if section_identifier.section_file_separator == old_section_file_separator:
-                self._section_identifiers.remove(section_identifier)
-
-        self._section_identifiers.append(
-            SectionIdentifier(
-                defaults=self.defaults,
-                section_file_separator=new_section_file_separator,
-            )
+        old_section_identifier = SectionIdentifier(
+            section_file_separator=old_section_file_separator, defaults=self.defaults
+        )
+        new_section_identifier = SectionIdentifier(
+            section_file_separator=new_section_file_separator, defaults=self.defaults
         )
 
-        self._data_by_sections[new_section_file_separator] = self._data_by_sections[
-            old_section_file_separator
+        self._data_by_sections[new_section_identifier] = self._data_by_sections[
+            old_section_identifier
         ]
-        del self._data_by_sections[old_section_file_separator]
+        del self._data_by_sections[old_section_identifier]
 
-    def _transform_raw_data_content_to_data_by_sections(self) -> Dict[str, str]:
+    def _transform_raw_data_content_to_data_by_sections(self) -> Dict[SectionIdentifier, str]:
         dict_data = dict()
-        for item in zip(
-            self._section_identifiers,
-            re.split(
-                self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX,
-                self._raw_data_content,
-            )[1:],
-        ):
-            dict_data[item[0].section_file_separator] = item[1]
+
+        result = []
+        positions = []
+        matches = re.finditer(self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content)
+        matches_list = list(matches)
+        for idx, match in enumerate(matches_list):
+            match_span = match.span()
+            if idx > 0:
+                positions.append((positions[len(positions) - 1][1], match_span[0]))
+            positions.append(match_span)
+            if idx + 1 == len(list(matches_list)):
+                positions.append((match_span[1], len(self._raw_data_content)))
+
+        for pos in positions:
+            result.append(self._raw_data_content[pos[0]:pos[1]])
+
+        for idx,item in enumerate(result):
+            if idx == 0:
+                continue
+            print("|||",result[idx-1],"|||")
+            si = SectionIdentifier(section_file_separator=result[idx-1], defaults=self.defaults)
+            dict_data[si]=item
+
+        print("xxxd", dict_data)
+
         return dict_data
 
     def transform_data_by_sections_to_raw_data_content(self) -> str:
