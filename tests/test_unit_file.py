@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 
-from notes_app.file import SectionIdentifier, get_validated_file_path
+from notes_app.file import get_validated_file_path
 
 from notes_app.defaults import Defaults
 
@@ -82,18 +82,18 @@ class TestFile:
         )
 
     def test_default_section_identifier(self, get_file):
-        assert isinstance(get_file.default_section_identifier, SectionIdentifier)
+        assert isinstance(get_file.default_section_separator, SectionIdentifier)
 
     def test_section_identifiers_sorted_by_name(self, get_file):
         assert all(
             [
                 isinstance(x, SectionIdentifier)
-                for x in get_file.section_identifiers_sorted_by_name
+                for x in get_file.section_separators_sorted
             ]
         )
 
         assert [
-            x.section_name for x in get_file.section_identifiers_sorted_by_name
+            x.section_name for x in get_file.section_separators_sorted
         ] == ["first", "second"]
 
     def test_add_section_identifier(self, get_file):
@@ -101,11 +101,11 @@ class TestFile:
             get_file.add_section_identifier(section_file_separator="<section=a> ")
             is None
         )
-        assert len(get_file.section_identifiers_sorted_by_name) == 3
+        assert len(get_file.section_separators_sorted) == 3
         assert all(
             [
                 isinstance(x, SectionIdentifier)
-                for x in get_file.section_identifiers_sorted_by_name
+                for x in get_file.section_separators_sorted
             ]
         )
 
@@ -114,17 +114,17 @@ class TestFile:
             get_file.delete_section_identifier(section_file_separator="<section=a> ")
             is None
         )
-        assert len(get_file.section_identifiers_sorted_by_name) == 2
+        assert len(get_file.section_separators_sorted) == 2
         assert all(
             [
                 isinstance(x, SectionIdentifier)
-                for x in get_file.section_identifiers_sorted_by_name
+                for x in get_file.section_separators_sorted
             ]
         )
 
     def test_delete_all_section_identifiers(self, get_file):
         assert get_file.delete_all_section_identifiers() is None
-        assert get_file.section_identifiers_sorted_by_name == []
+        assert get_file.section_separators_sorted == []
 
     def test_set_get_section_content(self, get_file):
         assert get_file.set_section_content(
@@ -166,8 +166,8 @@ class TestFile:
         ]
 
         assert get_file.rename_section(
-            old_section_file_separator="<section=a> ",
-            new_section_file_separator="<section=b> ",
+            old_section_separator="<section=a> ",
+            new_section_separator="<section=b> ",
         ) is None
 
         assert (

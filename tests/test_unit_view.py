@@ -38,7 +38,7 @@ class TestView:
 
         assert isinstance(screen.file, File)
         assert (
-            screen.current_section_identifier == screen.file.default_section_identifier
+                screen.current_section == screen.file.default_section_separator
         )
         assert isinstance(screen.search, Search)
 
@@ -78,7 +78,7 @@ class TestView:
         assert len(children_before) == 2
 
         screen.set_drawer_items(
-            section_identifiers=screen.file.section_identifiers_sorted_by_name
+            section_identifiers=screen.file.section_separators_sorted
         )
 
         children_after = copy(screen.ids.md_list.children)
@@ -570,19 +570,19 @@ class TestView:
         assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
 
         section_name = "new section"
-        assert len(screen.file.section_identifiers_sorted_by_name) == 2
+        assert len(screen.file.section_separators_sorted) == 2
         assert screen.execute_add_section(section_name) is None
 
         # add section dialog is closed
         assert screen.dialog.content_cls is None
 
-        assert len(screen.file.section_identifiers_sorted_by_name) == 3
+        assert len(screen.file.section_separators_sorted) == 3
         assert (
-            screen.file.section_identifiers_sorted_by_name[1].section_file_separator
+            screen.file.section_separators_sorted[1].section_file_separator
             == "<section=new section> "
         )
         assert (
-            screen.file.section_identifiers_sorted_by_name[1].section_name
+            screen.file.section_separators_sorted[1].section_name
             == "new section"
         )
         assert (
@@ -632,20 +632,20 @@ class TestView:
 
         old_section_name = "first"
         new_section_name = "updated section name"
-        assert screen.current_section_identifier.section_name == "first"
-        assert len(screen.file.section_identifiers_sorted_by_name) == 2
+        assert screen.current_section.section_name == "first"
+        assert len(screen.file.section_separators_sorted) == 2
         assert screen.execute_edit_section(old_section_name, new_section_name) is None
 
         # add section dialog is closed
         assert screen.dialog.content_cls is None
-        assert screen.current_section_identifier.section_name == "updated section name"
-        assert len(screen.file.section_identifiers_sorted_by_name) == 2
+        assert screen.current_section.section_name == "updated section name"
+        assert len(screen.file.section_separators_sorted) == 2
         assert (
-            screen.file.section_identifiers_sorted_by_name[1].section_file_separator
+            screen.file.section_separators_sorted[1].section_file_separator
             == "<section=updated section name> "
         )
         assert (
-            screen.file.section_identifiers_sorted_by_name[1].section_name
+            screen.file.section_separators_sorted[1].section_name
             == "updated section name"
         )
         assert (
@@ -967,7 +967,7 @@ class TestView:
         }
 
         screen.filter_data_split_by_section(
-            section_identifier=SectionIdentifier(
+            section_separator=SectionIdentifier(
                 defaults=get_app.model.defaults, section_name="second"
             )
         )
@@ -976,9 +976,9 @@ class TestView:
 
         assert len(screen.ids.md_list.children) == 1
 
-        assert screen.file.section_identifiers_sorted_by_name[0].section_name == "first"
+        assert screen.file.section_separators_sorted[0].section_name == "first"
         assert (
-            screen.file.section_identifiers_sorted_by_name[0].section_file_separator
+            screen.file.section_separators_sorted[0].section_file_separator
             == "<section=first> "
         )
         assert screen.file._data_by_sections == {

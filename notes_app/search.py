@@ -82,14 +82,12 @@ class Search:
         found_occurrences = dict()
 
         if self.search_all_sections:
-            sections_to_search_in = file.section_identifiers_sorted_by_name
+            sections_separators_to_search_in = file.section_separators_sorted
         else:
-            sections_to_search_in = [current_section_identifier]
+            sections_separators_to_search_in = [current_section_identifier]
 
-        for section in sections_to_search_in:
-            text = file.get_section_content(
-                section_file_separator=section.section_file_separator
-            )
+        for section_separator in sections_separators_to_search_in:
+            text = file.get_section_content(section_separator=section_separator)
 
             search_result = search_function(
                 pattern=pattern,
@@ -98,7 +96,7 @@ class Search:
                 full_words_search=self.search_full_words,
             )
             if search_result:
-                found_occurrences[section.section_file_separator] = search_result
+                found_occurrences[section_separator] = search_result
 
         return found_occurrences
 
