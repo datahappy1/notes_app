@@ -32,7 +32,7 @@ def test_get_file_updated_timestamp_as_epoch():
 
 class TestModel:
     def test_model(self, get_model):
-        assert get_model._file_path == get_model.defaults.DEFAULT_NOTES_FILE_NAME
+        assert get_model._file_path == get_model._defaults.DEFAULT_NOTES_FILE_NAME
         assert isinstance(get_model._file_size, int)
         assert isinstance(datetime.fromtimestamp(get_model._last_updated_on), datetime)
 
@@ -42,19 +42,19 @@ class TestModel:
         assert json.dumps(get_model.__repr__())
 
     def test__set_missing_store_defaults(self, get_model):
-        get_model.store.put("_file_path", value=None)
-        get_model.store.put("_file_size", value=0)
-        get_model.store.put("_last_updated_on", value=0)
+        get_model._store.put("_file_path", value=None)
+        get_model._store.put("_file_size", value=0)
+        get_model._store.put("_last_updated_on", value=0)
 
         get_model._set_missing_store_defaults()
 
-        assert get_model.store["_file_path"] == {
-            "value": f"{get_model.defaults.DEFAULT_NOTES_FILE_NAME}"
+        assert get_model._store["_file_path"] == {
+            "value": f"{get_model._defaults.DEFAULT_NOTES_FILE_NAME}"
         }
         # file size differs between OS types
-        assert isinstance(get_model.store["_file_size"]["value"], int)
+        assert isinstance(get_model._store["_file_size"]["value"], int)
         assert isinstance(
-            datetime.fromtimestamp(get_model.store["_last_updated_on"]["value"]),
+            datetime.fromtimestamp(get_model._store["_last_updated_on"]["value"]),
             datetime,
         )
 
@@ -104,14 +104,14 @@ class TestModel:
         assert get_model._last_updated_on > ts_before
 
     def test_dump(self, get_model):
-        get_model.file_path = get_model.defaults.DEFAULT_NOTES_FILE_NAME
+        get_model.file_path = get_model._defaults.DEFAULT_NOTES_FILE_NAME
         get_model._file_size = 123
         get_model._last_updated_on = 1653554504
 
         assert get_model.dump() is None
 
-        assert get_model.store["_file_path"] == {
-            "value": get_model.defaults.DEFAULT_NOTES_FILE_NAME
+        assert get_model._store["_file_path"] == {
+            "value": get_model._defaults.DEFAULT_NOTES_FILE_NAME
         }
-        assert get_model.store["_file_size"] == {"value": 123}
-        assert get_model.store["_last_updated_on"] == {"value": 1653554504}
+        assert get_model._store["_file_size"] == {"value": 123}
+        assert get_model._store["_last_updated_on"] == {"value": 1653554504}

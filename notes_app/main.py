@@ -33,8 +33,8 @@ class NotesApp(MDApp):
         )
 
     def _on_request_close(self, *source, **args):
-        if self.controller.view.is_unsaved_change:
-            self.controller.view.save_current_section_to_file()
+        if self.controller._view.is_unsaved_change:
+            self.controller._view.save_current_section_to_file()
 
     def build(self):
         self.theme_cls.primary_palette = "DeepPurple"

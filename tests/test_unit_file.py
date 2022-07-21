@@ -23,7 +23,7 @@ def test_get_validated_file_path():
 def test_transform_section_separator_to_section_name(get_file):
     assert (
         transform_section_separator_to_section_name(
-            defaults=get_file.defaults, section_separator="<section=a> "
+            defaults=get_file._defaults, section_separator="<section=a> "
         )
         == "a"
     )
@@ -32,7 +32,7 @@ def test_transform_section_separator_to_section_name(get_file):
 def test_transform_section_name_to_section_separator(get_file):
     assert (
         transform_section_name_to_section_separator(
-            defaults=get_file.defaults, section_name="a"
+            defaults=get_file._defaults, section_name="a"
         )
         == "<section=a> "
     )
