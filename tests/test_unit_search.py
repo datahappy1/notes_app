@@ -1,6 +1,6 @@
 import pytest
 
-from notes_app.file import SectionIdentifier
+from notes_app.defaults import Defaults
 from notes_app.search import (
     SEARCH_MINIMAL_CHAR_COUNT,
     validate_search_input,
@@ -13,7 +13,6 @@ from notes_app.search import (
     transform_section_text_placeholder_to_section_name,
     transform_section_name_to_section_text_placeholder,
 )
-from notes_app.defaults import Defaults
 
 defaults = Defaults()
 
@@ -101,14 +100,8 @@ class TestSearch:
         search.search_all_sections = False
         search.search_full_words = False
 
-        current_section_identifier = SectionIdentifier(
-            defaults=defaults, section_file_separator="<section=first> "
-        )
-
         assert search.search_for_occurrences(
-            pattern="do",
-            file=get_file,
-            current_section_identifier=current_section_identifier,
+            pattern="do", file=get_file, current_section_identifier="<section=first> ",
         ) == {"<section=first> ": [25]}
 
     def test_search_case_sensitive(self, get_file):
@@ -118,21 +111,15 @@ class TestSearch:
         search.search_all_sections = False
         search.search_full_words = False
 
-        current_section_identifier = SectionIdentifier(
-            defaults=defaults, section_file_separator="<section=first> "
-        )
-
         assert search.search_for_occurrences(
-            pattern="do",
-            file=get_file,
-            current_section_identifier=current_section_identifier,
+            pattern="do", file=get_file, current_section_identifier="<section=first> ",
         ) == {"<section=first> ": [25]}
 
         assert (
             search.search_for_occurrences(
                 pattern="dO",
                 file=get_file,
-                current_section_identifier=current_section_identifier,
+                current_section_identifier="<section=first> ",
             )
             == {}
         )
@@ -144,14 +131,8 @@ class TestSearch:
         search.search_all_sections = True
         search.search_full_words = False
 
-        current_section_identifier = SectionIdentifier(
-            defaults=defaults, section_file_separator="<section=first> "
-        )
-
         assert search.search_for_occurrences(
-            pattern="do",
-            file=get_file,
-            current_section_identifier=current_section_identifier,
+            pattern="do", file=get_file, current_section_identifier="<section=first> ",
         ) == {"<section=first> ": [25], "<section=second> ": [11]}
 
     def test_search_full_words(self, get_file):
@@ -161,21 +142,15 @@ class TestSearch:
         search.search_all_sections = False
         search.search_full_words = True
 
-        current_section_identifier = SectionIdentifier(
-            defaults=defaults, section_file_separator="<section=first> "
-        )
-
         assert search.search_for_occurrences(
-            pattern="non",
-            file=get_file,
-            current_section_identifier=current_section_identifier,
+            pattern="non", file=get_file, current_section_identifier="<section=first> ",
         ) == {"<section=first> ": [13]}
 
         assert (
             search.search_for_occurrences(
                 pattern="nonx",
                 file=get_file,
-                current_section_identifier=current_section_identifier,
+                current_section_identifier="<section=first> ",
             )
             == {}
         )

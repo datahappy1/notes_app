@@ -10,7 +10,12 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.filemanager import MDFileManager, FloatButton
 from kivymd.uix.menu import MDDropdownMenu
 
-from notes_app.file import File, SectionIdentifier
+from notes_app.defaults import Defaults
+from notes_app.file import (
+    File,
+    transform_section_name_to_section_separator,
+    SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+)
 from notes_app.search import Search
 from notes_app.view.notes_view import (
     DrawerList,
@@ -37,9 +42,7 @@ class TestView:
         assert screen.last_searched_string == ""
 
         assert isinstance(screen.file, File)
-        assert (
-                screen.current_section == screen.file.default_section_separator
-        )
+        assert screen.current_section == screen.file.default_section_separator
         assert isinstance(screen.search, Search)
 
         assert screen.auto_save_text_input_change_counter == 0
@@ -78,7 +81,7 @@ class TestView:
         assert len(children_before) == 2
 
         screen.set_drawer_items(
-            section_identifiers=screen.file.section_separators_sorted
+            section_separators=screen.file.section_separators_sorted
         )
 
         children_after = copy(screen.ids.md_list.children)
@@ -254,8 +257,20 @@ class TestView:
             id="<section=first> ", text="", edit=None, delete=None
         )
 
-        screen.file.delete_all_section_identifiers()
-        screen.file.add_section_identifier(section_file_separator="<section=first> ")
+        screen.file.set_section_content(
+            section_separator="<section=first> ",
+            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+        )
+        screen.press_delete_section(section_item=section_item)
+
+        section_item = ItemDrawer(
+            id="<section=second> ", text="", edit=None, delete=None
+        )
+
+        screen.file.set_section_content(
+            section_separator="<section=second> ",
+            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+        )
         screen.press_delete_section(section_item=section_item)
 
         assert isinstance(screen.snackbar, CustomSnackbar)
@@ -285,7 +300,6 @@ class TestView:
 
         # EMPTY_NOTES_FILE_PATH
         screen.execute_open_file(file_path=get_empty_file_file_path)
-        assert screen.file._section_identifiers == []
         assert screen.file._data_by_sections == {}
 
         assert screen.dialog.title == "Add section:"
@@ -577,18 +591,9 @@ class TestView:
         assert screen.dialog.content_cls is None
 
         assert len(screen.file.section_separators_sorted) == 3
+        assert screen.file.section_separators_sorted[1] == "<section=new section> "
         assert (
-            screen.file.section_separators_sorted[1].section_file_separator
-            == "<section=new section> "
-        )
-        assert (
-            screen.file.section_separators_sorted[1].section_name
-            == "new section"
-        )
-        assert (
-            screen.file.get_section_content(
-                section_file_separator="<section=new section> "
-            )
+            screen.file.get_section_content(section_separator="<section=new section> ")
             == ""
         )
         assert (
@@ -632,25 +637,22 @@ class TestView:
 
         old_section_name = "first"
         new_section_name = "updated section name"
-        assert screen.current_section.section_name == "first"
+        assert screen.current_section == "<section=first> "
         assert len(screen.file.section_separators_sorted) == 2
         assert screen.execute_edit_section(old_section_name, new_section_name) is None
 
         # add section dialog is closed
         assert screen.dialog.content_cls is None
-        assert screen.current_section.section_name == "updated section name"
+        assert screen.current_section == "<section=updated section name> "
         assert len(screen.file.section_separators_sorted) == 2
         assert (
-            screen.file.section_separators_sorted[1].section_file_separator
+            screen.file.section_separators_sorted[1]
             == "<section=updated section name> "
         )
-        assert (
-            screen.file.section_separators_sorted[1].section_name
-            == "updated section name"
-        )
+
         assert (
             screen.file.get_section_content(
-                section_file_separator="<section=updated section name> "
+                section_separator="<section=updated section name> "
             )
             == """Quod equidem non reprehendo
 """
@@ -727,7 +729,10 @@ class TestView:
             == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
         )
 
-        screen.file.add_section_identifier(section_file_separator="<section=a> ")
+        screen.file.set_section_content(
+            section_separator="<section=a> ",
+            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+        )
 
         screen.text_section_view.section_file_separator = "<section=a> "
 
@@ -747,7 +752,9 @@ class TestView:
 
         assert screen.text_section_view.focus is False
 
-    def test_save_current_section_to_file_is_external_update_with_changes_to_current_section(self, get_app):
+    def test_save_current_section_to_file_is_external_update_with_changes_to_current_section(
+        self, get_app
+    ):
         screen = get_app.controller.get_screen()
 
         assert (
@@ -755,7 +762,10 @@ class TestView:
             == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
         )
 
-        screen.file.add_section_identifier(section_file_separator="<section=a> ")
+        screen.file.set_section_content(
+            section_separator="<section=a> ",
+            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+        )
 
         screen.text_section_view.section_file_separator = "<section=a> "
 
@@ -780,7 +790,9 @@ class TestView:
             == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=a> test text mod"""
         )
 
-    def test_save_current_section_to_file_is_external_update_delete_current_section(self, get_app):
+    def test_save_current_section_to_file_is_external_update_delete_current_section(
+        self, get_app
+    ):
         screen = get_app.controller.get_screen()
 
         assert (
@@ -788,7 +800,10 @@ class TestView:
             == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
         )
 
-        screen.file.add_section_identifier(section_file_separator="<section=a> ")
+        screen.file.set_section_content(
+            section_separator="<section=a> ",
+            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+        )
 
         screen.text_section_view.section_file_separator = "<section=a> "
 
@@ -812,7 +827,9 @@ class TestView:
             == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=a> test text"""
         )
 
-    def test_save_current_section_to_file_is_external_update_with_changes_to_different_section(self, get_app):
+    def test_save_current_section_to_file_is_external_update_with_changes_to_different_section(
+        self, get_app
+    ):
         screen = get_app.controller.get_screen()
 
         assert (
@@ -874,7 +891,10 @@ class TestView:
             == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
         )
 
-        screen.file.add_section_identifier(section_file_separator="<section=a> ")
+        screen.file.set_section_content(
+            section_separator="<section=a> ",
+            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+        )
 
         screen.text_section_view.section_file_separator = "<section=a> "
 
@@ -966,9 +986,11 @@ class TestView:
             "<section=second> ": "Quis istum dolorem timet",
         }
 
+        defaults = Defaults()
+
         screen.filter_data_split_by_section(
-            section_separator=SectionIdentifier(
-                defaults=get_app.model.defaults, section_name="second"
+            section_separator=transform_section_name_to_section_separator(
+                defaults=defaults, section_name="second"
             )
         )
 
@@ -976,11 +998,8 @@ class TestView:
 
         assert len(screen.ids.md_list.children) == 1
 
-        assert screen.file.section_separators_sorted[0].section_name == "first"
-        assert (
-            screen.file.section_separators_sorted[0].section_file_separator
-            == "<section=first> "
-        )
+        assert screen.file.section_separators_sorted[0] == "<section=first> "
+
         assert screen.file._data_by_sections == {
             "<section=first> ": "Quod equidem non reprehendo\n"
         }
