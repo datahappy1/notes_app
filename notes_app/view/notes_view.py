@@ -25,14 +25,6 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import BaseSnackbar
 
-# for draw start
-from random import random
-from kivy.app import App
-from kivy.uix.widget import Widget
-from kivy.uix.button import Button
-from kivy.graphics import Color, Ellipse, Line
-# for draw end
-
 from kivy.base import EventLoop
 from kivy.uix.textinput import FL_IS_LINEBREAK
 
@@ -155,20 +147,6 @@ class CustomTextInput(TextInput):
         self._set_unredo_insert(cindex, cindex + len_str, substring, from_undo)
 
 
-# TODO rename, tests etc.
-class MyPaintWidget(Widget):
-    def on_touch_down(self, touch):
-        color = (random(), 1, 1)
-        with self.canvas:
-            Color(*color, mode='hsv')
-            d = 30.
-            Ellipse(pos=(touch.x - d / 2, touch.y - d / 2), size=(d, d))
-            touch.ud['line'] = Line(points=(touch.x, touch.y))
-
-    def on_touch_move(self, touch):
-        touch.ud['line'].points += [touch.x, touch.y]
-
-
 class IconsContainer(IRightBodyTouch, MDBoxLayout):
     pass
 
@@ -233,17 +211,6 @@ class SearchDialogContent(MDBoxLayout):
     search_string_placeholder = StringProperty(None)
     search_results_message = StringProperty(None)
     execute_search = ObjectProperty(None)
-    cancel = ObjectProperty(None)
-
-
-# TODO tests
-class DrawingDialogContent(MDBoxLayout):
-    # get_search_switch_state = ObjectProperty(None)
-    # search_switch_callback = ObjectProperty(None)
-    # search_string_placeholder = StringProperty(None)
-    # search_results_message = StringProperty(None)
-    # execute_search = ObjectProperty(None)
-    save = ObjectProperty(None)
     cancel = ObjectProperty(None)
 
 
@@ -794,40 +761,6 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.dialog = MDDialog(title="Search:", type="custom", content_cls=content)
 
         self.dialog.open()
-
-    # TODO tests
-    def save_drawing(self):
-        print("saved")
-
-    # TODO tests
-    # https://kivy.org/doc/stable/tutorials/firstwidget.html
-    def press_icon_add_drawing(self, *args):
-        print(args)
-
-        content = DrawingDialogContent(
-            # get_search_switch_state=self.get_search_switch_state,
-            # search_switch_callback=self.search_switch_callback,
-            # search_string_placeholder=self.last_searched_string,
-            # search_results_message="",
-            save=self.save_drawing,
-            cancel=self.cancel_dialog,
-        )
-
-        self.dialog = MDDialog(title="Drawing:", type="custom", content_cls=content)
-
-        self.dialog.open()
-
-        parent = Widget()
-        self.painter = MyPaintWidget()
-        clearbtn = Button(text='Clear')
-        clearbtn.bind(on_release=self.clear_canvas)
-        parent.add_widget(self.painter)
-        parent.add_widget(clearbtn)
-        return parent
-
-
-    def clear_canvas(self, obj):
-        self.painter.canvas.clear()
 
     def press_add_section(self, *args):
         content = AddSectionDialogContent(

@@ -44,7 +44,7 @@
         id: toolbar
         elevation: 8
         md_bg_color: app.theme_cls.bg_dark
-        left_action_items: [["menu", lambda x: nav_drawer.set_state("open")],["magnify", lambda x: root.press_icon_search()],["draw", lambda x: root.press_icon_add_drawing()]]
+        left_action_items: [["menu", lambda x: nav_drawer.set_state("open")],["magnify", lambda x: root.press_icon_search()]]
         right_action_items: [["file", lambda x: root.menu_storage.open()],["cog", lambda x: root.menu_settings.open()]]
 
     ScreenManager:
@@ -205,31 +205,6 @@
                 size_hint: (.5, .8)
                 text: "Search"
                 on_release: root.execute_search(search_string_input_value.text)
-
-<DrawingDialogContent>:
-    orientation: "vertical"
-    spacing: "12dp"
-    size_hint_y: None
-    height: "500dp"
-
-    results_list: scroll
-
-    MDBoxLayout:
-        size: root.size
-        pos: root.pos
-        orientation: "vertical"
-
-        MDBoxLayout:
-            size_hint_y: None
-            height: 40
-            MDFlatButton:
-                size_hint: (.5, .8)
-                text: "Cancel"
-                on_release: root.cancel()
-            MDRectangleFlatButton:
-                size_hint: (.5, .8)
-                text: "Search"
-                on_release: root.save()
 
 <AddSectionDialogContent>
     orientation: "vertical"

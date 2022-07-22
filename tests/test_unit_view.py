@@ -216,19 +216,19 @@ class TestView:
         # save settings
         value = MenuSettingsItems.Save.value
         screen.press_menu_settings_item_callback(text_item=value)
-        assert get_app.controller._view.settings.font_name == "Roboto-Bold"
-        assert get_app.controller._view.settings.font_size == "14.0"
-        assert get_app.controller._view.settings.background_color == "blue"
-        assert get_app.controller._view.settings.foreground_color == "lime"
+        assert get_app.controller.view.settings.font_name == "Roboto-Bold"
+        assert get_app.controller.view.settings.font_size == "14.0"
+        assert get_app.controller.view.settings.background_color == "blue"
+        assert get_app.controller.view.settings.foreground_color == "lime"
 
-        assert get_app.controller._view.settings.store["font_name"] == {
+        assert get_app.controller.view.settings.store["font_name"] == {
             "value": "Roboto-Bold"
         }
-        assert get_app.controller._view.settings.store["font_size"] == {"value": "14.0"}
-        assert get_app.controller._view.settings.store["background_color"] == {
+        assert get_app.controller.view.settings.store["font_size"] == {"value": "14.0"}
+        assert get_app.controller.view.settings.store["background_color"] == {
             "value": "blue"
         }
-        assert get_app.controller._view.settings.store["foreground_color"] == {
+        assert get_app.controller.view.settings.store["foreground_color"] == {
             "value": "lime"
         }
 
@@ -288,11 +288,11 @@ class TestView:
 
         # NOTES_FILE_PATH
         screen.execute_open_file(
-            file_path=get_app.controller._defaults.DEFAULT_NOTES_FILE_NAME
+            file_path=get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME
         )
         assert (
             screen.file._file_path
-            == get_app.controller._defaults.DEFAULT_NOTES_FILE_NAME
+            == get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME
         )
         assert isinstance(screen.ids.md_list.children[0], ItemDrawer)
         assert screen.ids.md_list.children[0].id == "<section=second> "
@@ -702,7 +702,7 @@ class TestView:
 
     def test_save_current_section_to_file_is_not_external_update(self, get_app):
         # setting model._last_updated_on manually will guarantee model.external_update returns False
-        get_app.controller._model._last_updated_on = int(time.time())
+        get_app.controller.model._last_updated_on = int(time.time())
 
         screen = get_app.controller.get_screen()
 
@@ -740,7 +740,7 @@ class TestView:
 
         # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
         d = datetime.today() - timedelta(hours=1)
-        get_app.controller._model._last_updated_on = int(d.timestamp())
+        get_app.controller.model._last_updated_on = int(d.timestamp())
 
         screen.text_section_view.focus = True
 
@@ -782,7 +782,7 @@ class TestView:
 
         # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
         d = datetime.today() - timedelta(hours=1)
-        get_app.controller._model._last_updated_on = int(d.timestamp())
+        get_app.controller.model._last_updated_on = int(d.timestamp())
 
         assert screen.save_current_section_to_file() is None
         assert (
@@ -819,7 +819,7 @@ class TestView:
 
         # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
         d = datetime.today() - timedelta(hours=1)
-        get_app.controller._model._last_updated_on = int(d.timestamp())
+        get_app.controller.model._last_updated_on = int(d.timestamp())
 
         assert screen.save_current_section_to_file() is None
         assert (
@@ -850,7 +850,7 @@ class TestView:
 
         # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
         d = datetime.today() - timedelta(hours=1)
-        get_app.controller._model._last_updated_on = int(d.timestamp())
+        get_app.controller.model._last_updated_on = int(d.timestamp())
 
         assert screen.save_current_section_to_file() is None
         assert (
@@ -860,7 +860,7 @@ class TestView:
 
     def test_press_menu_item_save_file_is_not_external_update(self, get_app):
         # setting model._last_updated_on manually will guarantee model.external_update returns False
-        get_app.controller._model._last_updated_on = int(time.time())
+        get_app.controller.model._last_updated_on = int(time.time())
 
         screen = get_app.controller.get_screen()
 
@@ -882,7 +882,7 @@ class TestView:
     def test_press_menu_item_save_file_is_external_update(self, get_app):
         # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
         d = datetime.today() - timedelta(hours=1)
-        get_app.controller._model._last_updated_on = int(d.timestamp())
+        get_app.controller.model._last_updated_on = int(d.timestamp())
 
         screen = get_app.controller.get_screen()
 
@@ -1011,12 +1011,12 @@ class TestView:
     def test_text_input_changed_callback_is_external_update(self, get_app):
         # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
         d = datetime.today() - timedelta(hours=1)
-        get_app.controller._model._last_updated_on = int(d.timestamp())
+        get_app.controller.model._last_updated_on = int(d.timestamp())
 
         screen = get_app.controller.get_screen()
 
         screen.auto_save_text_input_change_counter = (
-            get_app.controller._defaults.DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
+            get_app.controller.defaults.DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
         )
 
         # external update
@@ -1043,12 +1043,12 @@ class TestView:
 
     def test_text_input_changed_callback_is_not_external_update(self, get_app):
         # setting model._last_updated_on manually will guarantee model.external_update returns False
-        get_app.controller._model._last_updated_on = int(time.time())
+        get_app.controller.model._last_updated_on = int(time.time())
 
         screen = get_app.controller.get_screen()
 
         screen.auto_save_text_input_change_counter = (
-            get_app.controller._defaults.DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
+            get_app.controller.defaults.DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT - 1
         )
 
         screen.file._data_by_sections = {
@@ -1082,7 +1082,7 @@ class TestView:
         screen.manager_open = True
 
         screen.file_manager_select_path(
-            path=get_app.controller._defaults.DEFAULT_NOTES_FILE_NAME
+            path=get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME
         )
         assert screen.manager_open is False
         assert isinstance(screen.file_manager, MDFileManager)

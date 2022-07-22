@@ -31,7 +31,7 @@ class File:
         self._file_path = file_path
         self._controller = controller
 
-        self._defaults = defaults
+        self.defaults = defaults
 
         self._raw_data_content: str = self._get_validated_raw_data(
             raw_data=self.get_raw_data_content()
@@ -43,7 +43,7 @@ class File:
 
     def _get_validated_raw_data(self, raw_data) -> str:
         matches = re.findall(
-            self._defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, raw_data
+            self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, raw_data
         )
         if not matches:
             raise ValueError("No section in file found")
@@ -95,7 +95,7 @@ class File:
         positions = []
 
         matches = re.finditer(
-            self._defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content
+            self.defaults.DEFAULT_SECTION_FILE_SEPARATOR_REGEX, self._raw_data_content
         )
         matches_list = list(matches)
         for idx, match in enumerate(matches_list):
@@ -106,14 +106,14 @@ class File:
             if idx + 1 == len(list(matches_list)):
                 positions.append((_match_span[1], len(self._raw_data_content)))
 
-        _last_set_key = None
+        last_set_key = None
         for idx, pos in enumerate(positions):
             if idx % 2 == 0:
                 section_separator = self._raw_data_content[pos[0] : pos[1]]
-                result[section_separator] = _last_set_key
-                _last_set_key = section_separator
+                result[section_separator] = last_set_key
+                last_set_key = section_separator
             else:
-                result[_last_set_key] = self._raw_data_content[pos[0] : pos[1]]
+                result[last_set_key] = self._raw_data_content[pos[0] : pos[1]]
 
         return result
 

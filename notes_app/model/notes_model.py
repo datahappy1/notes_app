@@ -42,14 +42,14 @@ class NotesModel:
     """
 
     def __init__(self, store, defaults):
-        self._defaults = defaults
-        self._store = store(filename=self._defaults.DEFAULT_MODEL_STORE_FILE_NAME)
+        self.defaults = defaults
+        self.store = store(filename=self.defaults.DEFAULT_MODEL_STORE_FILE_NAME)
 
         self._set_missing_store_defaults()
 
-        self._file_path = self._store.get("_file_path")["value"]
-        self._file_size = self._store.get("_file_size")["value"]
-        self._last_updated_on = self._store.get("_last_updated_on")["value"]
+        self._file_path = self.store.get("_file_path")["value"]
+        self._file_size = self.store.get("_file_size")["value"]
+        self._last_updated_on = self.store.get("_last_updated_on")["value"]
 
         self.observers = []
 
@@ -66,21 +66,21 @@ class NotesModel:
 
     def _set_missing_store_defaults(self):
         if (
-            not self._store.exists("_file_path")
-            or self._store.get("_file_path")["value"] is None
+            not self.store.exists("_file_path")
+            or self.store.get("_file_path")["value"] is None
         ):
-            self._store.put("_file_path", value=self._defaults.DEFAULT_NOTES_FILE_NAME)
+            self.store.put("_file_path", value=self.defaults.DEFAULT_NOTES_FILE_NAME)
         if (
-            not self._store.exists("_file_size")
-            or self._store.get("_file_size")["value"] is None
+            not self.store.exists("_file_size")
+            or self.store.get("_file_size")["value"] is None
         ):
-            self._store.put("_file_size", value=0)
+            self.store.put("_file_size", value=0)
 
         if (
-            not self._store.exists("_last_updated_on")
-            or self._store.get("_last_updated_on")["value"] is None
+            not self.store.exists("_last_updated_on")
+            or self.store.get("_last_updated_on")["value"] is None
         ):
-            self._store.put("_last_updated_on", value=0)
+            self.store.put("_last_updated_on", value=0)
 
     @property
     def file_path(self):
@@ -139,6 +139,6 @@ class NotesModel:
         """
         dump model variables into store
         """
-        self._store.put("_file_path", value=self._file_path)
-        self._store.put("_file_size", value=self._file_size)
-        self._store.put("_last_updated_on", value=self._last_updated_on)
+        self.store.put("_file_path", value=self._file_path)
+        self.store.put("_file_size", value=self._file_size)
+        self.store.put("_last_updated_on", value=self._last_updated_on)
