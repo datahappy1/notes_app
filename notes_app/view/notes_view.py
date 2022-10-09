@@ -692,8 +692,6 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                     current_section_text_before = ""
                     # self.file.reload() will remove the current section separator from self.file.section_separators
                     # in case it was deleted or renamed so the current section identifier is added back
-                    # si = SectionIdentifier(section_file_separator=self.text_section_view.section_file_separator, defaults=self.defaults)
-                    #
                     self.file.set_section_content(
                         section_separator=self.text_section_view.section_file_separator,
                         section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
