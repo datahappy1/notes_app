@@ -858,6 +858,36 @@ class TestView:
             == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet<section=test> test data"""
         )
 
+    def test_save_current_section_to_file_handle_error(self, get_app):
+        # setting model._last_updated_on manually will guarantee model.external_update returns False
+        get_app.controller.model._last_updated_on = int(time.time())
+
+        screen = get_app.controller.get_screen()
+
+        assert (
+            screen.file.get_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
+        )
+
+        screen.text_section_view.section_file_separator = "<section=a> "
+
+        screen.text_section_view.text = "test text"
+
+        # setting model file path as empty string is invalid enough to raise file write error exc
+        get_app.controller.model.file_path = ""
+
+        assert screen.save_current_section_to_file() is None
+
+        # assert `<section=a> test text` was not added to the file,
+        # however the file content still contains data before the write failure
+        assert (
+            screen.file.get_raw_data_content()
+            == """<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet"""
+        )
+
+        assert isinstance(screen.snackbar, CustomSnackbar)
+        assert screen.snackbar.text.startswith("Error while saving file, details:")
+
     def test_press_menu_item_save_file_is_not_external_update(self, get_app):
         # setting model._last_updated_on manually will guarantee model.external_update returns False
         get_app.controller.model._last_updated_on = int(time.time())

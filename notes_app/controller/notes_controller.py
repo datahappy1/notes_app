@@ -47,9 +47,13 @@ class NotesController:
         """
         save_file_data saves provided data to the file with location set in model.file_path
         """
-        f = open(self.model.file_path, "w")
-        f.write(data)
-        f.close()
+        if len(data) == 0:
+            return
+        try:
+            with open(self.model.file_path, "w") as f:
+                f.write(data)
+        except Exception as exc:
+            raise exc
 
         self.model.update()
         self.model.dump()

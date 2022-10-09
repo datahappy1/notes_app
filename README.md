@@ -14,6 +14,7 @@ Notes application written in Python 3.8 & KivyMD
 ## version history
 | version | date | description |
 | :---: | :---: | :---: |
+| 0.1.2 | 10/10/2022 | minor bugfixes |
 | 0.1.1  | 12/7/2022  | removing item drawer menu highlight, improving diff feature, bugfixes |
 | 0.1.0  | 19/6/2022  | initial release |
 

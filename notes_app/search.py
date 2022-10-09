@@ -78,13 +78,13 @@ class Search:
     def search_full_words(self, value):
         self._search_full_words = value
 
-    def search_for_occurrences(self, pattern, file, current_section_identifier):
+    def search_for_occurrences(self, pattern, file, current_section):
         found_occurrences = dict()
 
         if self.search_all_sections:
             sections_separators_to_search_in = file.section_separators_sorted
         else:
-            sections_separators_to_search_in = [current_section_identifier]
+            sections_separators_to_search_in = [current_section]
 
         for section_separator in sections_separators_to_search_in:
             text = file.get_section_content(section_separator=section_separator)

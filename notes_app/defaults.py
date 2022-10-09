@@ -2,7 +2,7 @@ class Defaults:
     DEFAULT_MODEL_STORE_FILE_NAME = "file_metadata.json"
     DEFAULT_NOTES_FILE_NAME = "my_first_file.txt"
     DEFAULT_SECTION_FILE_SEPARATOR = "<section={name}> "
-    DEFAULT_SECTION_FILE_SEPARATOR_REGEX = "<section=[a-z A-Z]+> "
+    DEFAULT_SECTION_FILE_SEPARATOR_REGEX = "<section=[a-z A-Z0-9]+> "
     DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX = "<section=(.+?)> "
     DEFAULT_NOTES_FILE_CONTENT = f"{DEFAULT_SECTION_FILE_SEPARATOR.format(name='first')} Your first section. Here you can write your notes."
     DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT = 5

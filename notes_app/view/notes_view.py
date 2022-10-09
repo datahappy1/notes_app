@@ -538,11 +538,10 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.dialog.content_cls.results_list.clear_widgets()
 
-        # TODO rename current_section_identifier param to current_section
         found_occurrences = self.search.search_for_occurrences(
             pattern=self.last_searched_string,
             file=self.file,
-            current_section_identifier=self.current_section,
+            current_section=self.current_section,
         )
 
         if not found_occurrences:
@@ -679,49 +678,54 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
     def save_current_section_to_file(self):
         merged_current_section_text_data = None
 
-        if self.model.external_update:
-            self.file.reload()
-            try:
-                current_section_text_before = self.file.get_section_content(
-                    section_separator=self.text_section_view.section_file_separator
-                )
-            # KeyError raised if the current section was removed or renamed by a external update
-            except KeyError:
-                # merge_strings prioritizes current_section_text_after over current_section_text_before
-                # so empty string placeholder is set to current_section_text_before
-                current_section_text_before = ""
-                # self.file.reload() will remove the current section separator from self.file.section_separators
-                # in case it was deleted or renamed so the current section identifier is added back
-                # si = SectionIdentifier(section_file_separator=self.text_section_view.section_file_separator, defaults=self.defaults)
-                #
-                self.file.set_section_content(
-                    section_separator=self.text_section_view.section_file_separator,
-                    section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+        try:
+            if self.model.external_update:
+                self.file.reload()
+                try:
+                    current_section_text_before = self.file.get_section_content(
+                        section_separator=self.text_section_view.section_file_separator
+                    )
+                # KeyError raised if the current section was removed or renamed by a external update
+                except KeyError:
+                    # merge_strings prioritizes current_section_text_after over current_section_text_before
+                    # so empty string placeholder is set to current_section_text_before
+                    current_section_text_before = ""
+                    # self.file.reload() will remove the current section separator from self.file.section_separators
+                    # in case it was deleted or renamed so the current section identifier is added back
+                    # si = SectionIdentifier(section_file_separator=self.text_section_view.section_file_separator, defaults=self.defaults)
+                    #
+                    self.file.set_section_content(
+                        section_separator=self.text_section_view.section_file_separator,
+                        section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+                    )
+
+                current_section_text_after = self.text_section_view.text
+
+                merged_current_section_text_data = merge_strings(
+                    before=current_section_text_before, after=current_section_text_after
                 )
 
-            current_section_text_after = self.text_section_view.text
+                self.text_section_view.text = merged_current_section_text_data
+                # un-focus the TextInput so that the cursor is not offset by the external update
+                self.text_section_view.focus = False
 
-            merged_current_section_text_data = merge_strings(
-                before=current_section_text_before, after=current_section_text_after
+                self.set_drawer_items(
+                    section_separators=self.file.section_separators_sorted
+                )
+
+            self.file.set_section_content(
+                section_separator=self.text_section_view.section_file_separator,
+                section_content=merged_current_section_text_data
+                or self.text_section_view.text,
             )
 
-            self.text_section_view.text = merged_current_section_text_data
-            # un-focus the TextInput so that the cursor is not offset by the external update
-            self.text_section_view.focus = False
+            raw_text_data = self.file.transform_data_by_sections_to_raw_data_content()
 
-            self.set_drawer_items(
-                section_separators=self.file.section_separators_sorted
-            )
+            self.controller.save_file_data(data=raw_text_data)
 
-        self.file.set_section_content(
-            section_separator=self.text_section_view.section_file_separator,
-            section_content=merged_current_section_text_data
-            or self.text_section_view.text,
-        )
-
-        text_data = self.file.transform_data_by_sections_to_raw_data_content()
-
-        self.controller.save_file_data(data=text_data)
+        except Exception as exc:
+            self.show_error_bar(error_message=f"Error while saving file, details: {exc}")
+            return
 
     def press_menu_item_save_file(self, *args):
         self.save_current_section_to_file()

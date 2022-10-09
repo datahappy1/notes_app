@@ -101,7 +101,7 @@ class TestSearch:
         search.search_full_words = False
 
         assert search.search_for_occurrences(
-            pattern="do", file=get_file, current_section_identifier="<section=first> ",
+            pattern="do", file=get_file, current_section="<section=first> ",
         ) == {"<section=first> ": [25]}
 
     def test_search_case_sensitive(self, get_file):
@@ -112,14 +112,14 @@ class TestSearch:
         search.search_full_words = False
 
         assert search.search_for_occurrences(
-            pattern="do", file=get_file, current_section_identifier="<section=first> ",
+            pattern="do", file=get_file, current_section="<section=first> ",
         ) == {"<section=first> ": [25]}
 
         assert (
             search.search_for_occurrences(
                 pattern="dO",
                 file=get_file,
-                current_section_identifier="<section=first> ",
+                current_section="<section=first> ",
             )
             == {}
         )
@@ -132,7 +132,7 @@ class TestSearch:
         search.search_full_words = False
 
         assert search.search_for_occurrences(
-            pattern="do", file=get_file, current_section_identifier="<section=first> ",
+            pattern="do", file=get_file, current_section="<section=first> ",
         ) == {"<section=first> ": [25], "<section=second> ": [11]}
 
     def test_search_full_words(self, get_file):
@@ -143,14 +143,14 @@ class TestSearch:
         search.search_full_words = True
 
         assert search.search_for_occurrences(
-            pattern="non", file=get_file, current_section_identifier="<section=first> ",
+            pattern="non", file=get_file, current_section="<section=first> ",
         ) == {"<section=first> ": [13]}
 
         assert (
             search.search_for_occurrences(
                 pattern="nonx",
                 file=get_file,
-                current_section_identifier="<section=first> ",
+                current_section="<section=first> ",
             )
             == {}
         )
