@@ -722,7 +722,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.controller.save_file_data(data=raw_text_data)
 
         except Exception as exc:
-            self.show_error_bar(error_message=f"Error while saving file, details: {exc}")
+            self.show_error_bar(
+                error_message=f"Error while saving file, try recovering from dump file, details: {exc}"
+            )
             return
 
     def press_menu_item_save_file(self, *args):

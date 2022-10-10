@@ -1,3 +1,4 @@
+from datetime import datetime
 from notes_app.view.notes_view import NotesView
 
 
@@ -53,6 +54,9 @@ class NotesController:
             with open(self.model.file_path, "w") as f:
                 f.write(data)
         except Exception as exc:
+            # another attempt at writing at least a dump file
+            with open(f"__dump__{datetime.now():%Y_%m_%d_%H_%M_%S}", "w") as f:
+                f.write(data)
             raise exc
 
         self.model.update()

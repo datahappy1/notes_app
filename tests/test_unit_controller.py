@@ -2,7 +2,7 @@ import pytest
 
 from time import sleep
 from datetime import datetime
-from os import path, remove
+from os import path, remove, listdir, getcwd
 from os.path import exists
 
 from notes_app.defaults import Defaults
@@ -115,6 +115,18 @@ class TestController:
         # assert the model file_size is still > 0
         assert controller.model.file_size > 0  # exact file size differs between OS types
         assert datetime.fromtimestamp(controller.model.last_updated_on) >= _epoch_before
+
+        # assert the file gets correctly dumped to disk
+        dump_files_to_evaluate = []
+        for file in listdir(getcwd()):
+            if file.startswith("__dump__"):
+                dump_files_to_evaluate.append(file)
+
+        # assert only 1 dump file is written
+        assert len(dump_files_to_evaluate) == 1
+        with open(file=dump_files_to_evaluate[0], mode="r") as f:
+            assert f.readlines() == ['<section=first> Quod equidem non reprehendo\n',
+                                     '<section=second> Quis istum dolorem timet <section=third> !\n']
 
     def test_get_screen(self, get_app):
         controller = get_app.controller

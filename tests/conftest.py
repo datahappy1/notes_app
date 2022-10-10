@@ -22,6 +22,7 @@ EMPTY_FILE_NAME = "empty.txt"
 EMPTY_FILE_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/{EMPTY_FILE_NAME}"
 EMPTY_FILE_CONTENT = """"""
 
+DUMP_FILES_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/"
 
 defaults = Defaults()
 defaults.DEFAULT_NOTES_FILE_NAME = TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
@@ -91,6 +92,12 @@ def delete_default_notes_empty_file():
         os.remove(EMPTY_FILE_PATH)
 
 
+def delete_dump_files():
+    for file in os.listdir(DUMP_FILES_PATH):
+        if file.startswith("__dump__"):
+            os.remove(file)
+
+
 @pytest.fixture(autouse=True)
 def get_default_test_files_state():
     create_settings_file()
@@ -102,6 +109,7 @@ def get_default_test_files_state():
     delete_model_file()
     delete_default_notes_file()
     delete_default_notes_empty_file()
+    delete_dump_files()
 
 
 @pytest.fixture

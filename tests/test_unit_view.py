@@ -886,7 +886,7 @@ class TestView:
         )
 
         assert isinstance(screen.snackbar, CustomSnackbar)
-        assert screen.snackbar.text.startswith("Error while saving file, details:")
+        assert screen.snackbar.text.startswith("Error while saving file, try recovering from dump file, details:")
 
     def test_press_menu_item_save_file_is_not_external_update(self, get_app):
         # setting model._last_updated_on manually will guarantee model.external_update returns False
