@@ -31,7 +31,7 @@ defaults.DEFAULT_NOTES_FILE_CONTENT = TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
 
 def create_settings_file():
     with open(
-        file=f"{getcwd()}/{defaults.DEFAULT_SETTINGS_STORE_FILE_NAME}", mode="w"
+        file=f"{getcwd()}/{defaults.DEFAULT_SETTINGS_STORE_FILE_NAME}", mode="w", encoding="utf8"
     ) as f:
         f.write(
             json.dumps(
@@ -53,7 +53,7 @@ def delete_settings_file():
 
 def create_model_file():
     with open(
-        file=f"{getcwd()}/{defaults.DEFAULT_MODEL_STORE_FILE_NAME}", mode="w"
+        file=f"{getcwd()}/{defaults.DEFAULT_MODEL_STORE_FILE_NAME}", mode="w", encoding="utf8"
     ) as f:
         f.write(
             json.dumps(
@@ -73,7 +73,7 @@ def delete_model_file():
 
 
 def create_default_notes_file():
-    with open(file=defaults.DEFAULT_NOTES_FILE_NAME, mode="w") as notes_file:
+    with open(file=defaults.DEFAULT_NOTES_FILE_NAME, mode="w", encoding="utf8") as notes_file:
         notes_file.write(defaults.DEFAULT_NOTES_FILE_CONTENT)
 
 
@@ -83,7 +83,7 @@ def delete_default_notes_file():
 
 
 def create_default_notes_empty_file():
-    with open(file=EMPTY_FILE_PATH, mode="w") as notes_file:
+    with open(file=EMPTY_FILE_PATH, mode="w", encoding="utf8") as notes_file:
         notes_file.write(EMPTY_FILE_CONTENT)
 
 

@@ -30,7 +30,7 @@ class NotesController:
         such default file gets automatically created
         """
         if not self.model.file_path_exists:
-            with open(file=self.defaults.DEFAULT_NOTES_FILE_NAME, mode="w") as f:
+            with open(file=self.defaults.DEFAULT_NOTES_FILE_NAME, mode="w", encoding="utf8") as f:
                 f.write(self.defaults.DEFAULT_NOTES_FILE_CONTENT)
 
     def set_file_path(self, file_path) -> None:
@@ -39,7 +39,7 @@ class NotesController:
         self.model.dump()
 
     def read_file_data(self, file_path=None) -> str:
-        f = open(file_path or self.model.file_path, "r")
+        f = open(file_path or self.model.file_path, "r", encoding="utf8")
         s = f.read()
         f.close()
         return s
@@ -51,11 +51,11 @@ class NotesController:
         if len(data) == 0:
             return
         try:
-            with open(self.model.file_path, "w") as f:
+            with open(self.model.file_path, "w", encoding="utf8") as f:
                 f.write(data)
         except Exception as exc:
             # another attempt at writing at least a dump file
-            with open(f"__dump__{datetime.now():%Y_%m_%d_%H_%M_%S}", "w") as f:
+            with open(f"__dump__{datetime.now():%Y_%m_%d_%H_%M_%S}", "w", encoding="utf8") as f:
                 f.write(data)
             raise exc
 

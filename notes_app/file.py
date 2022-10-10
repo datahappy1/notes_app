@@ -7,7 +7,7 @@ SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
 
 def get_validated_file_path(file_path: str) -> Optional[str]:
     try:
-        with open(file=file_path, mode="r"):
+        with open(file=file_path, mode="r", encoding="utf8"):
             pass
     except (PermissionError, FileNotFoundError, IsADirectoryError):
         return

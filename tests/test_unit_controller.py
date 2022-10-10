@@ -81,7 +81,7 @@ class TestController:
         assert _epoch_before
 
         # asserting the default notes file contains data
-        with open(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME, mode="r") as f:
+        with open(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME, mode="r", encoding="utf8") as f:
             assert f.readlines() == ['<section=first> Quod equidem non reprehendo\n',
                                      '<section=second> Quis istum dolorem timet']
 
@@ -107,7 +107,7 @@ class TestController:
             )
 
         # assert the file still contains the data
-        with open(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME, mode="r") as f:
+        with open(get_app.controller.defaults.DEFAULT_NOTES_FILE_NAME, mode="r", encoding="utf8") as f:
             assert f.readlines() == ['<section=first> Quod equidem non reprehendo\n',
                                      '<section=second> Quis istum dolorem timet\n']
 
@@ -124,7 +124,7 @@ class TestController:
 
         # assert only 1 dump file is written
         assert len(dump_files_to_evaluate) == 1
-        with open(file=dump_files_to_evaluate[0], mode="r") as f:
+        with open(file=dump_files_to_evaluate[0], mode="r", encoding="utf8") as f:
             assert f.readlines() == ['<section=first> Quod equidem non reprehendo\n',
                                      '<section=second> Quis istum dolorem timet <section=third> !\n']
 
