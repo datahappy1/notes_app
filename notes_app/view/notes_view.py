@@ -5,16 +5,16 @@ from enum import Enum
 from os import path, linesep
 from os.path import exists
 
-from kivy.core.window import Window
+from kivy.base import EventLoop
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.uix.scrollview import ScrollView
-from kivymd.theming import ThemableBehavior
+from kivy.uix.textinput import TextInput, FL_IS_LINEBREAK
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.textfield import TextInput
 from kivymd.uix.filemanager import MDFileManager
+from kivymd.uix.label import MDLabel
 from kivymd.uix.list import (
     MDList,
     OneLineAvatarIconListItem,
@@ -23,21 +23,16 @@ from kivymd.uix.list import (
 )
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
-from kivymd.uix.snackbar import BaseSnackbar
-
-from kivy.base import EventLoop
-from kivy.uix.textinput import FL_IS_LINEBREAK
+from kivymd.uix.snackbar import MDSnackbar
 
 from notes_app import __version__
-from notes_app.diff import merge_strings
-from notes_app.observer.notes_observer import Observer
-
 from notes_app.color import (
     get_color_by_name,
     get_next_color_by_rgba,
     AVAILABLE_COLORS,
     AVAILABLE_SNACK_BAR_COLORS,
 )
+from notes_app.diff import merge_strings
 from notes_app.file import (
     get_validated_file_path,
     File,
@@ -47,23 +42,19 @@ from notes_app.file import (
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
 from notes_app.font import get_next_font, AVAILABLE_FONTS
-from notes_app.mark import get_marked_text
+from notes_app.notes_service import NotesService
+from notes_app.observer.notes_observer import Observer
 from notes_app.search import (
     Search,
     validate_search_input,
-    SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT,
-    SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR,
-    SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
     transform_section_text_placeholder_to_section_name,
-    transform_section_name_to_section_text_placeholder,
     transform_position_text_placeholder_to_position,
-    transform_position_to_position_text_placeholder,
 )
 
 APP_TITLE = "Notes"
 APP_METADATA_ROWS = [
     "A simple notes application",
-    "built with Python 3.8 & KivyMD",
+    "built with Python 3.11 & KivyMD",
     f"version {__version__}",
 ]
 EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
@@ -71,7 +62,7 @@ EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
 
 class CustomTextInput(TextInput):
     # overriding TextInput.insert_text() with added extra condition and (len(_lines_flags) - 1 >= row + 1)
-    # to handle a edge case when external update adds multiple line breaks and results in uncaught index error
+    # to handle an edge case when external update adds multiple line breaks and results in uncaught index error
     def insert_text(self, substring, from_undo=False):
         """Insert new text at the current cursor position. Override this
         function in order to pre-process text for input validation.
@@ -162,18 +153,8 @@ class ContentNavigationDrawer(MDBoxLayout):
     pass
 
 
-class DrawerList(ThemableBehavior, MDList):
-    pass  # set_color_item causing app crashes hard to reproduce
-
-    # def set_color_item(self, instance_item):
-    #     """Called when tap on a menu item.
-    #     Set the color of the icon and text for the menu item.
-    #     """
-    #     for item in self.children:
-    #         if item.text_color == self.theme_cls.primary_color:
-    #             item.text_color = self.theme_cls.text_color
-    #             break
-    #     instance_item.text_color = self.theme_cls.primary_color
+class DrawerList(MDList):
+    pass
 
 
 class OpenFileDialogContent(MDBoxLayout):
@@ -222,9 +203,8 @@ class CustomListItem(ThreeLineListItem):
     pass
 
 
-class CustomSnackbar(BaseSnackbar):
-    text = StringProperty(None)
-    icon = StringProperty(None)
+class CustomSnackbar(MDSnackbar):
+    pass
 
 
 class MenuStorageItems(Enum):
@@ -278,6 +258,12 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             controller=self.controller,
             defaults=self.defaults,
         )
+
+        self.notes_service = NotesService(
+            file=self.file,
+            defaults=self.defaults,
+        )
+
         self.current_section = self.file.default_section_separator
         self.filter_data_split_by_section()
         self.set_drawer_items(section_separators=self.file.section_separators_sorted)
@@ -424,43 +410,35 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.press_menu_item_show_app_metadata()
             self.menu_settings.dismiss()
 
+    def show_message(self, message, color):
+        self.snackbar = CustomSnackbar(
+            MDLabel(
+                text=message,
+                theme_text_color="Custom",
+                text_color=(1, 1, 1, 1),
+            ),
+            snackbar_x=10,
+            snackbar_y=10,
+            md_bg_color=get_color_by_name(
+                colors_list=AVAILABLE_SNACK_BAR_COLORS,
+                color_name=color,
+            ).rgba_value,
+        )
+        self.snackbar.open()
+
     def notify_model_is_changed(self):
         """
         The method is called when the model changes.
         Requests and displays the value of the sum.
         """
-        self.snackbar = CustomSnackbar(
-            text="changes saved",
-            icon="information",
-            snackbar_x="10dp",
-            snackbar_y="10dp",
-            bg_color=get_color_by_name(
-                colors_list=AVAILABLE_SNACK_BAR_COLORS, color_name="success_green"
-            ).rgba_value,
-        )
-        self.snackbar.size_hint_x = (
-            Window.width - (self.snackbar.snackbar_x * 2)
-        ) / Window.width
-        self.snackbar.open()
+        self.show_message(message="Changes saved", color="success_green")
 
     def show_error_bar(self, error_message):
         """
         The method is called when the model changes.
         Requests and displays the value of the sum.
         """
-        self.snackbar = CustomSnackbar(
-            text=error_message,
-            icon="alert-circle",
-            snackbar_x="10dp",
-            snackbar_y="10dp",
-            bg_color=get_color_by_name(
-                colors_list=AVAILABLE_SNACK_BAR_COLORS, color_name="failure_red"
-            ).rgba_value,
-        )
-        self.snackbar.size_hint_x = (
-            Window.width - (self.snackbar.snackbar_x * 2)
-        ) / Window.width
-        self.snackbar.open()
+        self.show_message(message=error_message, color="failure_red")
 
     def execute_open_file(self, file_path):
         if not file_path or not exists(file_path):
@@ -480,6 +458,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 controller=self.controller,
                 defaults=self.defaults,
             )
+
+            self.notes_service.file = self.file
+
             self.set_drawer_items(
                 section_separators=self.file.section_separators_sorted
             )
@@ -538,56 +519,29 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.dialog.content_cls.results_list.clear_widgets()
 
-        found_occurrences = self.search.search_for_occurrences(
-            pattern=self.last_searched_string,
-            file=self.file,
+        results = self.notes_service.search(
+            query=self.last_searched_string,
             current_section=self.current_section,
+            case_sensitive=self.search.search_case_sensitive,
+            full_words=self.search.search_full_words,
+            all_sections=self.search.search_all_sections,
         )
 
-        if not found_occurrences:
+        if not results:
             self.dialog.content_cls.search_results_message = "No match found"
             return
 
-        found_occurrences_count = 0
-
-        for (
-            section_file_separator,
-            section_found_occurrences,
-        ) in found_occurrences.items():
-            found_occurrences_count += len(section_found_occurrences)
-            text_data = self.file.get_section_content(section_file_separator)
-
-            for position_start in section_found_occurrences:
-                position_end = position_start + len(self.last_searched_string)
-
-                found_string = text_data[position_start:position_end]
-                found_string_marked = get_marked_text(
-                    text=found_string,
-                    highlight_style=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
-                    highlight_color=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR,
+        for result in results:
+            self.dialog.content_cls.results_list.add_widget(
+                CustomListItem(
+                    text=result.preview,
+                    secondary_text=f"section {result.section}",
+                    tertiary_text=f"position {result.position}",
+                    on_release=self.execute_goto_search_result,
                 )
+            )
 
-                found_string_extra_chars = text_data[
-                    position_end : position_end
-                    + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
-                ]
-
-                section_name = transform_section_separator_to_section_name(
-                    defaults=self.defaults, section_separator=section_file_separator
-                )
-
-                self.dialog.content_cls.results_list.add_widget(
-                    CustomListItem(
-                        text=f"{found_string_marked}{found_string_extra_chars}...",
-                        secondary_text=transform_section_name_to_section_text_placeholder(
-                            section_name=section_name
-                        ),
-                        tertiary_text=transform_position_to_position_text_placeholder(
-                            position_start=position_start
-                        ),
-                        on_release=self.execute_goto_search_result,
-                    )
-                )
+        found_occurrences_count = len(results)
 
         self.dialog.content_cls.search_results_message = (
             f"Matches on {found_occurrences_count} positions found"

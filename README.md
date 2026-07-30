@@ -1,5 +1,5 @@
 # notes_app
-Notes application written in Python 3.8 & KivyMD
+Notes application written in Python 3.11 & KivyMD
 
 ![](https://github.com/datahappy1/notes_app/blob/main/notes_app_recording.gif)
 
@@ -12,11 +12,12 @@ Notes application written in Python 3.8 & KivyMD
 - Notes text is auto-saved while typing
 
 ## version history
-| version | date | description |
-| :---: | :---: | :---: |
-| 0.1.2 | 10/10/2022 | minor bugfixes |
-| 0.1.1  | 12/7/2022  | removing item drawer menu highlight, improving diff feature, bugfixes |
-| 0.1.0  | 19/6/2022  | initial release |
+| version |    date    |                              description                              |
+|:-------:|:----------:|:---------------------------------------------------------------------:|
+|  1.0.0  | 29/07/2026 |               Python 3.11 support, MCP server, Drawpad                |
+|  0.1.2  | 10/10/2022 |                            minor bugfixes                             |
+|  0.1.1  | 12/7/2022  | removing item drawer menu highlight, improving diff feature, bugfixes |
+|  0.1.0  | 19/6/2022  |                            initial release                            |
 
 ## FAQ
 - I need to synchronize my notes file across devices, how do I achieve that?

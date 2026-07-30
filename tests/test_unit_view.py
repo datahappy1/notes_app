@@ -1,13 +1,13 @@
 import os
 import time
-from datetime import datetime, timedelta
 from copy import copy
+from datetime import datetime, timedelta
 from os import linesep
 
 from kivy.properties import ObjectProperty, StringProperty
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.filemanager import MDFileManager, FloatButton
+from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.menu import MDDropdownMenu
 
 from notes_app.defaults import Defaults
@@ -246,9 +246,8 @@ class TestView:
 <section=second> Quis istum dolorem timet
 """
         screen.controller.save_file_data(data=test_data)
-
         assert isinstance(screen.snackbar, CustomSnackbar)
-        assert screen.snackbar.text == "changes saved"
+        assert screen.snackbar.ids.label_container.children[0].text == "Changes saved"
 
     def test_show_error_bar(self, get_app):
         screen = get_app.controller.get_screen()
@@ -274,7 +273,7 @@ class TestView:
         screen.press_delete_section(section_item=section_item)
 
         assert isinstance(screen.snackbar, CustomSnackbar)
-        assert screen.snackbar.text == "Cannot delete last section"
+        assert screen.snackbar.ids.label_container.children[0].text == "Cannot delete last section"
 
     def test_execute_open_file(self, get_app, get_empty_file_file_path):
         screen = get_app.controller.get_screen()
@@ -283,8 +282,7 @@ class TestView:
         screen.press_menu_item_open_file()
         assert screen.manager_open is True
         assert isinstance(screen.file_manager, MDFileManager)
-        assert isinstance(screen.file_manager.children[0], FloatButton)
-        assert isinstance(screen.file_manager.children[1], MDBoxLayout)
+        assert isinstance(screen.file_manager.children[0], MDBoxLayout)
 
         # NOTES_FILE_PATH
         screen.execute_open_file(
@@ -399,7 +397,7 @@ class TestView:
         )
         assert (
             screen.dialog.content_cls.results_list.children[0].text
-            == f"[b][color=ff0000]lor[/color][/b]em timet..."
+            == f"lorem timet"
         )
         assert (
             screen.dialog.content_cls.results_list.children[0].secondary_text
@@ -429,7 +427,7 @@ class TestView:
         )
         assert (
             screen.dialog.content_cls.results_list.children[0].text
-            == f"[b][color=ff0000]Quod[/color][/b] equidem non reprehendo\n..."
+            == f"Quod equidem non reprehendo\n"
         )
         assert (
             screen.dialog.content_cls.results_list.children[0].secondary_text
@@ -459,7 +457,7 @@ class TestView:
         )
         assert (
             screen.dialog.content_cls.results_list.children[0].text
-            == f"[b][color=ff0000]Quod[/color][/b] equidem non reprehendo\n..."
+            == f"Quod equidem non reprehendo\n"
         )
         assert (
             screen.dialog.content_cls.results_list.children[0].secondary_text
@@ -490,7 +488,7 @@ class TestView:
         )
         assert (
             screen.dialog.content_cls.results_list.children[0].text
-            == f"[b][color=ff0000]Qu[/color][/b]is istum dolorem timet..."
+            == f"Quis istum dolorem timet"
         )
         assert (
             screen.dialog.content_cls.results_list.children[0].secondary_text
@@ -512,7 +510,7 @@ class TestView:
         )
         assert (
             screen.dialog.content_cls.results_list.children[1].text
-            == f"[b][color=ff0000]qu[/color][/b]idem non reprehendo\n..."
+            == f"quidem non reprehendo\n"
         )
         assert (
             screen.dialog.content_cls.results_list.children[1].secondary_text
@@ -534,7 +532,7 @@ class TestView:
         )
         assert (
             screen.dialog.content_cls.results_list.children[2].text
-            == f"[b][color=ff0000]Qu[/color][/b]od equidem non reprehendo\n..."
+            == f"Quod equidem non reprehendo\n"
         )
         assert (
             screen.dialog.content_cls.results_list.children[2].secondary_text
@@ -886,7 +884,7 @@ class TestView:
         )
 
         assert isinstance(screen.snackbar, CustomSnackbar)
-        assert screen.snackbar.text.startswith("Error while saving file, try recovering from dump file, details:")
+        assert screen.snackbar.ids.label_container.children[0].text.startswith("Error while saving file, try recovering from dump file, details:")
 
     def test_press_menu_item_save_file_is_not_external_update(self, get_app):
         # setting model._last_updated_on manually will guarantee model.external_update returns False
@@ -1036,7 +1034,7 @@ class TestView:
 
         section_item = screen.ids.md_list.children[0]
         assert screen.press_delete_section(section_item=section_item) is None
-        assert screen.snackbar.text == "Cannot delete last section"
+        assert screen.snackbar.ids.label_container.children[0].text == "Cannot delete last section"
 
     def test_text_input_changed_callback_is_external_update(self, get_app):
         # setting model._last_updated_on manually to the past will guarantee model.external_update returns True
@@ -1116,8 +1114,7 @@ class TestView:
         )
         assert screen.manager_open is False
         assert isinstance(screen.file_manager, MDFileManager)
-        assert isinstance(screen.file_manager.children[0], FloatButton)
-        assert isinstance(screen.file_manager.children[1], MDBoxLayout)
+        assert isinstance(screen.file_manager.children[0], MDBoxLayout)
 
     def test_cancel_file_manager(self, get_app):
         screen = get_app.controller.get_screen()
