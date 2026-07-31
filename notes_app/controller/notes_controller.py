@@ -1,4 +1,3 @@
-from datetime import datetime
 from notes_app.view.notes_view import NotesView
 
 
@@ -35,30 +34,6 @@ class NotesController:
 
     def set_file_path(self, file_path) -> None:
         self.model.file_path = file_path
-        self.model.update()
-        self.model.dump()
-
-    def read_file_data(self, file_path=None) -> str:
-        f = open(file_path or self.model.file_path, "r", encoding="utf8")
-        s = f.read()
-        f.close()
-        return s
-
-    def save_file_data(self, data) -> None:
-        """
-        save_file_data saves provided data to the file with location set in model.file_path
-        """
-        if len(data) == 0:
-            return
-        try:
-            with open(self.model.file_path, "w", encoding="utf8") as f:
-                f.write(data)
-        except Exception as exc:
-            # another attempt at writing at least a dump file
-            with open(f"__dump__{datetime.now():%Y_%m_%d_%H_%M_%S}", "w", encoding="utf8") as f:
-                f.write(data)
-            raise exc
-
         self.model.update()
         self.model.dump()
 

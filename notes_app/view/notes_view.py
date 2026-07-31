@@ -36,8 +36,6 @@ from notes_app.diff import merge_strings
 from notes_app.file import (
     get_validated_file_path,
     File,
-    transform_section_separator_to_section_name,
-    transform_section_name_to_section_separator,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
@@ -250,23 +248,19 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
 
-        self.search = Search(defaults=self.defaults)
         self.set_properties_from_settings()
 
-        self.file = File(
-            file_path=self.model.file_path,
-            controller=self.controller,
-            defaults=self.defaults,
-        )
-
         self.notes_service = NotesService(
-            file=self.file,
+            file=File(
+                file_path=self.model.file_path,
+                defaults=self.defaults,
+            ),
             defaults=self.defaults,
         )
 
-        self.current_section = self.file.default_section_separator
+        self.current_section = self.notes_service.file.default_section_separator
         self.filter_data_split_by_section()
-        self.set_drawer_items(section_separators=self.file.section_separators_sorted)
+        self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
 
     @property
     def is_unsaved_change(self):
@@ -287,9 +281,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.text_section_view.section_file_separator = section_separator
 
-        self.text_section_view.text = self.file.get_section_content(
+        self.text_section_view.text = self.notes_service.get_section(
             section_separator=section_separator
-        )
+        ).text
 
         # setting self.text_section_view.text invokes the on_text event method
         # but changing the section without any actual typing is not an unsaved change
@@ -299,7 +293,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         # the search result is selected even after the related section is deleted
         self.text_section_view.select_text(0, 0)
 
-        section_name = transform_section_separator_to_section_name(
+        section_name = self.notes_service.transform_section_separator_to_section_name(
             defaults=self.defaults, section_separator=section_separator
         )
 
@@ -312,7 +306,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.ids.md_list.add_widget(
                 ItemDrawer(
                     id=section_separator,
-                    text=transform_section_separator_to_section_name(
+                    text=self.notes_service.transform_section_separator_to_section_name(
                         defaults=self.defaults, section_separator=section_separator
                     ),
                     on_release=lambda x=f"{section_separator}": self.press_drawer_item_callback(
@@ -453,22 +447,19 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.controller.set_file_path(validated_file_path)
 
         try:
-            self.file = File(
+            self.notes_service._file = File(
                 file_path=validated_file_path,
-                controller=self.controller,
                 defaults=self.defaults,
             )
 
-            self.notes_service.file = self.file
-
             self.set_drawer_items(
-                section_separators=self.file.section_separators_sorted
+                section_separators=self.notes_service.file.section_separators_sorted
             )
             self.filter_data_split_by_section(
-                section_separator=self.file.default_section_separator
+                section_separator=self.notes_service.file.default_section_separator
             )
         except ValueError:
-            self.file.delete_all_sections_content()
+            self.notes_service.file.delete_all_sections_content()
             self.press_add_section()
 
     def execute_goto_search_result(self, custom_list_item):
@@ -476,7 +467,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             section_text_placeholder=custom_list_item.secondary_text
         )
 
-        self.current_section = transform_section_name_to_section_separator(
+        self.current_section = self.notes_service.transform_section_name_to_section_separator(
             defaults=self.defaults, section_name=section_name
         )
         self.filter_data_split_by_section()
@@ -496,19 +487,19 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
     def get_search_switch_state(self, switch_id):
         if switch_id == "search_case_sensitive_switch":
-            return self.search.search_case_sensitive
+            return self.notes_service.search_engine.search_case_sensitive
         elif switch_id == "search_all_sections_switch":
-            return self.search.search_all_sections
+            return self.notes_service.search_engine.search_all_sections
         elif switch_id == "search_full_words_switch":
-            return self.search.search_full_words
+            return self.notes_service.search_engine.search_full_words
 
     def search_switch_callback(self, switch_id, state, *args):
         if switch_id == "search_case_sensitive_switch":
-            self.search.search_case_sensitive = state
+            self.notes_service.search_engine.search_case_sensitive = state
         elif switch_id == "search_all_sections_switch":
-            self.search.search_all_sections = state
+            self.notes_service.search_engine.search_all_sections = state
         elif switch_id == "search_full_words_switch":
-            self.search.search_full_words = state
+            self.notes_service.search_engine.search_full_words = state
 
     def execute_search(self, *args):
         if not validate_search_input(input_string=args[0]):
@@ -522,9 +513,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         results = self.notes_service.search(
             query=self.last_searched_string,
             current_section=self.current_section,
-            case_sensitive=self.search.search_case_sensitive,
-            full_words=self.search.search_full_words,
-            all_sections=self.search.search_all_sections,
+            case_sensitive=self.notes_service.search_engine.search_case_sensitive,
+            full_words=self.notes_service.search_engine.search_full_words,
+            all_sections=self.notes_service.search_engine.search_all_sections,
         )
 
         if not results:
@@ -558,27 +549,27 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             or section_name.isspace()
             or section_name
             in [
-                transform_section_separator_to_section_name(
+                self.notes_service.transform_section_separator_to_section_name(
                     defaults=self.defaults, section_separator=section_separator
                 )
-                for section_separator in self.file.section_separators_sorted
+                for section_separator in self.notes_service.file.section_separators_sorted
             ]
         ):
             self.dialog.content_cls.add_section_result_message = "Invalid name"
             return
 
-        section_separator = transform_section_name_to_section_separator(
+        section_separator = self.notes_service.transform_section_name_to_section_separator(
             defaults=self.defaults, section_name=section_name
         )
 
-        self.file.set_section_content(
+        self.notes_service.save_section(
             section_separator=section_separator,
-            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+            text=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
         )
 
         self.filter_data_split_by_section(section_separator=section_separator)
 
-        self.set_drawer_items(section_separators=self.file.section_separators_sorted)
+        self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
 
         self.cancel_dialog()
 
@@ -591,32 +582,32 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             or new_section_name.isspace()
             or new_section_name
             in [
-                transform_section_separator_to_section_name(
+                self.notes_service.transform_section_separator_to_section_name(
                     defaults=self.defaults, section_separator=section_separator
                 )
-                for section_separator in self.file.section_separators_sorted
+                for section_separator in self.notes_service.file.section_separators_sorted
             ]
             or old_section_name == new_section_name
         ):
             self.dialog.content_cls.edit_section_result_message = "Invalid name"
             return
 
-        new_section_separator = transform_section_name_to_section_separator(
+        new_section_separator = self.notes_service.transform_section_name_to_section_separator(
             defaults=self.defaults, section_name=new_section_name
         )
 
-        old_section_separator = transform_section_name_to_section_separator(
+        old_section_separator = self.notes_service.transform_section_name_to_section_separator(
             defaults=self.defaults, section_name=old_section_name
         )
 
-        self.file.rename_section(
+        self.notes_service.rename_section(
             old_section_separator=old_section_separator,
             new_section_separator=new_section_separator,
         )
 
         self.filter_data_split_by_section(section_separator=new_section_separator)
 
-        self.set_drawer_items(section_separators=self.file.section_separators_sorted)
+        self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
 
         self.current_section = new_section_separator
 
@@ -634,21 +625,21 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         try:
             if self.model.external_update:
-                self.file.reload()
+                self.notes_service.file.reload()
                 try:
-                    current_section_text_before = self.file.get_section_content(
+                    current_section_text_before = self.notes_service.get_section(
                         section_separator=self.text_section_view.section_file_separator
                     )
-                # KeyError raised if the current section was removed or renamed by a external update
+                # KeyError raised if the current section was removed or renamed by an external update
                 except KeyError:
                     # merge_strings prioritizes current_section_text_after over current_section_text_before
                     # so empty string placeholder is set to current_section_text_before
                     current_section_text_before = ""
-                    # self.file.reload() will remove the current section separator from self.file.section_separators
+                    # self.notes_service.file.reload() will remove the current section separator from self.notes_service.file.section_separators
                     # in case it was deleted or renamed so the current section identifier is added back
-                    self.file.set_section_content(
+                    self.notes_service.save_section(
                         section_separator=self.text_section_view.section_file_separator,
-                        section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+                        text=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
                     )
 
                 current_section_text_after = self.text_section_view.text
@@ -662,18 +653,17 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 self.text_section_view.focus = False
 
                 self.set_drawer_items(
-                    section_separators=self.file.section_separators_sorted
+                    section_separators=self.notes_service.file.section_separators_sorted
                 )
 
-            self.file.set_section_content(
+            self.notes_service.save_section(
                 section_separator=self.text_section_view.section_file_separator,
-                section_content=merged_current_section_text_data
+                text=merged_current_section_text_data
                 or self.text_section_view.text,
             )
 
-            raw_text_data = self.file.transform_data_by_sections_to_raw_data_content()
-
-            self.controller.save_file_data(data=raw_text_data)
+            self.notes_service.file.save_file_data()
+            self.model.file_saved()
 
         except Exception as exc:
             self.show_error_bar(
@@ -730,7 +720,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.dialog.open()
 
     def press_edit_section(self, section_item):
-        section_name = transform_section_separator_to_section_name(
+        section_name = self.notes_service.transform_section_separator_to_section_name(
             defaults=self.defaults, section_separator=section_item.id
         )
 
@@ -747,17 +737,17 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.dialog.open()
 
     def press_delete_section(self, section_item):
-        if len(self.file.section_separators_sorted) == 1:
+        if len(self.notes_service.file.section_separators_sorted) == 1:
             self.show_error_bar(error_message="Cannot delete last section")
             return
 
         self.ids.md_list.remove_widget(section_item)
 
         section_separator = section_item.id
-        self.file.delete_section_content(section_separator=section_separator)
+        self.notes_service.delete_section(section_separator=section_separator)
 
         self.filter_data_split_by_section(
-            section_separator=self.file.default_section_separator
+            section_separator=self.notes_service.file.default_section_separator
         )
 
     def text_input_changed_callback(self):

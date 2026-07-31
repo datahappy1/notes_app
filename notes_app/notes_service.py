@@ -1,9 +1,7 @@
+import re
 from dataclasses import dataclass, asdict
 from typing import List
 
-from notes_app.file import (
-    transform_section_separator_to_section_name,
-)
 from notes_app.search import (
     Search,
     validate_search_input,
@@ -19,6 +17,15 @@ class SearchResult:
 
     def to_dict(self):
         return asdict(self)
+
+@dataclass
+class Section:
+    text: str
+
+@dataclass
+class Note:
+    section: Section
+    text: str
 
 
 class NotesService:
@@ -37,6 +44,16 @@ class NotesService:
         self.file = file
         self.defaults = defaults
         self.search_engine = Search(defaults)
+
+    @staticmethod
+    def transform_section_separator_to_section_name(defaults, section_separator: str) -> str:
+        return re.search(
+            defaults.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX, section_separator,
+        ).group(1)
+
+    @staticmethod
+    def transform_section_name_to_section_separator(defaults, section_name: str) -> str:
+        return defaults.DEFAULT_SECTION_FILE_SEPARATOR.format(name=section_name)
 
     def search(
         self,
@@ -67,7 +84,7 @@ class NotesService:
         for section_separator, positions in occurrences.items():
             text = self.file.get_section_content(section_separator)
 
-            section_name = transform_section_separator_to_section_name(
+            section_name = self.transform_section_separator_to_section_name(
                 defaults=self.defaults,
                 section_separator=section_separator,
             )
@@ -86,14 +103,35 @@ class NotesService:
 
         return results
 
-    def get_section(self, section_separator: str) -> str:
-        return self.file.get_section_content(section_separator)
+    def search_all_sections_simple(self, query: str) -> List[SearchResult]:
+        return self.search(
+            query=query,
+            current_section=self.get_section_by_name(
+                self.list_sections()[0].text # use the first existing section since we search in all sections anyway
+            ).text,
+            case_sensitive=False,
+            full_words=False,
+            all_sections=True
+        )
 
-    def list_sections(self):
+    def get_section(self, section_separator: str) -> Section:
+        return Section(self.file.get_section_content(section_separator))
+
+    def get_section_by_name(self, section_name: str) -> Section:
+        separator = self.transform_section_name_to_section_separator(
+            defaults=self.defaults,
+            section_name=section_name,
+        )
+
+        return Section(self.file.get_section_content(separator))
+
+    def list_sections(self) -> List[Section]:
         return [
-            transform_section_separator_to_section_name(
-                defaults=self.defaults,
-                section_separator=s,
+            Section(
+                self.transform_section_separator_to_section_name(
+                    defaults=self.defaults,
+                    section_separator=s,
+                )
             )
             for s in self.file.section_separators_sorted
         ]
@@ -104,11 +142,66 @@ class NotesService:
             section_content=text,
         )
 
+    def save_section_by_name(self, section_name: str, text: str):
+        separator = self.transform_section_name_to_section_separator(
+            defaults=self.defaults,
+            section_name=section_name,
+        )
+
+        self.file.set_section_content(
+            section_separator=separator,
+            section_content=text,
+        )
+
     def create_section(self, section_separator: str, text: str = ""):
         self.file.set_section_content(
             section_separator=section_separator,
             section_content=text,
         )
 
+    def create_section_by_name(self, section_name: str, text: str = ""):
+        separator = self.transform_section_name_to_section_separator(
+            defaults=self.defaults,
+            section_name=section_name,
+        )
+
+        self.file.set_section_content(
+            section_separator=separator,
+            section_content=text,
+        )
+
     def delete_section(self, section_separator: str):
         self.file.delete_section_content(section_separator)
+
+    def delete_section_by_name(self, section_name: str):
+        separator = self.transform_section_name_to_section_separator(
+            defaults=self.defaults,
+            section_name=section_name,
+        )
+
+        self.file.delete_section_content(separator)
+
+    def rename_section(self, old_section_separator: str, new_section_separator: str):
+        self.file.rename_section(
+            old_section_separator=old_section_separator,
+            new_section_separator=new_section_separator,
+        )
+
+    def rename_section_by_name(self, old_section_name: str, new_section_name: str):
+        old_section_separator = self.transform_section_name_to_section_separator(
+            defaults=self.defaults,
+            section_name=old_section_name,
+        )
+
+        new_section_separator = self.transform_section_name_to_section_separator(
+            defaults=self.defaults,
+            section_name=new_section_name,
+        )
+
+        self.file.rename_section(
+            old_section_separator=old_section_separator,
+            new_section_separator=new_section_separator,
+        )
+
+    def update_file(self, file):
+        self.file = file

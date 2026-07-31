@@ -10,6 +10,7 @@ from notes_app.defaults import Defaults
 from notes_app.controller.notes_controller import NotesController
 from notes_app.model.notes_model import NotesModel
 from notes_app.file import File
+from notes_app.notes_service import NotesService
 from notes_app.settings import Settings
 
 TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME = "my_first_file.txt"
@@ -122,17 +123,10 @@ def get_model():
     return NotesModel(store=JsonStore, defaults=defaults)
 
 
-@pytest.fixture()
+@pytest.fixture
 def get_file():
-    controller = NotesController(
-        settings=Settings(store=JsonStore, defaults=defaults),
-        model=NotesModel(store=JsonStore, defaults=defaults),
-        defaults=defaults,
-    )
-
     file = File(
         file_path=defaults.DEFAULT_NOTES_FILE_NAME,
-        controller=controller,
         defaults=defaults,
     )
     return file
@@ -141,6 +135,15 @@ def get_file():
 @pytest.fixture(autouse=True)
 def get_settings():
     return Settings(store=JsonStore, defaults=defaults)
+
+
+@pytest.fixture(autouse=True)
+def get_notes_service():
+    file = File(
+        file_path=defaults.DEFAULT_NOTES_FILE_NAME,
+        defaults=defaults,
+    )
+    return NotesService(file=file, defaults=defaults)
 
 
 @pytest.fixture(autouse=True)
