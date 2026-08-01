@@ -40,10 +40,10 @@ from notes_app.file import (
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
 from notes_app.font import get_next_font, AVAILABLE_FONTS
+from notes_app.markdown_renderer import MarkdownRenderer
 from notes_app.notes_service import NotesService
 from notes_app.observer.notes_observer import Observer
 from notes_app.search import (
-    Search,
     validate_search_input,
     transform_section_text_placeholder_to_section_name,
     transform_position_text_placeholder_to_position,
@@ -261,6 +261,8 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.current_section = self.notes_service.file.default_section_separator
         self.filter_data_split_by_section()
         self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
+
+        self.markdown_renderer = MarkdownRenderer()
 
     @property
     def is_unsaved_change(self):
@@ -786,5 +788,24 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.manager_open = False
         self.file_manager.close()
 
+    def render_markdown(self):
+        layout = self.ids.markdown_preview
+
+        layout.clear_widgets()
+
+        widgets = self.markdown_renderer.render(
+            self.ids.text_input.text
+        )
+
+        for widget in widgets:
+            layout.add_widget(widget)
+
+    def toggle_preview(self):
+        manager = self.ids.editor_manager
+        if manager.current == "edit":
+            self.render_markdown()
+            manager.current = "preview"
+        else:
+            manager.current = "edit"
 
 Builder.load_file(path.join(path.dirname(__file__), "notes_view.kv"))

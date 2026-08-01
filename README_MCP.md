@@ -7,7 +7,7 @@ You configure it once (the exact location depends on the client/version), for ex
     "notes": {
       "command": "python",
       "args": [
-        "/home/deb/projects/notes_app/mcp/mcp_server.py"
+        "/home/deb/projects/notes_app/mcp_server.py"
       ]
     }
   }
@@ -20,7 +20,7 @@ or on Windows
     "notes": {
       "command": "python",
       "args": [
-        "C:\\Projects\\Notes\\mcp\\mcp_server.py"
+        "C:\\Projects\\Notes\\mcp_server.py"
       ]
     }
   }

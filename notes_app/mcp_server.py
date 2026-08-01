@@ -20,13 +20,15 @@ from notes_app.notes_service import NotesService
 
 defaults = Defaults()
 
+
 # we need to load the file path to the currently used file in the notes app
 def _get_file_path(filename):
     with open(file=filename, mode="r", encoding="utf-8") as f:
         content = json.load(f)
     return content.get("_file_path").get("value")
 
-file_path = _get_file_path(filename="file_metadata.json")
+
+file_path = _get_file_path(filename=defaults.DEFAULT_MODEL_STORE_FILE_NAME)
 
 file = File(
     file_path=file_path or defaults.DEFAULT_NOTES_FILE_NAME,

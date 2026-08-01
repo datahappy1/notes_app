@@ -8,6 +8,7 @@ from kivymd.app import MDApp
 
 from notes_app.defaults import Defaults
 from notes_app.controller.notes_controller import NotesController
+from notes_app.markdown_renderer import MarkdownRenderer
 from notes_app.model.notes_model import NotesModel
 from notes_app.file import File
 from notes_app.notes_service import NotesService
@@ -145,6 +146,9 @@ def get_notes_service():
     )
     return NotesService(file=file, defaults=defaults)
 
+@pytest.fixture()
+def get_markdown_renderer():
+    return MarkdownRenderer()
 
 @pytest.fixture(autouse=True)
 def get_app():

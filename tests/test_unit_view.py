@@ -1129,3 +1129,59 @@ class TestView:
 
         screen.cancel_file_manager()
         assert screen.manager_open is False
+
+    def test_render_markdown(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        rendered_widget = object()
+
+        class FakeLayout:
+            def __init__(self):
+                self.widgets = []
+                self.cleared = False
+
+            def clear_widgets(self):
+                self.cleared = True
+                self.widgets.clear()
+
+            def add_widget(self, widget):
+                self.widgets.append(widget)
+
+        class FakeTextInput:
+            text = "# Heading"
+
+        screen.ids = {
+            "markdown_preview": FakeLayout(),
+            "text_input": FakeTextInput(),
+        }
+
+        screen.markdown_renderer.render = lambda text: [rendered_widget]
+
+        screen.render_markdown()
+
+        assert screen.ids.markdown_preview.cleared is True
+        assert screen.ids.markdown_preview.widgets == [rendered_widget]
+
+    def test_toggle_preview_edit_to_preview(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        class FakeManager:
+            current = "edit"
+
+        screen.ids["editor_manager"] = FakeManager()
+
+        screen.toggle_preview()
+
+        assert screen.ids["editor_manager"].current == "preview"
+
+    def test_toggle_preview_preview_to_edit(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        class FakeManager:
+            current = "preview"
+
+        screen.ids["editor_manager"] = FakeManager()
+
+        screen.toggle_preview()
+
+        assert screen.ids["editor_manager"].current == "edit"
