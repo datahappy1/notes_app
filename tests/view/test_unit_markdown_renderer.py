@@ -1,4 +1,4 @@
-from notes_app.markdown_renderer import (
+from notes_app.view.markdown_renderer import (
     CustomMDLabel,
     CustomMDCard,
     CodeBlock,

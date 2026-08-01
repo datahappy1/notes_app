@@ -1,4 +1,4 @@
-from notes_app.color import (
+from notes_app.utils.color import (
     Color,
     get_color_by_name,
     AVAILABLE_COLORS,

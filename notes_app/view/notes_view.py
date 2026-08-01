@@ -26,24 +26,26 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import MDSnackbar
 
 from notes_app import __version__
-from notes_app.color import (
+from notes_app.utils.color import (
     get_color_by_name,
     get_next_color_by_rgba,
     AVAILABLE_COLORS,
     AVAILABLE_SNACK_BAR_COLORS,
 )
-from notes_app.diff import merge_strings
-from notes_app.file import (
+from notes_app.utils.diff import merge_strings
+from notes_app.services.drawing_service import DrawingService
+from notes_app.view.drawing_window import DrawingWindow
+from notes_app.domain.file import (
     get_validated_file_path,
     File,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
 )
-from notes_app.font import get_next_font, AVAILABLE_FONTS
-from notes_app.markdown_renderer import MarkdownRenderer
-from notes_app.notes_service import NotesService
+from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
+from notes_app.view.markdown_renderer import MarkdownRenderer
+from notes_app.services.notes_service import NotesService
 from notes_app.observer.notes_observer import Observer
-from notes_app.search import (
+from notes_app.services.search import (
     validate_search_input,
     transform_section_text_placeholder_to_section_name,
     transform_position_text_placeholder_to_position,
@@ -263,6 +265,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
 
         self.markdown_renderer = MarkdownRenderer()
+        self.drawing_service = DrawingService()
 
     @property
     def is_unsaved_change(self):
@@ -807,5 +810,18 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             manager.current = "preview"
         else:
             manager.current = "edit"
+
+    def open_drawpad(self):
+        section_name = self.notes_service.transform_section_separator_to_section_name(
+            defaults=self.defaults,
+            section_separator=self.current_section,
+        )
+
+        window = DrawingWindow(
+            section=section_name,
+            drawing_service=self.drawing_service,
+        )
+
+        window.open()
 
 Builder.load_file(path.join(path.dirname(__file__), "notes_view.kv"))

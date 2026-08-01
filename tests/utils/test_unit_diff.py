@@ -1,6 +1,6 @@
 import pytest
 
-from notes_app.diff import (
+from notes_app.utils.diff import (
     _merge,
     _replace_line_endings,
     _split,

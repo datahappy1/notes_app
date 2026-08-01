@@ -1,4 +1,4 @@
-from notes_app.font import get_next_font, AVAILABLE_FONTS
+from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
 
 
 class TestFont:

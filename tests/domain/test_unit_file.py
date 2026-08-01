@@ -1,11 +1,10 @@
 import uuid
-from datetime import datetime
 from os import listdir, getcwd
 
 import pytest
 
 from notes_app.defaults import Defaults
-from notes_app.file import (
+from notes_app.domain.file import (
     get_validated_file_path,
 )
 

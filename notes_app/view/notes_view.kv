@@ -31,7 +31,7 @@
         elevation: 8
         md_bg_color: app.theme_cls.bg_dark
         left_action_items: [["menu", lambda x: nav_drawer.set_state("open")],["magnify", lambda x: root.press_icon_search()]]
-        right_action_items: [["eye", lambda x: root.toggle_preview()], ["file", lambda x: root.menu_storage.open()],["cog", lambda x: root.menu_settings.open()]]
+        right_action_items: [["draw", lambda x: root.open_drawpad()],["eye", lambda x: root.toggle_preview()],["file", lambda x: root.menu_storage.open()],["cog", lambda x: root.menu_settings.open()]]
 
     ScreenManager:
         id: editor_manager

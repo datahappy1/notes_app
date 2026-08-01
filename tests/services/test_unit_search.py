@@ -1,7 +1,7 @@
 import pytest
 
 from notes_app.defaults import Defaults
-from notes_app.search import (
+from notes_app.services.search import (
     SEARCH_MINIMAL_CHAR_COUNT,
     validate_search_input,
     _basic_search_function,

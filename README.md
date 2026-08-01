@@ -14,7 +14,7 @@ Notes application written in Python 3.11 & KivyMD
 ## version history
 | version |    date    |                              description                              |
 |:-------:|:----------:|:---------------------------------------------------------------------:|
-|  1.0.0  | 29/07/2026 |               Python 3.11 support, MCP server, Drawpad                |
+|  1.0.0  | 29/07/2026 |      Python 3.11 upgrade, MCP server, Markdown support, Drawpad       |
 |  0.1.2  | 10/10/2022 |                            minor bugfixes                             |
 |  0.1.1  | 12/7/2022  | removing item drawer menu highlight, improving diff feature, bugfixes |
 |  0.1.0  | 19/6/2022  |                            initial release                            |
@@ -62,7 +62,7 @@ Here you can write your notes.
 
 When running the app locally, Pipenv is recommended but general requirements.txt file is also attached.
 
-- generating dependencies graph using Pydeps
+- generating dependencies graph using Pydeps ( requires Graphviz installed )
 ```language="sh"
 cd notes_app
 pip3 install pydeps

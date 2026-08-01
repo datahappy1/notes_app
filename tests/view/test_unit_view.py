@@ -11,11 +11,11 @@ from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.menu import MDDropdownMenu
 
 from notes_app.defaults import Defaults
-from notes_app.file import (
+from notes_app.domain.file import (
     File,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
 )
-from notes_app.search import Search
+from notes_app.services.search import Search
 from notes_app.view.notes_view import (
     DrawerList,
     MenuSettingsItems,

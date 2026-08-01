@@ -1,5 +1,6 @@
 import re
 import webbrowser
+from typing import List
 
 from kivymd.uix.card import MDSeparator, MDCard
 from kivymd.uix.label import MDLabel
@@ -13,7 +14,7 @@ _EMPTY_LINE_HEIGHT = "12dp"
 _CARD_PADDING = "10dp"
 _CARD_SPACING = "5dp"
 _CARD_RADIUS = 8
-_CODE_BLOCK_LABEL = "```"
+_CODE_BLOCK_SEPARATOR = "```"
 _CODE_BLOCK_FONT = "RobotoMono-Regular"
 
 
@@ -53,35 +54,35 @@ class CodeBlock(MDCard):
             )
         )
 
-def get_heading1(line):
+def get_heading1(line: str) -> CustomMDLabel:
     return CustomMDLabel(
         text=line[2:],
         font_style="H3",
     )
 
-def get_heading2(line):
+def get_heading2(line: str) -> CustomMDLabel:
     return CustomMDLabel(
         text=line[3:],
         font_style="H4",
     )
 
-def get_heading3(line):
+def get_heading3(line: str) -> CustomMDLabel:
     return CustomMDLabel(
         text=line[4:],
         font_style="H5",
     )
 
-def get_bullet(line):
+def get_bullet(line: str) -> CustomMDLabel:
     return CustomMDLabel(
         text=f"• {line[2:]}",
     )
 
-def get_indented_bullet(line):
+def get_indented_bullet(line: str) -> CustomMDLabel:
     return CustomMDLabel(
         text=f"    - {line[3:]}",
     )
 
-def get_quote(line):
+def get_quote(line: str) -> CustomMDCard:
     card = CustomMDCard()
 
     card.add_widget(
@@ -91,23 +92,23 @@ def get_quote(line):
     )
     return card
 
-def get_separator():
+def get_separator() -> MDSeparator:
     return MDSeparator()
 
-def get_empty_label():
+def get_empty_label() -> CustomMDLabel:
     return CustomMDLabel(
         text="",
         height=_EMPTY_LINE_HEIGHT,
     )
 
-def get_plain_label(line):
+def get_plain_label(line: str) -> CustomMDLabel:
     return CustomMDLabel(
         text=line,
     )
 
 class MarkdownRenderer:
     @staticmethod
-    def _transform_inline_elements(text):
+    def _transform_inline_elements(text: str) -> str:
         text = re.sub(r"\*\*(.+?)\*\*", r"[b]\1[/b]", text)
         text = re.sub(r"\*(.+?)\*", r"[i]\1[/i]", text)
 
@@ -115,7 +116,7 @@ class MarkdownRenderer:
         text = URL_REGEX.sub(r"[ref=\1][color=#2196F3][u]\1[/u][/color][/ref]",text)
         return text
 
-    def _render_line(self, line):
+    def _render_line(self, line: str) -> CustomMDLabel | MDSeparator | CustomMDCard:
         if not line.strip():
             return get_empty_label()
 
@@ -137,7 +138,7 @@ class MarkdownRenderer:
             line=self._transform_inline_elements(line)
         )
 
-    def render(self, text):
+    def render(self, text: str) -> List[CustomMDLabel | MDSeparator | CustomMDCard]:
         widgets = []
 
         inside_code = False
@@ -145,7 +146,7 @@ class MarkdownRenderer:
 
         for line in text.split(_LINE_SEPARATOR):
             if inside_code:
-                if line.startswith(_CODE_BLOCK_LABEL):
+                if line.startswith(_CODE_BLOCK_SEPARATOR):
                     widgets.append(
                         CodeBlock(
                             code="\n".join(code_buffer),
@@ -158,7 +159,7 @@ class MarkdownRenderer:
                     code_buffer.append(line)
                 continue
 
-            if line.startswith(_CODE_BLOCK_LABEL):
+            if line.startswith(_CODE_BLOCK_SEPARATOR):
                 inside_code = True
                 continue
 

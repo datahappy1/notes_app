@@ -8,10 +8,10 @@ from kivymd.app import MDApp
 
 from notes_app.defaults import Defaults
 from notes_app.controller.notes_controller import NotesController
-from notes_app.markdown_renderer import MarkdownRenderer
+from notes_app.view.markdown_renderer import MarkdownRenderer
 from notes_app.model.notes_model import NotesModel
-from notes_app.file import File
-from notes_app.notes_service import NotesService
+from notes_app.domain.file import File
+from notes_app.services.notes_service import NotesService
 from notes_app.settings import Settings
 
 TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME = "my_first_file.txt"

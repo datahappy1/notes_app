@@ -33,15 +33,16 @@ AVAILABLE_SNACK_BAR_COLORS = [
 ]
 
 
-def get_color_by_name(colors_list: List[Color], color_name: str) -> Color:
+def get_color_by_name(colors_list: List[Color], color_name: str) -> Color | None:
     for color in colors_list:
         if color.name == color_name:
             return color
+    return None
 
 
 def get_next_color_by_rgba(
     colors_list: List[Color], rgba_value: List[int], skip_rgba_value: List[int] = None
-) -> Color:
+) -> Color | None:
     iterable_available_colors = iter(colors_list)
 
     for color in iterable_available_colors:
@@ -56,3 +57,4 @@ def get_next_color_by_rgba(
                 )
 
             return next_color
+    return None
