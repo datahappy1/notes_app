@@ -35,7 +35,7 @@ from notes_app.utils.color import (
 from notes_app.utils.diff import merge_strings
 from notes_app.services.drawing_service import DrawingService
 from notes_app.view.drawing_window import DrawingWindow
-from notes_app.domain.file import (
+from notes_app.domain.notes_file import (
     get_validated_file_path,
     File,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
@@ -45,7 +45,7 @@ from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
 from notes_app.view.markdown_renderer import MarkdownRenderer
 from notes_app.services.notes_service import NotesService
 from notes_app.observer.notes_observer import Observer
-from notes_app.services.search import (
+from notes_app.services.search_service import (
     validate_search_input,
     transform_section_text_placeholder_to_section_name,
     transform_position_text_placeholder_to_position,

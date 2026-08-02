@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass, asdict
 from typing import List
 
-from notes_app.services.search import (
+from notes_app.services.search_service import (
     Search,
     validate_search_input,
 )

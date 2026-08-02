@@ -1,7 +1,7 @@
 import pytest
 
 from notes_app.defaults import Defaults
-from notes_app.services.search import (
+from notes_app.services.search_service import (
     SEARCH_MINIMAL_CHAR_COUNT,
     validate_search_input,
     _basic_search_function,
@@ -17,7 +17,7 @@ from notes_app.services.search import (
 defaults = Defaults()
 
 
-class TestSearch:
+class TestSearchService:
     @pytest.mark.parametrize(
         "input_string, is_valid",
         [
@@ -93,7 +93,7 @@ class TestSearch:
         assert search.search_all_sections == defaults.DEFAULT_VALUE_SEARCH_ALL_SECTIONS
         assert search.search_full_words == defaults.DEFAULT_VALUE_SEARCH_FULL_WORDS
 
-    def test_search_default(self, get_file):
+    def test_search_default(self, get_notes_file):
         search = Search(defaults=defaults)
 
         search.search_case_sensitive = False
@@ -101,10 +101,10 @@ class TestSearch:
         search.search_full_words = False
 
         assert search.search_for_occurrences(
-            pattern="do", file=get_file, current_section="<section=first> ",
+            pattern="do", file=get_notes_file, current_section="<section=first> ",
         ) == {"<section=first> ": [25]}
 
-    def test_search_case_sensitive(self, get_file):
+    def test_search_case_sensitive(self, get_notes_file):
         search = Search(defaults=defaults)
 
         search.search_case_sensitive = True
@@ -112,19 +112,19 @@ class TestSearch:
         search.search_full_words = False
 
         assert search.search_for_occurrences(
-            pattern="do", file=get_file, current_section="<section=first> ",
+            pattern="do", file=get_notes_file, current_section="<section=first> ",
         ) == {"<section=first> ": [25]}
 
         assert (
             search.search_for_occurrences(
                 pattern="dO",
-                file=get_file,
+                file=get_notes_file,
                 current_section="<section=first> ",
             )
             == {}
         )
 
-    def test_search_all_sections(self, get_file):
+    def test_search_all_sections(self, get_notes_file):
         search = Search(defaults=defaults)
 
         search.search_case_sensitive = False
@@ -132,10 +132,10 @@ class TestSearch:
         search.search_full_words = False
 
         assert search.search_for_occurrences(
-            pattern="do", file=get_file, current_section="<section=first> ",
+            pattern="do", file=get_notes_file, current_section="<section=first> ",
         ) == {"<section=first> ": [25], "<section=second> ": [11]}
 
-    def test_search_full_words(self, get_file):
+    def test_search_full_words(self, get_notes_file):
         search = Search(defaults=defaults)
 
         search.search_case_sensitive = False
@@ -143,13 +143,13 @@ class TestSearch:
         search.search_full_words = True
 
         assert search.search_for_occurrences(
-            pattern="non", file=get_file, current_section="<section=first> ",
+            pattern="non", file=get_notes_file, current_section="<section=first> ",
         ) == {"<section=first> ": [13]}
 
         assert (
             search.search_for_occurrences(
                 pattern="nonx",
-                file=get_file,
+                file=get_notes_file,
                 current_section="<section=first> ",
             )
             == {}

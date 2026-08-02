@@ -10,7 +10,7 @@ from notes_app.defaults import Defaults
 from notes_app.controller.notes_controller import NotesController
 from notes_app.view.markdown_renderer import MarkdownRenderer
 from notes_app.model.notes_model import NotesModel
-from notes_app.domain.file import File
+from notes_app.domain.notes_file import File
 from notes_app.services.notes_service import NotesService
 from notes_app.settings import Settings
 
@@ -125,7 +125,7 @@ def get_model():
 
 
 @pytest.fixture
-def get_file():
+def get_notes_file():
     file = File(
         file_path=defaults.DEFAULT_NOTES_FILE_NAME,
         defaults=defaults,
@@ -146,9 +146,11 @@ def get_notes_service():
     )
     return NotesService(file=file, defaults=defaults)
 
+
 @pytest.fixture()
 def get_markdown_renderer():
     return MarkdownRenderer()
+
 
 @pytest.fixture(autouse=True)
 def get_app():

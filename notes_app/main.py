@@ -37,8 +37,8 @@ class NotesApp(MDApp):
             self.controller.view.save_current_section_to_file()
 
     def build(self):
-        self.theme_cls.primary_palette = "DeepPurple"
-        self.theme_cls.theme_style = "Light"
+        self.theme_cls.primary_palette = "Indigo"
+        self.theme_cls.theme_style = "Dark"
 
         self.icon = "assets/notes_app_logo.png"
 

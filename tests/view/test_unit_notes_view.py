@@ -11,11 +11,11 @@ from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.menu import MDDropdownMenu
 
 from notes_app.defaults import Defaults
-from notes_app.domain.file import (
+from notes_app.domain.notes_file import (
     File,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
 )
-from notes_app.services.search import Search
+from notes_app.services.search_service import Search
 from notes_app.view.notes_view import (
     DrawerList,
     MenuSettingsItems,
@@ -29,7 +29,7 @@ from notes_app.view.notes_view import (
 )
 
 
-class TestView:
+class TestNotesView:
     def test_view(self, get_app):
         assert get_app.model
         assert get_app.controller

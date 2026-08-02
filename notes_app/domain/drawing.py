@@ -1,21 +1,23 @@
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 
 
 @dataclass
 class Stroke:
     tool: str
     points: list
+    color: tuple = field(default_factory=lambda: (0, 0, 0, 1))
 
 
 class Drawing:
     def __init__(self):
         self.strokes = []
 
-    def add_stroke(self, tool, points):
+    def add_stroke(self, tool, current_color, points):
         self.strokes.append(
             Stroke(
                 tool=tool,
+                color=current_color,
                 points=points,
             )
         )
@@ -36,6 +38,9 @@ class Drawing:
             with open(filename, encoding="utf8") as f:
                 data = json.load(f)
             for stroke in data:
+                if "color" not in stroke:
+                    stroke["color"] = (0, 0, 0, 1)
+
                 drawing.strokes.append(
                     Stroke(**stroke)
                 )

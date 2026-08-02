@@ -11,7 +11,7 @@ import json
 from fastmcp import FastMCP
 
 from notes_app.defaults import Defaults
-from notes_app.domain.file import File
+from notes_app.domain.notes_file import File
 from notes_app.services.notes_service import NotesService
 
 # ---------------------------------------------------------------------
