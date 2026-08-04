@@ -3,10 +3,20 @@ from kivy.uix.widget import Widget
 
 
 class DrawingCanvas(Widget):
+    LINE_WIDTH = 2
+
     def __init__(self, drawing, **kwargs):
         super().__init__(**kwargs)
 
         self.drawing = drawing
+
+        self.current_color = (0, 0, 0, 1)
+        self.current_stroke_color = self.current_color
+
+        self.current_stroke = []
+        self.current_line = None
+        self.active_touch = None
+        self.tool = "pencil"
 
         with self.canvas.before:
             Color(1, 1, 1, 1)
@@ -23,33 +33,41 @@ class DrawingCanvas(Widget):
             size=self._update_background,
         )
 
-        self.current_color = (0, 0, 0, 1)
-        self.current_stroke = []
-        self.current_line = None
-
-        self.bind(size=lambda *_: self.redraw())
-        self.bind(pos=lambda *_: self.redraw())
+        self.bind(
+            size=lambda *_: self.redraw(),
+            pos=lambda *_: self.redraw(),
+        )
 
         self.redraw()
-        self.tool = "pencil"
 
     def set_color(self, color):
-        self.current_color = color
+        self.current_color = tuple(color)
 
     def clear(self):
+        """Remove all strokes and reset the active stroke state."""
+        self._reset_current_stroke()
+
         self.drawing.strokes.clear()
         self.redraw()
 
     def undo(self):
-        if len(self.drawing.strokes) > 1:
-            self.drawing.strokes.pop()
-            self.drawing.strokes.pop()
-            self.redraw()
+        """Remove the most recently completed stroke."""
+        self._reset_current_stroke()
+
+        if not self.drawing.strokes:
+            return
+
+        self.drawing.strokes.pop()
+        self.redraw()
 
     def redraw(self):
+        """Rebuild the visible drawing from the stored strokes."""
         self.drawing_layer.clear()
 
         for stroke in self.drawing.strokes:
+            if len(stroke.points) < 4:
+                continue
+
             self.drawing_layer.add(
                 Color(*stroke.color)
             )
@@ -57,7 +75,7 @@ class DrawingCanvas(Widget):
             self.drawing_layer.add(
                 Line(
                     points=stroke.points,
-                    width=2,
+                    width=self.LINE_WIDTH,
                 )
             )
 
@@ -66,32 +84,65 @@ class DrawingCanvas(Widget):
         self.background.size = self.size
 
     def _pencil_down(self, touch):
+        # Do not start another stroke while one is active.
+        if self.active_touch is not None:
+            return False
+
+        self.active_touch = touch
         self.current_stroke = [touch.x, touch.y]
+        self.current_stroke_color = tuple(self.current_color)
+
         self.drawing_layer.add(
-            Color(*self.current_color)
+            Color(*self.current_stroke_color)
         )
+
         self.current_line = Line(
             points=self.current_stroke,
-            width=2,
+            width=self.LINE_WIDTH,
         )
 
         self.drawing_layer.add(self.current_line)
+
         return True
 
     def _pencil_move(self, touch):
+        if touch is not self.active_touch:
+            return False
+
+        if self.current_line is None:
+            return False
+
         self.current_stroke.extend([touch.x, touch.y])
         self.current_line.points = self.current_stroke
 
         return True
 
     def _pencil_up(self, touch):
-        self.drawing.add_stroke(
-            tool=self.tool,
-            current_color=self.current_color,
-            points=self.current_stroke.copy(),
-        )
-        self.redraw()
-        return True
+        if touch is not self.active_touch:
+            return False
+
+        try:
+            # Ignore taps / incomplete strokes.
+            if len(self.current_stroke) >= 4:
+                self.drawing.add_stroke(
+                    tool=self.tool,
+                    current_color=self.current_stroke_color,
+                    points=self.current_stroke.copy(),
+                )
+
+            # Rebuild graphics from the model.
+            self.redraw()
+
+            return True
+
+        finally:
+            self._reset_current_stroke()
+
+    def _reset_current_stroke(self):
+        self.active_touch = None
+        self.current_stroke = []
+        self.current_line = None
+        self.current_stroke_color = tuple(self.current_color)
 
     def on_touch_down(self, touch):
         if not self.collide_point(*touch.pos):
