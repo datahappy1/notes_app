@@ -58,6 +58,13 @@
                     padding: "8dp"
                     spacing: "8dp"
 
+                    MDTextField:
+                        id: section_filter
+                        hint_text: "Filter sections..."
+                        mode: "rectangle"
+                        size_hint_y: None
+                        height: "48dp"
+
                     ScrollView:
                         DrawerList:
                             id: md_list
@@ -225,7 +232,7 @@
             id: search_string_input_value
             text: root.search_string_placeholder
             hint_text: "What string to search for?"
-            max_text_length: 10
+            max_text_length: 20
 
         MDBoxLayout:
             size_hint_y: None
@@ -306,3 +313,27 @@
                 size_hint: (.5, .8)
                 text: "Save"
                 on_release: root.execute_edit_section(root.old_section_name, section_name_input_value.text)
+
+<DeleteSectionDialogContent>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "180dp"
+
+    MDLabel:
+        text: "Delete section '" + root.section_name + "'?"
+        halign: "center"
+        valign: "center"
+
+    MDBoxLayout:
+        size_hint_y: None
+        height: "48dp"
+        spacing: "8dp"
+
+        MDFlatButton:
+            text: "Cancel"
+            on_release: root.cancel()
+
+        MDRectangleFlatButton:
+            text: "Delete"
+            on_release: root.execute_delete_section()

@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 
 SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
 SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
+SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT = 20
 
 
 def get_validated_file_path(file_path: str) -> Optional[str]:

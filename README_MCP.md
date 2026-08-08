@@ -1,7 +1,10 @@
-# Claude Code configuration
+# Claude Code Configuration
 
-You configure it once (the exact location depends on the client/version), for example:
+Configure the Notes MCP server once in Claude Code. The exact configuration location depends on the Claude Code version and client setup.
 
+## Linux / macOS
+
+```json
 {
   "mcpServers": {
     "notes": {
@@ -12,9 +15,11 @@ You configure it once (the exact location depends on the client/version), for ex
     }
   }
 }
+```
 
-or on Windows
+## Windows
 
+```json
 {
   "mcpServers": {
     "notes": {
@@ -25,10 +30,13 @@ or on Windows
     }
   }
 }
+```
 
-Then Claude automatically sees tools like
+Once configured, Claude Code can automatically discover and use the Notes MCP tools, such as:
 
-notes.search
-notes.list_sections
-notes.get_note
-notes.save_note
+* `notes.search`
+* `notes.list_sections`
+* `notes.get_note`
+* `notes.save_note`
+
+The MCP server runs locally and communicates with Claude Code through **stdio**, so no HTTP server or open network port is required.

@@ -25,7 +25,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import MDSnackbar
 
-from notes_app import __version__
+from notes_app import __version__, __repository_url__
 from notes_app.utils.color import (
     get_color_by_name,
     get_next_color_by_rgba,
@@ -39,7 +39,7 @@ from notes_app.domain.notes_file import (
     get_validated_file_path,
     File,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
-    SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
+    SECTION_FILE_NAME_MINIMAL_CHAR_COUNT, SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT,
 )
 from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
 from notes_app.view.markdown_renderer import MarkdownRenderer
@@ -57,7 +57,7 @@ APP_METADATA_ROWS = [
     "built with Python 3.11 & KivyMD",
     f"version {__version__}",
 ]
-EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
+EXTERNAL_REPOSITORY_URL = __repository_url__
 
 
 class CustomTextInput(TextInput):
@@ -186,6 +186,12 @@ class EditSectionDialogContent(MDBoxLayout):
     cancel = ObjectProperty(None)
 
 
+class DeleteSectionDialogContent(MDBoxLayout):
+    section_name = StringProperty(None)
+    execute_delete_section = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
 class SearchDialogContent(MDBoxLayout):
     get_search_switch_state = ObjectProperty(None)
     search_switch_callback = ObjectProperty(None)
@@ -261,6 +267,10 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         )
 
         self.current_section = self.notes_service.file.default_section_separator
+        self.all_sections = []
+
+        self.bind_section_filter()
+
         self.filter_data_split_by_section()
         self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
 
@@ -305,6 +315,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.ids.toolbar.title = f"{APP_TITLE} section: {section_name}"
 
     def set_drawer_items(self, section_separators):
+        self.all_sections = list(section_separators)
+        self.filter_sections("")
+
         self.ids.md_list.clear_widgets()
 
         for section_separator in section_separators:
@@ -328,6 +341,37 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.current_section = text_item.id  # separator
         self.filter_data_split_by_section()
+
+    def filter_sections(self, text):
+        text = text.lower().strip()
+
+        self.ids.md_list.clear_widgets()
+
+        for separator in self.all_sections:
+            section_name = (
+                self.notes_service.transform_section_separator_to_section_name(
+                    defaults=self.defaults,
+                    section_separator=separator,
+                )
+            )
+
+            if text and text not in section_name.lower():
+                continue
+
+            self.ids.md_list.add_widget(
+                ItemDrawer(
+                    id=separator,
+                    text=section_name,
+                    on_release=lambda x=separator: self.press_drawer_item_callback(x),
+                    edit=self.press_edit_section,
+                    delete=self.press_delete_section,
+                )
+            )
+
+    def bind_section_filter(self):
+        self.ids.section_filter.bind(
+            text=lambda instance, value: self.filter_sections(value)
+        )
 
     def get_menu_storage(self):
         menu_items = [
@@ -551,6 +595,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         if (
             not section_name
             or len(section_name) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+            or len(section_name) > SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT
             or section_name.isspace()
             or section_name
             in [
@@ -584,6 +629,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         if (
             not new_section_name
             or len(new_section_name) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+            or len(new_section_name) > SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT
             or new_section_name.isspace()
             or new_section_name
             in [
@@ -746,14 +792,44 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.show_error_bar(error_message="Cannot delete last section")
             return
 
-        self.ids.md_list.remove_widget(section_item)
+        section_name = (
+            self.notes_service.transform_section_separator_to_section_name(
+                defaults=self.defaults,
+                section_separator=section_item.id,
+            )
+        )
 
+        content = DeleteSectionDialogContent(
+            section_name=section_name,
+            execute_delete_section=lambda *_: self.execute_delete_section(
+                section_item
+            ),
+            cancel=self.cancel_dialog,
+        )
+
+        self.dialog = MDDialog(
+            title="Delete section?",
+            type="custom",
+            content_cls=content,
+        )
+        self.dialog.open()
+
+    def execute_delete_section(self, section_item):
         section_separator = section_item.id
-        self.notes_service.delete_section(section_separator=section_separator)
+
+        self.notes_service.delete_section(
+            section_separator=section_separator
+        )
 
         self.filter_data_split_by_section(
             section_separator=self.notes_service.file.default_section_separator
         )
+
+        self.set_drawer_items(
+            section_separators=self.notes_service.file.section_separators_sorted
+        )
+
+        self.cancel_dialog()
 
     def text_input_changed_callback(self):
         self.auto_save_text_input_change_counter += 1

@@ -111,6 +111,32 @@ class TestNotesView:
         assert screen.text_section_view.text == f"Quis istum dolorem timet"
         assert screen.auto_save_text_input_change_counter == 0
 
+    def test_filter_sections(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        screen.all_sections = ["<section=Python> ","<section=Second> ","<section=Python_Projects> "]
+
+        screen.filter_sections("python")
+        items = screen.ids.md_list.children
+        assert len(items) == 2
+        assert {item.text for item in items} == {
+            "Python",
+            "Python_Projects",
+        }
+
+        screen.filter_sections("thon")
+        items = screen.ids.md_list.children
+        assert len(items) == 2
+        assert {item.text for item in items} == {
+            "Python",
+            "Python_Projects",
+        }
+
+        screen.filter_sections("#@#$#@$")
+        items = screen.ids.md_list.children
+        assert len(items) == 0
+        assert {item.text for item in items} == set()
+
     def test_get_menu_storage(self, get_app):
         screen = get_app.controller.get_screen()
         menu = screen.get_menu_storage()
@@ -263,6 +289,7 @@ class TestNotesView:
             section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
         )
         screen.press_delete_section(section_item=section_item)
+        screen.execute_delete_section(section_item=section_item)
 
         section_item = ItemDrawer(
             id="<section=second> ", text="", edit=None, delete=None
@@ -574,6 +601,10 @@ class TestNotesView:
         assert screen.execute_add_section(section_name) is None
         assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
 
+        section_name = "_" * 21
+        assert screen.execute_add_section(section_name) is None
+        assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
+
         section_name = None
         assert screen.execute_add_section(section_name) is None
         assert screen.dialog.content_cls.add_section_result_message == "Invalid name"
@@ -625,6 +656,11 @@ class TestNotesView:
         assert screen.execute_edit_section(old_section_name, new_section_name) is None
         assert screen.dialog.content_cls.edit_section_result_message == "Invalid name"
 
+        old_section_name = ""
+        new_section_name = "_" * 21
+        assert screen.execute_edit_section(old_section_name, new_section_name) is None
+        assert screen.dialog.content_cls.edit_section_result_message == "Invalid name"
+
         old_section_name = None
         new_section_name = ""
         assert screen.execute_edit_section(old_section_name, new_section_name) is None
@@ -668,12 +704,54 @@ class TestNotesView:
         )
         assert screen.ids.toolbar.title == "Notes section: updated section name"
 
-    def test_goto_external_url(self, get_app):
-        # opens browser
-        # screen = get_app.controller.get_screen()
+    def test_press_delete_section_opens_confirmation_dialog(self, get_app):
+        screen = get_app.controller.get_screen()
 
+        section = screen.ids.md_list.children[0]
+        screen.press_delete_section(section)
+
+        assert screen.dialog is not None
+        assert screen.dialog.title == "Delete section?"
+
+    def test_press_delete_section_does_not_delete_before_confirmation(
+            self,
+            get_app,
+    ):
+        screen = get_app.controller.get_screen()
+
+        section = screen.ids.md_list.children[0]
+        section_separator = section.id
+
+        sections_before = list(
+            screen.notes_service.file.section_separators_sorted
+        )
+
+        screen.press_delete_section(section)
+
+        assert section_separator in sections_before
+        assert section_separator in (
+            screen.notes_service.file.section_separators_sorted
+        )
+
+    def test_execute_delete_section_deletes_section(self, get_app):
+        screen = get_app.controller.get_screen()
+
+        section = screen.ids.md_list.children[0]
+        section_separator = section.id
+
+        screen.press_delete_section(section)
+
+        screen.execute_delete_section(section)
+
+        assert section_separator not in (
+            screen.notes_service.file.section_separators_sorted
+        )
+
+    # def test_goto_external_url(self, get_app):
+        # # opens browser
+        # screen = get_app.controller.get_screen()
+        #
         # assert screen.execute_goto_external_url()
-        pass
 
     def test_cancel_dialog(self, get_app):
         screen = get_app.controller.get_screen()
@@ -1005,40 +1083,6 @@ class TestNotesView:
         assert screen.dialog.content_cls.cancel.__str__().startswith(
             "<bound method NotesView.cancel_dialog of <Screen name=''>>"
         )
-
-    def test_press_delete_section(self, get_app, get_notes_service):
-        screen = get_app.controller.get_screen()
-
-        section_item = screen.ids.md_list.children[0]
-
-        assert len(screen.ids.md_list.children) == 2
-
-        assert screen.notes_service.file._data_by_sections == {
-            "<section=first> ": "Quod equidem non reprehendo\n",
-            "<section=second> ": "Quis istum dolorem timet",
-        }
-
-        defaults = Defaults()
-
-        screen.filter_data_split_by_section(
-            section_separator=get_notes_service.transform_section_name_to_section_separator(
-                defaults=defaults, section_name="second"
-            )
-        )
-
-        assert screen.press_delete_section(section_item=section_item) is None
-
-        assert len(screen.ids.md_list.children) == 1
-
-        assert screen.notes_service.file.section_separators_sorted[0] == "<section=first> "
-
-        assert screen.notes_service.file._data_by_sections == {
-            "<section=first> ": "Quod equidem non reprehendo\n"
-        }
-
-        section_item = screen.ids.md_list.children[0]
-        assert screen.press_delete_section(section_item=section_item) is None
-        assert screen.snackbar.ids.label_container.children[0].text == "Cannot delete last section"
 
     def test_text_input_changed_callback_is_external_update(self, get_app):
         # setting model._last_updated_on manually to the past will guarantee model.external_update returns True

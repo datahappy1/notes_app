@@ -1,20 +1,20 @@
 import re
 
 SEARCH_MINIMAL_CHAR_COUNT = 2
+SEARCH_MAX_CHAR_COUNT = 20
 
-SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT = 30
 SEARCH_LIST_ITEM_SECTION_DISPLAY_VALUE = "section "
 SEARCH_LIST_ITEM_POSITION_DISPLAY_VALUE = "position "
-
-SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR = "ff0000"
-SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE = "b"
-
 
 def validate_search_input(input_string):
     if (
         not input_string
-        or len(input_string) < SEARCH_MINIMAL_CHAR_COUNT
         or input_string.isspace()
+    ):
+        return False
+
+    if (
+        not SEARCH_MINIMAL_CHAR_COUNT <= len(input_string) <= SEARCH_MAX_CHAR_COUNT
     ):
         return False
     return True
