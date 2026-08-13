@@ -30,6 +30,7 @@ DRAWING_FILES_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/"
 TEST_SECTION_NAME = "test"
 TEST_SECTION_FILE_SEPARATOR = "<section=test> "
 TEST_SECTION_DATA = "test data"
+TEST_SECTION_UPDATED_NAME = "updated_section_name"
 
 defaults = Defaults()
 defaults.DEFAULT_NOTES_FILE_NAME = TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
@@ -113,9 +114,12 @@ def delete_dump_files():
 
 def delete_drawing_files():
     for file in os.listdir(DRAWING_FILES_PATH):
-        if (
-            file.lower() == f"{TEST_SECTION_NAME}.json"
-            or file.lower() == f"{TEST_SECTION_NAME}.png"
+        if file.lower() in (
+            f"{TEST_SECTION_NAME}.json",
+            f"{TEST_SECTION_UPDATED_NAME}.json",
+        ) or file.lower() in (
+            f"{TEST_SECTION_NAME}.png",
+            f"{TEST_SECTION_UPDATED_NAME}.png",
         ):
             os.remove(file)
 
@@ -137,7 +141,12 @@ def get_default_test_files_state():
     delete_default_notes_file()
     delete_default_notes_empty_file()
     delete_dump_files()
-    # delete_drawing_files()
+    delete_drawing_files()
+
+
+@pytest.fixture
+def get_empty_file_dir_path():
+    return TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH
 
 
 @pytest.fixture

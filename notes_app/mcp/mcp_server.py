@@ -54,6 +54,57 @@ notes = NotesService(
 mcp = FastMCP("Notes")
 
 
+@mcp.tool
+def list_markdown_commands() -> list[dict[str, str]]:
+    """Return the Markdown syntax supported by the Notes application."""
+    return [
+        {
+            "syntax": "# Heading",
+            "description": "Heading level 1",
+        },
+        {
+            "syntax": "## Heading",
+            "description": "Heading level 2",
+        },
+        {
+            "syntax": "### Heading",
+            "description": "Heading level 3",
+        },
+        {
+            "syntax": "**text**",
+            "description": "Bold text",
+        },
+        {
+            "syntax": "*text*",
+            "description": "Italic text",
+        },
+        {
+            "syntax": "- item",
+            "description": "Bullet item",
+        },
+        {
+            "syntax": "-- item",
+            "description": "Indented bullet item",
+        },
+        {
+            "syntax": "> text",
+            "description": "Quote",
+        },
+        {
+            "syntax": "---",
+            "description": "Horizontal separator",
+        },
+        {
+            "syntax": "https://example.com",
+            "description": "Clickable URL",
+        },
+        {
+            "syntax": "```",
+            "description": "Fenced code block",
+        },
+    ]
+
+
 @mcp.tool()
 def search_notes(query: str):
     """
@@ -100,6 +151,7 @@ def save_note(section: str, content: str):
         text=content,
     )
     notes.file.save_file_data()
+    notes.file.reload()
 
     return {"success": True}
 
@@ -115,6 +167,7 @@ def create_note(section: str, content: str = ""):
         text=content,
     )
     notes.file.save_file_data()
+    notes.file.reload()
 
     return {"success": True}
 
@@ -130,6 +183,7 @@ def rename_note(old_name: str, new_name: str):
         new_section_name=new_name,
     )
     notes.file.save_file_data()
+    notes.file.reload()
 
     return {"success": True}
 
@@ -142,6 +196,7 @@ def delete_note(section: str):
 
     notes.delete_section_by_name(section)
     notes.file.save_file_data()
+    notes.file.reload()
 
     return {"success": True}
 

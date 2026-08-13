@@ -28,6 +28,7 @@ from kivymd.uix.snackbar import MDSnackbar
 from notes_app import __version__, __repository_url__
 from notes_app.domain.notes_file import (
     get_validated_file_path,
+    get_directory_from_file_path,
     File,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
@@ -497,6 +498,8 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             return
 
         self.controller.set_file_path(validated_file_path)
+        file_path_dir = get_directory_from_file_path(file_path=validated_file_path)
+        self.drawing_service.set_path_dir(path_dir=file_path_dir)
 
         try:
             self.notes_service.file = File(
@@ -511,7 +514,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 section_separator=self.notes_service.file.default_section_separator
             )
 
-            self.show_message(message=f"File changed to {validated_file_path}", color="success_green")
+            self.show_message(
+                message=f"File changed to {validated_file_path}", color="success_green"
+            )
 
         except ValueError:
             self.notes_service.file.delete_all_sections_content()

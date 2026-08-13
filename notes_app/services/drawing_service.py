@@ -7,6 +7,7 @@ from notes_app.domain.drawing import Drawing
 class DrawingService:
     def __init__(self, defaults):
         self.defaults = defaults
+        self.path_dir = self.defaults.BASE_FILE_PATH
 
     def _safe_name(self, section):
         return re.sub(
@@ -15,11 +16,14 @@ class DrawingService:
             section,
         )
 
+    def set_path_dir(self, path_dir: str):
+        self.path_dir = path_dir
+
     def json_path(self, section):
-        return Path(self.defaults.BASE_FILE_PATH) / f"{self._safe_name(section)}.json"
+        return Path(self.path_dir) / f"{self._safe_name(section)}.json"
 
     def png_path(self, section):
-        return Path(self.defaults.BASE_FILE_PATH) / f"{self._safe_name(section)}.png"
+        return Path(self.path_dir) / f"{self._safe_name(section)}.png"
 
     def load(self, section):
         return Drawing.load(self.json_path(section))

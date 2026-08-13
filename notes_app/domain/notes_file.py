@@ -1,3 +1,4 @@
+import os
 import re
 from datetime import datetime
 from typing import List, Dict, Optional
@@ -14,6 +15,10 @@ def get_validated_file_path(file_path: str) -> Optional[str]:
     except (PermissionError, FileNotFoundError, IsADirectoryError):
         return None
     return file_path
+
+
+def get_directory_from_file_path(file_path: str) -> str:
+    return os.path.dirname(file_path)
 
 
 class File:

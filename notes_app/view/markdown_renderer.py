@@ -130,9 +130,9 @@ class MarkdownRenderer:
             return get_empty_label()
 
         handlers = (
-            ("### ", get_heading3, line),
-            ("## ", get_heading2, line),
             ("# ", get_heading1, line),
+            ("## ", get_heading2, line),
+            ("### ", get_heading3, line),
             ("- ", get_bullet, line),
             ("-- ", get_indented_bullet, line),
             ("> ", get_quote, line),

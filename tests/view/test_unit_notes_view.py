@@ -315,7 +315,9 @@ class TestNotesView:
             == "Cannot delete last section"
         )
 
-    def test_execute_open_file(self, get_app, get_empty_file_file_path):
+    def test_execute_open_file(
+        self, get_app, get_empty_file_file_path, get_empty_file_dir_path
+    ):
         screen = get_app.controller.get_screen()
 
         assert screen.manager_open is False
@@ -341,6 +343,8 @@ class TestNotesView:
         assert screen.notes_service.file._data_by_sections == {}
 
         assert screen.dialog.title == "Add section:"
+
+        assert screen.drawing_service.path_dir == get_empty_file_dir_path
 
     def test_execute_goto_search_result(self, get_app):
         screen = get_app.controller.get_screen()
