@@ -8,6 +8,7 @@ Run:
 """
 
 import json
+import os
 
 from fastmcp import FastMCP
 
@@ -29,7 +30,12 @@ def _get_file_path(filename):
     return content.get("_file_path").get("value")
 
 
-file_path = _get_file_path(filename=defaults.DEFAULT_MODEL_STORE_FILE_NAME)
+# NOTES_FILE takes precedence, letting the server target a specific notes file
+# independently of whatever the GUI app currently has open. When it is unset we
+# fall back to the file path recorded in the model store, then to the default.
+file_path = os.environ.get("NOTES_FILE") or _get_file_path(
+    filename=defaults.DEFAULT_MODEL_STORE_FILE_NAME
+)
 
 file = File(
     file_path=file_path or defaults.DEFAULT_NOTES_FILE_NAME,
@@ -93,6 +99,7 @@ def save_note(section: str, content: str):
         section_name=section,
         text=content,
     )
+    notes.file.save_file_data()
 
     return {"success": True}
 
@@ -107,6 +114,7 @@ def create_note(section: str, content: str = ""):
         section_name=section,
         text=content,
     )
+    notes.file.save_file_data()
 
     return {"success": True}
 
@@ -121,6 +129,7 @@ def rename_note(old_name: str, new_name: str):
         old_section_name=old_name,
         new_section_name=new_name,
     )
+    notes.file.save_file_data()
 
     return {"success": True}
 
@@ -132,6 +141,7 @@ def delete_note(section: str):
     """
 
     notes.delete_section_by_name(section)
+    notes.file.save_file_data()
 
     return {"success": True}
 

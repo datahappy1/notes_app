@@ -708,7 +708,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 try:
                     current_section_text_before = self.notes_service.get_section(
                         section_separator=self.text_section_view.section_file_separator
-                    )
+                    ).text
                 # KeyError raised if the current section was removed or renamed by an external update
                 except KeyError:
                     # merge_strings prioritizes current_section_text_after over current_section_text_before
