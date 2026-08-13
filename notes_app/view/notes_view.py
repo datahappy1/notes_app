@@ -499,7 +499,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.controller.set_file_path(validated_file_path)
 
         try:
-            self.notes_service._file = File(
+            self.notes_service.file = File(
                 file_path=validated_file_path,
                 defaults=self.defaults,
             )
@@ -510,6 +510,10 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.filter_data_split_by_section(
                 section_separator=self.notes_service.file.default_section_separator
             )
+            self.notes_service.file.reload()
+
+            self.show_message(message=f"File changed to {validated_file_path}", color="success_green")
+
         except ValueError:
             self.notes_service.file.delete_all_sections_content()
             self.press_add_section()
