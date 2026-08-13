@@ -29,7 +29,6 @@ class DrawingService:
 
     @staticmethod
     def _is_drawing_in_section(json_drawing_file_path, png_drawing_file_path):
-        print(json_drawing_file_path, png_drawing_file_path)
         return (
             Path(json_drawing_file_path).is_file()
             and Path(png_drawing_file_path).is_file()
