@@ -5,6 +5,7 @@ from notes_app.view.markdown_renderer import (
     MDSeparator,
 )
 
+
 class TestMarkdownRenderer:
     def test_transform_inline_elements(self, get_markdown_renderer):
         result = get_markdown_renderer._transform_inline_elements(
@@ -60,22 +61,14 @@ class TestMarkdownRenderer:
         assert widgets[0].text == "hello world"
 
     def test_render_code_block(self, get_markdown_renderer):
-        widgets = get_markdown_renderer.render(
-            "```python\n"
-            "print('hello')\n"
-            "```"
-        )
+        widgets = get_markdown_renderer.render("```python\n" "print('hello')\n" "```")
 
         assert len(widgets) == 1
         assert isinstance(widgets[0], CodeBlock)
         assert widgets[0].children[0].text == "print('hello')"
 
     def test_render_multiple_lines(self, get_markdown_renderer):
-        widgets = get_markdown_renderer.render(
-            "# Title\n"
-            "\n"
-            "- item"
-        )
+        widgets = get_markdown_renderer.render("# Title\n" "\n" "- item")
 
         assert len(widgets) == 3
 

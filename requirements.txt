@@ -1,3 +1,4 @@
+pygame==2.6.1
 aiofile==3.11.1
 altgraph==0.17.5
 annotated-doc==0.0.5

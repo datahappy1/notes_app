@@ -26,6 +26,21 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import MDSnackbar
 
 from notes_app import __version__, __repository_url__
+from notes_app.domain.notes_file import (
+    get_validated_file_path,
+    File,
+    SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+    SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
+    SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT,
+)
+from notes_app.observer.notes_observer import Observer
+from notes_app.services.drawing_service import DrawingService
+from notes_app.services.notes_service import NotesService
+from notes_app.services.search_service import (
+    validate_search_input,
+    transform_section_text_placeholder_to_section_name,
+    transform_position_text_placeholder_to_position,
+)
 from notes_app.utils.color import (
     get_color_by_name,
     get_next_color_by_rgba,
@@ -33,23 +48,9 @@ from notes_app.utils.color import (
     AVAILABLE_SNACK_BAR_COLORS,
 )
 from notes_app.utils.diff import merge_strings
-from notes_app.services.drawing_service import DrawingService
-from notes_app.view.drawing_window import DrawingWindow
-from notes_app.domain.notes_file import (
-    get_validated_file_path,
-    File,
-    SECTION_FILE_NEW_SECTION_PLACEHOLDER,
-    SECTION_FILE_NAME_MINIMAL_CHAR_COUNT, SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT,
-)
 from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
+from notes_app.view.drawing_window import DrawingWindow
 from notes_app.view.markdown_renderer import MarkdownRenderer
-from notes_app.services.notes_service import NotesService
-from notes_app.observer.notes_observer import Observer
-from notes_app.services.search_service import (
-    validate_search_input,
-    transform_section_text_placeholder_to_section_name,
-    transform_position_text_placeholder_to_position,
-)
 
 APP_TITLE = "Notes"
 APP_METADATA_ROWS = [
@@ -122,7 +123,7 @@ class CustomTextInput(TextInput):
             # Allows for faster typing of text when the amount of text in
             # TextInput gets large.
 
-            (start, finish, lines, lines_flags, len_lines) = self._get_line_from_cursor(
+            start, finish, lines, lines_flags, len_lines = self._get_line_from_cursor(
                 row, new_text
             )
 
@@ -230,7 +231,7 @@ class MenuSettingsItems(Enum):
 
 
 class NotesView(MDBoxLayout, MDScreen, Observer):
-    """"
+    """ "
     A class that implements the visual presentation `NotesModel`.
 
     """
@@ -272,10 +273,12 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.bind_section_filter()
 
         self.filter_data_split_by_section()
-        self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
+        self.set_drawer_items(
+            section_separators=self.notes_service.file.section_separators_sorted
+        )
 
         self.markdown_renderer = MarkdownRenderer()
-        self.drawing_service = DrawingService()
+        self.drawing_service = DrawingService(defaults=self.defaults)
 
     @property
     def is_unsaved_change(self):
@@ -516,8 +519,10 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             section_text_placeholder=custom_list_item.secondary_text
         )
 
-        self.current_section = self.notes_service.transform_section_name_to_section_separator(
-            defaults=self.defaults, section_name=section_name
+        self.current_section = (
+            self.notes_service.transform_section_name_to_section_separator(
+                defaults=self.defaults, section_name=section_name
+            )
         )
         self.filter_data_split_by_section()
 
@@ -608,8 +613,10 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.dialog.content_cls.add_section_result_message = "Invalid name"
             return
 
-        section_separator = self.notes_service.transform_section_name_to_section_separator(
-            defaults=self.defaults, section_name=section_name
+        section_separator = (
+            self.notes_service.transform_section_name_to_section_separator(
+                defaults=self.defaults, section_name=section_name
+            )
         )
 
         self.notes_service.save_section(
@@ -619,7 +626,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.filter_data_split_by_section(section_separator=section_separator)
 
-        self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
+        self.set_drawer_items(
+            section_separators=self.notes_service.file.section_separators_sorted
+        )
 
         self.cancel_dialog()
 
@@ -643,12 +652,16 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.dialog.content_cls.edit_section_result_message = "Invalid name"
             return
 
-        new_section_separator = self.notes_service.transform_section_name_to_section_separator(
-            defaults=self.defaults, section_name=new_section_name
+        new_section_separator = (
+            self.notes_service.transform_section_name_to_section_separator(
+                defaults=self.defaults, section_name=new_section_name
+            )
         )
 
-        old_section_separator = self.notes_service.transform_section_name_to_section_separator(
-            defaults=self.defaults, section_name=old_section_name
+        old_section_separator = (
+            self.notes_service.transform_section_name_to_section_separator(
+                defaults=self.defaults, section_name=old_section_name
+            )
         )
 
         self.notes_service.rename_section(
@@ -656,9 +669,21 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             new_section_separator=new_section_separator,
         )
 
+        try:
+            self.drawing_service.rename_section(
+                old_section=old_section_name,
+                new_section=new_section_name,
+            )
+        except Exception as exc:
+            self.show_error_bar(
+                error_message=f"Error while renaming corresponding drawing files, details: {exc}"
+            )
+
         self.filter_data_split_by_section(section_separator=new_section_separator)
 
-        self.set_drawer_items(section_separators=self.notes_service.file.section_separators_sorted)
+        self.set_drawer_items(
+            section_separators=self.notes_service.file.section_separators_sorted
+        )
 
         self.current_section = new_section_separator
 
@@ -709,8 +734,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
             self.notes_service.save_section(
                 section_separator=self.text_section_view.section_file_separator,
-                text=merged_current_section_text_data
-                or self.text_section_view.text,
+                text=merged_current_section_text_data or self.text_section_view.text,
             )
 
             self.notes_service.file.save_file_data()
@@ -792,18 +816,14 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.show_error_bar(error_message="Cannot delete last section")
             return
 
-        section_name = (
-            self.notes_service.transform_section_separator_to_section_name(
-                defaults=self.defaults,
-                section_separator=section_item.id,
-            )
+        section_name = self.notes_service.transform_section_separator_to_section_name(
+            defaults=self.defaults,
+            section_separator=section_item.id,
         )
 
         content = DeleteSectionDialogContent(
             section_name=section_name,
-            execute_delete_section=lambda *_: self.execute_delete_section(
-                section_item
-            ),
+            execute_delete_section=lambda *_: self.execute_delete_section(section_item),
             cancel=self.cancel_dialog,
         )
 
@@ -817,9 +837,12 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
     def execute_delete_section(self, section_item):
         section_separator = section_item.id
 
-        self.notes_service.delete_section(
-            section_separator=section_separator
+        section_name = self.notes_service.transform_section_separator_to_section_name(
+            defaults=self.defaults,
+            section_separator=section_item.id,
         )
+
+        self.notes_service.delete_section(section_separator=section_separator)
 
         self.filter_data_split_by_section(
             section_separator=self.notes_service.file.default_section_separator
@@ -828,6 +851,13 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.set_drawer_items(
             section_separators=self.notes_service.file.section_separators_sorted
         )
+
+        try:
+            self.drawing_service.delete_section(section=section_name)
+        except Exception as exc:
+            self.show_error_bar(
+                error_message=f"Error while deleting corresponding drawing files, details: {exc}"
+            )
 
         self.cancel_dialog()
 
@@ -872,9 +902,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         layout.clear_widgets()
 
-        widgets = self.markdown_renderer.render(
-            self.ids.text_input.text
-        )
+        widgets = self.markdown_renderer.render(self.ids.text_input.text)
 
         for widget in widgets:
             layout.add_widget(widget)
@@ -899,5 +927,6 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         )
 
         window.open()
+
 
 Builder.load_file(path.join(path.dirname(__file__), "notes_view.kv"))

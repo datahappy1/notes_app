@@ -25,9 +25,7 @@ class TestDrawing:
 
         drawing.add_stroke("pen", color, points)
 
-        assert drawing.strokes == [
-            Stroke("pen", points, color)
-        ]
+        assert drawing.strokes == [Stroke("pen", points, color)]
 
     def test_save(self, tmp_path):
         drawing = Drawing()
@@ -48,32 +46,35 @@ class TestDrawing:
 
     def test_load(self, tmp_path):
         filename = tmp_path / "drawing.json"
-        filename.write_text(json.dumps([
-            {
-                "tool": "pen",
-                "points": [[1, 2]],
-                "color": [1, 0, 0, 1],
-            }
-        ]))
+        filename.write_text(
+            json.dumps(
+                [
+                    {
+                        "tool": "pen",
+                        "points": [[1, 2]],
+                        "color": [1, 0, 0, 1],
+                    }
+                ]
+            )
+        )
 
         drawing = Drawing.load(filename)
 
-        assert drawing.strokes == [
-            Stroke("pen", [[1, 2]], [1, 0, 0, 1])
-        ]
+        assert drawing.strokes == [Stroke("pen", [[1, 2]], [1, 0, 0, 1])]
 
     def test_load_without_color(self, tmp_path):
         filename = tmp_path / "drawing.json"
-        filename.write_text(json.dumps([
-            {
-                "tool": "pen",
-                "points": [[1, 2]],
-            }
-        ]))
+        filename.write_text(
+            json.dumps(
+                [
+                    {
+                        "tool": "pen",
+                        "points": [[1, 2]],
+                    }
+                ]
+            )
+        )
 
         drawing = Drawing.load(filename)
 
-        assert drawing.strokes == [
-            Stroke("pen", [[1, 2]], (0, 0, 0, 1))
-        ]
-
+        assert drawing.strokes == [Stroke("pen", [[1, 2]], (0, 0, 0, 1))]

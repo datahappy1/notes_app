@@ -65,21 +65,11 @@ class DrawingWindow(ModalView):
         # Separator
         buttons.add_widget(self.create_separator())
 
-        black_pen_button = self.get_colored_pen_button(
-            color=(0, 0, 0, 1)
-        )
-        red_pen_button = self.get_colored_pen_button(
-            color=(1, 0, 0, 1)
-        )
-        blue_pen_button = self.get_colored_pen_button(
-            color=(0, 0, 1, 1)
-        )
-        green_pen_button = self.get_colored_pen_button(
-            color=(0, 0.5, 0, 1)
-        )
-        yellow_pen_button = self.get_colored_pen_button(
-            color=(1, 1, 0, 1)
-        )
+        black_pen_button = self.get_colored_pen_button(color=(0, 0, 0, 1))
+        red_pen_button = self.get_colored_pen_button(color=(1, 0, 0, 1))
+        blue_pen_button = self.get_colored_pen_button(color=(0, 0, 1, 1))
+        green_pen_button = self.get_colored_pen_button(color=(0, 0.5, 0, 1))
+        yellow_pen_button = self.get_colored_pen_button(color=(1, 1, 0, 1))
 
         self.color_buttons = [
             black_pen_button,
@@ -105,9 +95,7 @@ class DrawingWindow(ModalView):
             size=("48dp", "48dp"),
             pos_hint={"center_y": 0.5},
         )
-        clear_button.bind(
-            on_release=lambda *_: self.canvas_widget.clear()
-        )
+        clear_button.bind(on_release=lambda *_: self.canvas_widget.clear())
 
         undo_button = MDIconButton(
             icon="undo-variant",
@@ -117,9 +105,7 @@ class DrawingWindow(ModalView):
             size=("48dp", "48dp"),
             pos_hint={"center_y": 0.5},
         )
-        undo_button.bind(
-            on_release=lambda *_: self.canvas_widget.undo()
-        )
+        undo_button.bind(on_release=lambda *_: self.canvas_widget.undo())
 
         buttons.add_widget(clear_button)
         buttons.add_widget(undo_button)
@@ -172,7 +158,4 @@ class DrawingWindow(ModalView):
     def save(self, *args):
         self.service.save(self.section, self.drawing)
 
-        self.canvas_widget.export_to_png(
-            str(self.service.png_path(self.section))
-        )
-
+        self.canvas_widget.export_to_png(str(self.service.png_path(self.section)))

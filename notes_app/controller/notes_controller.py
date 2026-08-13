@@ -29,7 +29,9 @@ class NotesController:
         such default file gets automatically created
         """
         if not self.model.file_path_exists:
-            with open(file=self.defaults.DEFAULT_NOTES_FILE_NAME, mode="w", encoding="utf8") as f:
+            with open(
+                file=self.defaults.DEFAULT_NOTES_FILE_NAME, mode="w", encoding="utf8"
+            ) as f:
                 f.write(self.defaults.DEFAULT_NOTES_FILE_CONTENT)
 
     def set_file_path(self, file_path) -> None:

@@ -68,9 +68,7 @@ class DrawingCanvas(Widget):
             if len(stroke.points) < 4:
                 continue
 
-            self.drawing_layer.add(
-                Color(*stroke.color)
-            )
+            self.drawing_layer.add(Color(*stroke.color))
 
             self.drawing_layer.add(
                 Line(
@@ -92,9 +90,7 @@ class DrawingCanvas(Widget):
         self.current_stroke = [touch.x, touch.y]
         self.current_stroke_color = tuple(self.current_color)
 
-        self.drawing_layer.add(
-            Color(*self.current_stroke_color)
-        )
+        self.drawing_layer.add(Color(*self.current_stroke_color))
 
         self.current_line = Line(
             points=self.current_stroke,

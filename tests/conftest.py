@@ -25,6 +25,11 @@ EMPTY_FILE_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/{EMPTY_FILE_NAME
 EMPTY_FILE_CONTENT = """"""
 
 DUMP_FILES_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/"
+DRAWING_FILES_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/"
+
+TEST_SECTION_NAME = "test"
+TEST_SECTION_FILE_SEPARATOR = "<section=test> "
+TEST_SECTION_DATA = "test data"
 
 defaults = Defaults()
 defaults.DEFAULT_NOTES_FILE_NAME = TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
@@ -33,7 +38,9 @@ defaults.DEFAULT_NOTES_FILE_CONTENT = TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
 
 def create_settings_file():
     with open(
-        file=f"{getcwd()}/{defaults.DEFAULT_SETTINGS_STORE_FILE_NAME}", mode="w", encoding="utf8"
+        file=f"{getcwd()}/{defaults.DEFAULT_SETTINGS_STORE_FILE_NAME}",
+        mode="w",
+        encoding="utf8",
     ) as f:
         f.write(
             json.dumps(
@@ -55,7 +62,9 @@ def delete_settings_file():
 
 def create_model_file():
     with open(
-        file=f"{getcwd()}/{defaults.DEFAULT_MODEL_STORE_FILE_NAME}", mode="w", encoding="utf8"
+        file=f"{getcwd()}/{defaults.DEFAULT_MODEL_STORE_FILE_NAME}",
+        mode="w",
+        encoding="utf8",
     ) as f:
         f.write(
             json.dumps(
@@ -75,7 +84,9 @@ def delete_model_file():
 
 
 def create_default_notes_file():
-    with open(file=defaults.DEFAULT_NOTES_FILE_NAME, mode="w", encoding="utf8") as notes_file:
+    with open(
+        file=defaults.DEFAULT_NOTES_FILE_NAME, mode="w", encoding="utf8"
+    ) as notes_file:
         notes_file.write(defaults.DEFAULT_NOTES_FILE_CONTENT)
 
 
@@ -100,6 +111,20 @@ def delete_dump_files():
             os.remove(file)
 
 
+def delete_drawing_files():
+    for file in os.listdir(DRAWING_FILES_PATH):
+        if (
+            file.lower() == f"{TEST_SECTION_NAME}.json"
+            or file.lower() == f"{TEST_SECTION_NAME}.png"
+        ):
+            os.remove(file)
+
+
+@pytest.fixture
+def get_defaults():
+    return Defaults()
+
+
 @pytest.fixture(autouse=True)
 def get_default_test_files_state():
     create_settings_file()
@@ -112,11 +137,22 @@ def get_default_test_files_state():
     delete_default_notes_file()
     delete_default_notes_empty_file()
     delete_dump_files()
+    # delete_drawing_files()
 
 
 @pytest.fixture
 def get_empty_file_file_path():
     return EMPTY_FILE_PATH
+
+
+@pytest.fixture
+def get_test_section_separator_data():
+    return TEST_SECTION_FILE_SEPARATOR, TEST_SECTION_DATA
+
+
+@pytest.fixture
+def get_test_section_name():
+    return TEST_SECTION_NAME
 
 
 @pytest.fixture

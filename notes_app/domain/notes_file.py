@@ -25,9 +25,9 @@ class File:
             raw_data=self.get_raw_data_content()
         )
 
-        self._data_by_sections: Dict[
-            str, str
-        ] = self._transform_raw_data_content_to_data_by_sections()
+        self._data_by_sections: Dict[str, str] = (
+            self._transform_raw_data_content_to_data_by_sections()
+        )
 
     def _get_validated_raw_data(self, raw_data) -> str:
         matches = re.findall(
@@ -64,7 +64,9 @@ class File:
                 f.write(data)
         except Exception as exc:
             # another attempt at writing at least a dump file
-            with open(f"__dump__{datetime.now():%Y_%m_%d_%H_%M_%S}", "w", encoding="utf8") as f:
+            with open(
+                f"__dump__{datetime.now():%Y_%m_%d_%H_%M_%S}", "w", encoding="utf8"
+            ) as f:
                 f.write(data)
             raise exc
 
@@ -88,7 +90,9 @@ class File:
     def delete_section_content(self, section_separator: str) -> None:
         self._data_by_sections.pop(section_separator)
 
-    def rename_section(self, old_section_separator: str, new_section_separator: str) -> None:
+    def rename_section(
+        self, old_section_separator: str, new_section_separator: str
+    ) -> None:
         self._data_by_sections[new_section_separator] = self._data_by_sections[
             old_section_separator
         ]

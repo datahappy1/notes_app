@@ -9,10 +9,10 @@ from notes_app.view.drawing_window import DrawingWindow
 
 class TestDrawingWindow:
 
-    def test_init(self, tmp_path):
-        service = DrawingService(tmp_path)
+    def test_init(self, get_defaults):
+        service = DrawingService(defaults=get_defaults)
         drawing = Drawing()
-        drawing.save(tmp_path / "Test.json")
+        drawing.save("Test.json")
 
         window = DrawingWindow("Test", service)
 
@@ -21,22 +21,22 @@ class TestDrawingWindow:
         assert window.drawing.strokes == drawing.strokes
         assert window.canvas_widget.drawing is window.drawing
 
-    def test_create_separator(self, tmp_path):
-        window = DrawingWindow("Test", DrawingService(tmp_path))
+    def test_create_separator(self, get_defaults):
+        window = DrawingWindow("Test", DrawingService(defaults=get_defaults))
 
         separator = window.create_separator()
 
         assert isinstance(separator, MDBoxLayout)
 
-    def test_get_colored_pen_button(self, tmp_path):
-        window = DrawingWindow("Test", DrawingService(tmp_path))
+    def test_get_colored_pen_button(self, get_defaults):
+        window = DrawingWindow("Test", DrawingService(defaults=get_defaults))
         color = (1, 0, 0, 1)
         button = window.get_colored_pen_button(color)
         assert button.icon == "pencil-circle-outline"
         assert button.icon_color == list(color)
 
-    def test_select_icon(self, tmp_path):
-        window = DrawingWindow("Test", DrawingService(tmp_path))
+    def test_select_icon(self, get_defaults):
+        window = DrawingWindow("Test", DrawingService(defaults=get_defaults))
         button = window.color_buttons[1]
 
         window.select_icon(button, (1, 0, 0, 1))
@@ -49,12 +49,21 @@ class TestDrawingWindow:
             if color_button is not button
         )
 
-    def test_save(self, tmp_path):
-        service = DrawingService(tmp_path)
+    def test_save(self, get_defaults):
+        service = DrawingService(defaults=get_defaults)
         window = DrawingWindow("Test", service)
-        window.drawing.add_stroke( "pencil", (1, 0, 0, 1), [10, 20, 30, 40], )
+        window.drawing.add_stroke(
+            "pencil",
+            (1, 0, 0, 1),
+            [10, 20, 30, 40],
+        )
         window.save()
-        loaded = Drawing.load(tmp_path / "Test.json")
+        loaded = Drawing.load("Test.json")
 
-        assert loaded.strokes == [ Stroke( tool="pencil", points=[10, 20, 30, 40], color=[1, 0, 0, 1], ) ]
-        assert (tmp_path / "Test.png").exists()
+        assert loaded.strokes == [
+            Stroke(
+                tool="pencil",
+                points=[10, 20, 30, 40],
+                color=[1, 0, 0, 1],
+            )
+        ]

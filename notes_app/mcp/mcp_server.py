@@ -6,6 +6,7 @@ Exposes NotesService methods to Claude Code, Codex, etc.
 Run:
     python mcp_server.py
 """
+
 import json
 
 from fastmcp import FastMCP

@@ -23,7 +23,11 @@ class NotesApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        defaults = Defaults()
+        write_dir = self.user_data_dir
+        if not os.path.exists(write_dir):
+            os.makedirs(write_dir)
+
+        defaults = Defaults(base_file_path=write_dir)
         settings = Settings(store=JsonStore, defaults=defaults)
 
         self.model = NotesModel(store=JsonStore, defaults=defaults)

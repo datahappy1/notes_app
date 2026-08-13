@@ -27,17 +27,28 @@ class TestDiff:
             (
                 "",
                 "this is some section.yeah",
-                [["this", "is", "some", "section.yeah"],],
+                [
+                    ["this", "is", "some", "section.yeah"],
+                ],
             ),
             (
                 "some section text",
                 "this is some section.yeah",
-                [["this", "is"], ["some"], ["section", "text"], ["section.yeah"],],
+                [
+                    ["this", "is"],
+                    ["some"],
+                    ["section", "text"],
+                    ["section.yeah"],
+                ],
             ),
             (
                 "some section text",
                 "another text",
-                [["some", "section"], ["another"], ["text"],],
+                [
+                    ["some", "section"],
+                    ["another"],
+                    ["text"],
+                ],
             ),
         ],
     )
@@ -65,7 +76,10 @@ class TestDiff:
                 "this is some section.yeah",
                 ["this", " ", "is", " ", "some", " ", "section", ".", "yeah"],
             ),
-            ("another text", ["another", " ", "text"],),
+            (
+                "another text",
+                ["another", " ", "text"],
+            ),
         ],
     )
     def test__split(self, input_text, result):
@@ -74,8 +88,14 @@ class TestDiff:
     @pytest.mark.parametrize(
         "input_list, result",
         [
-            (["this", "is", "some", "section.yeah"], "this is some section.yeah",),
-            (["another", "text"], "another text",),
+            (
+                ["this", "is", "some", "section.yeah"],
+                "this is some section.yeah",
+            ),
+            (
+                ["another", "text"],
+                "another text",
+            ),
         ],
     )
     def test__join(self, input_list, result):
@@ -87,7 +107,11 @@ class TestDiff:
             ("is", "this is some section.yeah", "this is some section.yeah"),
             ("is", "this some section.yeah", "is this some section.yeah"),
             ("", "this is some section.yeah", "this is some section.yeah"),
-            ("", "this is some section.yeah", "this is some section.yeah",),
+            (
+                "",
+                "this is some section.yeah",
+                "this is some section.yeah",
+            ),
             (
                 "some section text",
                 "this is some section.yeah",

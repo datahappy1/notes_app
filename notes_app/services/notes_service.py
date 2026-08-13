@@ -18,9 +18,11 @@ class SearchResult:
     def to_dict(self):
         return asdict(self)
 
+
 @dataclass
 class Section:
     text: str
+
 
 @dataclass
 class Note:
@@ -46,9 +48,12 @@ class NotesService:
         self.search_engine = Search(defaults)
 
     @staticmethod
-    def transform_section_separator_to_section_name(defaults, section_separator: str) -> str:
+    def transform_section_separator_to_section_name(
+        defaults, section_separator: str
+    ) -> str:
         return re.search(
-            defaults.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX, section_separator,
+            defaults.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX,
+            section_separator,
         ).group(1)
 
     @staticmethod
@@ -97,7 +102,7 @@ class NotesService:
                         section=section_name,
                         position=position,
                         matched_text=text[position:end],
-                        preview=text[position:end + preview_length],
+                        preview=text[position : end + preview_length],
                     )
                 )
 
@@ -107,11 +112,13 @@ class NotesService:
         return self.search(
             query=query,
             current_section=self.get_section_by_name(
-                self.list_sections()[0].text # use the first existing section since we search in all sections anyway
+                self.list_sections()[
+                    0
+                ].text  # use the first existing section since we search in all sections anyway
             ).text,
             case_sensitive=False,
             full_words=False,
-            all_sections=True
+            all_sections=True,
         )
 
     def get_section(self, section_separator: str) -> Section:
