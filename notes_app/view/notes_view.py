@@ -510,7 +510,6 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.filter_data_split_by_section(
                 section_separator=self.notes_service.file.default_section_separator
             )
-            self.notes_service.file.reload()
 
             self.show_message(message=f"File changed to {validated_file_path}", color="success_green")
 

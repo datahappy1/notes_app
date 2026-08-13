@@ -11,8 +11,8 @@ class Defaults:
             self.BASE_FILE_PATH, "my_first_file.txt"
         )
         self.DEFAULT_SECTION_FILE_SEPARATOR = "<section={name}> "
-        self.DEFAULT_SECTION_FILE_SEPARATOR_REGEX = "<section=[a-z A-Z0-9]+> "
-        self.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX = "<section=(.+?)> "
+        self.DEFAULT_SECTION_FILE_SEPARATOR_REGEX = r"<section=[a-zA-Z0-9_-]*> "
+        self.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX = r"<section=(.+?)> "
         self.DEFAULT_NOTES_FILE_CONTENT = f"{self.DEFAULT_SECTION_FILE_SEPARATOR.format(name='first')} Your first section. Here you can write your notes."
         self.DEFAULT_AUTO_SAVE_TEXT_INPUT_CHANGE_COUNT = 5
         self.DEFAULT_VALUE_SEARCH_CASE_SENSITIVE = False
