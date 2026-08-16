@@ -1,4 +1,3 @@
-import os
 import json
 from dataclasses import dataclass, asdict, field
 
@@ -11,6 +10,10 @@ class Stroke:
 
 
 class Drawing:
+    DRAWING_START = "<drawing>"
+    DRAWING_END = "</drawing>"
+    DRAWING_VERSION = 1
+
     def __init__(self):
         self.strokes = []
 
@@ -23,48 +26,88 @@ class Drawing:
             )
         )
 
-    def save(self, filename):
-        with open(filename, "w", encoding="utf8") as f:
-            json.dump(
-                [asdict(x) for x in self.strokes],
-                f,
-                indent=4,
-            )
+    def to_dict(self):
+        return {
+            "version": self.DRAWING_VERSION,
+            "strokes": [asdict(stroke) for stroke in self.strokes],
+        }
+
+    def to_json(self):
+        return json.dumps(
+            self.to_dict(),
+            indent=4,
+        )
 
     @classmethod
-    def load(cls, filename):
+    def from_dict(cls, data):
         drawing = cls()
 
-        try:
-            with open(filename, encoding="utf8") as f:
-                data = json.load(f)
-            for stroke in data:
-                if "color" not in stroke:
-                    stroke["color"] = (0, 0, 0, 1)
+        if not isinstance(data, dict):
+            return drawing
 
-                drawing.strokes.append(Stroke(**stroke))
+        if data.get("version") != cls.DRAWING_VERSION:
+            return drawing
 
-        except FileNotFoundError:
-            pass
+        for stroke in data.get("strokes", []):
+            if "color" not in stroke:
+                stroke["color"] = (0, 0, 0, 1)
+            else:
+                stroke["color"] = tuple(stroke["color"])
+
+            drawing.strokes.append(Stroke(**stroke))
 
         return drawing
 
-    @staticmethod
-    def rename_files(old_json_path, new_json_path, old_png_path, new_png_path):
+    @classmethod
+    def from_json(cls, value):
         try:
-            os.rename(old_json_path, new_json_path)
-            os.rename(old_png_path, new_png_path)
-        except FileNotFoundError as file_not_found:
-            raise file_not_found
-        except Exception as exc:
-            raise exc
+            data = json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            return cls()
 
-    @staticmethod
-    def delete_files(json_path, png_path):
-        try:
-            os.remove(json_path)
-            os.remove(png_path)
-        except FileNotFoundError as file_not_found:
-            raise file_not_found
-        except Exception as exc:
-            raise exc
+        return cls.from_dict(data)
+
+    def to_text(self):
+        return f"{self.DRAWING_START}\n" f"{self.to_json()}\n" f"{self.DRAWING_END}"
+
+    @classmethod
+    def from_text(cls, text):
+        start = text.find(cls.DRAWING_START)
+        end = text.find(cls.DRAWING_END)
+
+        if start == -1 or end == -1 or end < start:
+            return cls()
+
+        start += len(cls.DRAWING_START)
+        json_text = text[start:end].strip()
+
+        return cls.from_json(json_text)
+
+    @classmethod
+    def remove_from_text(cls, text):
+        start = text.find(cls.DRAWING_START)
+        end = text.find(cls.DRAWING_END)
+
+        if start == -1 or end == -1 or end < start:
+            return text
+
+        end += len(cls.DRAWING_END)
+
+        if end < len(text) and text[end] == "\n":
+            end += 1
+        elif start > 0 and text[start - 1] == "\n":
+            start -= 1
+
+        return text[:start] + text[end:]
+
+    @classmethod
+    def replace_in_text(cls, text, drawing):
+        clean_text = cls.remove_from_text(text).rstrip()
+
+        if not drawing.strokes:
+            return clean_text
+
+        if clean_text:
+            return f"{clean_text}\n\n{drawing.to_text()}"
+
+        return drawing.to_text()

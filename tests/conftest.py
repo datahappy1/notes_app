@@ -8,6 +8,8 @@ from kivymd.app import MDApp
 
 from notes_app.defaults import Defaults
 from notes_app.controller.notes_controller import NotesController
+from notes_app.services.drawing_service import DrawingService
+from notes_app.view.drawing_window import DrawingWindow
 from notes_app.view.markdown_renderer import MarkdownRenderer
 from notes_app.model.notes_model import NotesModel
 from notes_app.domain.notes_file import File
@@ -112,18 +114,6 @@ def delete_dump_files():
             os.remove(file)
 
 
-def delete_drawing_files():
-    for file in os.listdir(DRAWING_FILES_PATH):
-        if file.lower() in (
-            f"{TEST_SECTION_NAME}.json",
-            f"{TEST_SECTION_UPDATED_NAME}.json",
-        ) or file.lower() in (
-            f"{TEST_SECTION_NAME}.png",
-            f"{TEST_SECTION_UPDATED_NAME}.png",
-        ):
-            os.remove(file)
-
-
 @pytest.fixture
 def get_defaults():
     return Defaults()
@@ -141,7 +131,6 @@ def get_default_test_files_state():
     delete_default_notes_file()
     delete_default_notes_empty_file()
     delete_dump_files()
-    delete_drawing_files()
 
 
 @pytest.fixture
@@ -195,6 +184,25 @@ def get_notes_service():
 @pytest.fixture()
 def get_markdown_renderer():
     return MarkdownRenderer()
+
+
+@pytest.fixture()
+def get_drawing_window(get_defaults, get_notes_file):
+    section = "Test"
+
+    separator = get_defaults.DEFAULT_SECTION_FILE_SEPARATOR.format(name=section)
+
+    get_notes_file.set_section_content(
+        separator,
+        "",
+    )
+
+    service = DrawingService(
+        defaults=get_defaults,
+        file=get_notes_file,
+    )
+
+    return DrawingWindow(section, service)
 
 
 @pytest.fixture(autouse=True)

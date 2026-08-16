@@ -1,5 +1,6 @@
 from kivy.graphics import Color, Line, Rectangle, InstructionGroup
 from kivy.uix.widget import Widget
+from notes_app.domain.drawing import Drawing
 
 
 class DrawingCanvas(Widget):
@@ -8,7 +9,7 @@ class DrawingCanvas(Widget):
     def __init__(self, drawing, **kwargs):
         super().__init__(**kwargs)
 
-        self.drawing = drawing
+        self.drawing = drawing if drawing is not None else Drawing()
 
         self.current_color = (0, 0, 0, 1)
         self.current_stroke_color = self.current_color

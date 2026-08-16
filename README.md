@@ -92,6 +92,13 @@ Your first section.
 
 Here you can write your notes.
 
+<drawing>
+{
+    "version": 1,
+    "strokes": [...]
+}
+</drawing>
+
 <section=second>
 Another section of yours.
 ```

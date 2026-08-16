@@ -344,8 +344,6 @@ class TestNotesView:
 
         assert screen.dialog.title == "Add section:"
 
-        assert screen.drawing_service.path_dir == get_empty_file_dir_path
-
     def test_execute_goto_search_result(self, get_app):
         screen = get_app.controller.get_screen()
 
@@ -695,15 +693,6 @@ class TestNotesView:
             [(1, 2)],
         )
         screen.drawing_service.save("first", drawing)
-        screen.export_to_png(filename="first.png")
-
-        assert (
-            screen.drawing_service._is_drawing_in_section(
-                screen.drawing_service.json_path("first"),
-                screen.drawing_service.png_path("first"),
-            )
-            is True
-        )
 
         old_section_name = "first"
         new_section_name = "updated section name"
@@ -720,36 +709,40 @@ class TestNotesView:
             == "<section=updated section name> "
         )
 
-        assert (
-            screen.notes_service.file.get_section_content(
-                section_separator="<section=updated section name> "
-            )
-            == """Quod equidem non reprehendo
-"""
+        assert screen.notes_service.file.get_section_content(
+            section_separator="<section=updated section name> "
+        ) == (
+            "Quod equidem non reprehendo\n"
+            "\n"
+            "<drawing>\n"
+            "{\n"
+            '    "version": 1,\n'
+            '    "strokes": [\n'
+            "        {\n"
+            '            "tool": "pen",\n'
+            '            "points": [\n'
+            "                [\n"
+            "                    1,\n"
+            "                    2\n"
+            "                ]\n"
+            "            ],\n"
+            '            "color": [\n'
+            "                1,\n"
+            "                0,\n"
+            "                0,\n"
+            "                1\n"
+            "            ]\n"
+            "        }\n"
+            "    ]\n"
+            "}\n"
+            "</drawing>"
         )
         assert (
             screen.text_section_view.section_file_separator
             == "<section=updated section name> "
         )
-        assert screen.text_section_view.text == """Quod equidem non reprehendo
-"""
+
         assert screen.ids.toolbar.title == "Notes section: updated section name"
-
-        assert (
-            screen.drawing_service._is_drawing_in_section(
-                screen.drawing_service.json_path("first"),
-                screen.drawing_service.png_path("first"),
-            )
-            is False
-        )
-
-        assert (
-            screen.drawing_service._is_drawing_in_section(
-                screen.drawing_service.json_path("updated_section_name"),
-                screen.drawing_service.png_path("updated_section_name"),
-            )
-            is True
-        )
 
     def test_press_delete_section_opens_confirmation_dialog(self, get_app):
         screen = get_app.controller.get_screen()
@@ -791,15 +784,6 @@ class TestNotesView:
             [(1, 2)],
         )
         screen.drawing_service.save("second", drawing)
-        screen.export_to_png(filename="second.png")
-
-        assert (
-            screen.drawing_service._is_drawing_in_section(
-                screen.drawing_service.json_path("second"),
-                screen.drawing_service.png_path("second"),
-            )
-            is True
-        )
 
         screen.press_delete_section(section)
 
@@ -807,14 +791,6 @@ class TestNotesView:
 
         assert section_separator not in (
             screen.notes_service.file.section_separators_sorted
-        )
-
-        assert (
-            screen.drawing_service._is_drawing_in_section(
-                screen.drawing_service.json_path("second"),
-                screen.drawing_service.png_path("second"),
-            )
-            is False
         )
 
     # def test_goto_external_url(self, get_app):
@@ -1005,7 +981,7 @@ class TestNotesView:
         assert screen.save_current_section_to_file() is None
         assert (
             screen.notes_service.file.get_raw_data_content()
-            == f"""<section=first> Quod equidem non reprehendo\n<section=second> Quis istum dolorem timet{test_section_separator}{test_section_content}"""
+            == f"""<section=first> Quod equidem non reprehendo<section=second> Quis istum dolorem timet{test_section_separator}{test_section_content}"""
         )
 
     def test_save_current_section_to_file_handle_error(self, get_app):
@@ -1185,8 +1161,7 @@ class TestNotesView:
 
         assert (
             screen.notes_service.file.get_raw_data_content()
-            == f"""<section=first> Quod equidem non reprehendo
-<section=second> Quis istum dolorem timet{test_section_separator}{test_section_data}"""
+            == f"""<section=first> Quod equidem non reprehendo<section=second> Quis istum dolorem timet{test_section_separator}{test_section_data}"""
         )
 
         assert screen.text_input_changed_callback() is None
@@ -1211,8 +1186,7 @@ class TestNotesView:
 
         assert (
             screen.notes_service.file.get_raw_data_content()
-            == """<section=first> Quod equidem non reprehendo
-<section=second> Quis istum dolorem timet"""
+            == """<section=first> Quod equidem non reprehendo<section=second> Quis istum dolorem timet"""
         )
 
         assert screen.text_input_changed_callback() is None

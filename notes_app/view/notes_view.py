@@ -28,7 +28,6 @@ from kivymd.uix.snackbar import MDSnackbar
 from notes_app import __version__, __repository_url__
 from notes_app.domain.notes_file import (
     get_validated_file_path,
-    get_directory_from_file_path,
     File,
     SECTION_FILE_NEW_SECTION_PLACEHOLDER,
     SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
@@ -260,11 +259,13 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.set_properties_from_settings()
 
+        self.file = File(
+            file_path=self.model.file_path,
+            defaults=self.defaults,
+        )
+
         self.notes_service = NotesService(
-            file=File(
-                file_path=self.model.file_path,
-                defaults=self.defaults,
-            ),
+            file=self.file,
             defaults=self.defaults,
         )
 
@@ -279,7 +280,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         )
 
         self.markdown_renderer = MarkdownRenderer()
-        self.drawing_service = DrawingService(defaults=self.defaults)
+        self.drawing_service = DrawingService(file=self.file, defaults=self.defaults)
 
     @property
     def is_unsaved_change(self):
@@ -498,8 +499,6 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             return
 
         self.controller.set_file_path(validated_file_path)
-        file_path_dir = get_directory_from_file_path(file_path=validated_file_path)
-        self.drawing_service.set_path_dir(path_dir=file_path_dir)
 
         try:
             self.notes_service.file = File(
@@ -859,13 +858,6 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.set_drawer_items(
             section_separators=self.notes_service.file.section_separators_sorted
         )
-
-        try:
-            self.drawing_service.delete_section(section=section_name)
-        except Exception as exc:
-            self.show_error_bar(
-                error_message=f"Error while deleting corresponding drawing files, details: {exc}"
-            )
 
         self.cancel_dialog()
 

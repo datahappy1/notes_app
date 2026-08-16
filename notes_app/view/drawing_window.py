@@ -156,6 +156,7 @@ class DrawingWindow(ModalView):
         button.icon = "pencil-circle"
 
     def save(self, *args):
-        self.service.save(self.section, self.drawing)
-
-        self.canvas_widget.export_to_png(str(self.service.png_path(self.section)))
+        self.service.save(
+            self.section,
+            self.drawing,
+        )

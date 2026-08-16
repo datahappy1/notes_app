@@ -17,10 +17,6 @@ def get_validated_file_path(file_path: str) -> Optional[str]:
     return file_path
 
 
-def get_directory_from_file_path(file_path: str) -> str:
-    return os.path.dirname(file_path)
-
-
 class File:
     def __init__(self, file_path, defaults):
         self._file_path = file_path

@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass, asdict
 from typing import List
 
+from notes_app.domain.drawing import Drawing
 from notes_app.services.search_service import (
     Search,
     validate_search_input,
@@ -57,7 +58,10 @@ class NotesService:
         ).group(1)
 
     @staticmethod
-    def transform_section_name_to_section_separator(defaults, section_name: str) -> str:
+    def transform_section_name_to_section_separator(
+        defaults,
+        section_name: str,
+    ) -> str:
         return defaults.DEFAULT_SECTION_FILE_SEPARATOR.format(name=section_name)
 
     def search(
@@ -111,18 +115,16 @@ class NotesService:
     def search_all_sections_simple(self, query: str) -> List[SearchResult]:
         return self.search(
             query=query,
-            current_section=self.get_section_by_name(
-                self.list_sections()[
-                    0
-                ].text  # use the first existing section since we search in all sections anyway
-            ).text,
+            current_section=self.get_section_by_name(self.list_sections()[0].text).text,
             case_sensitive=False,
             full_words=False,
             all_sections=True,
         )
 
     def get_section(self, section_separator: str) -> Section:
-        return Section(self.file.get_section_content(section_separator))
+        text = self.file.get_section_content(section_separator)
+
+        return Section(Drawing.remove_from_text(text))
 
     def get_section_by_name(self, section_name: str) -> Section:
         separator = self.transform_section_name_to_section_separator(
@@ -130,7 +132,9 @@ class NotesService:
             section_name=section_name,
         )
 
-        return Section(self.file.get_section_content(separator))
+        text = self.file.get_section_content(separator)
+
+        return Section(Drawing.remove_from_text(text))
 
     def list_sections(self) -> List[Section]:
         return [
@@ -144,6 +148,16 @@ class NotesService:
         ]
 
     def save_section(self, section_separator: str, text: str):
+        if section_separator in self.file.section_separators_sorted:
+            existing_text = self.file.get_section_content(section_separator)
+
+            drawing = Drawing.from_text(existing_text)
+
+            text = Drawing.replace_in_text(
+                text,
+                drawing,
+            )
+
         self.file.set_section_content(
             section_separator=section_separator,
             section_content=text,
@@ -154,6 +168,16 @@ class NotesService:
             defaults=self.defaults,
             section_name=section_name,
         )
+
+        if separator in self.file.section_separators_sorted:
+            existing_text = self.file.get_section_content(separator)
+
+            drawing = Drawing.from_text(existing_text)
+
+            text = Drawing.replace_in_text(
+                text,
+                drawing,
+            )
 
         self.file.set_section_content(
             section_separator=separator,
@@ -188,13 +212,21 @@ class NotesService:
 
         self.file.delete_section_content(separator)
 
-    def rename_section(self, old_section_separator: str, new_section_separator: str):
+    def rename_section(
+        self,
+        old_section_separator: str,
+        new_section_separator: str,
+    ):
         self.file.rename_section(
             old_section_separator=old_section_separator,
             new_section_separator=new_section_separator,
         )
 
-    def rename_section_by_name(self, old_section_name: str, new_section_name: str):
+    def rename_section_by_name(
+        self,
+        old_section_name: str,
+        new_section_name: str,
+    ):
         old_section_separator = self.transform_section_name_to_section_separator(
             defaults=self.defaults,
             section_name=old_section_name,
