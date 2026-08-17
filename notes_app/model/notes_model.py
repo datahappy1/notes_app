@@ -9,6 +9,8 @@ import json
 import time
 from os import linesep, path
 
+from kivy.storage.jsonstore import JsonStore
+
 GENERAL_DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -125,6 +127,10 @@ class NotesModel:
     def notify_observers(self):
         for o in self.observers:
             o.notify_model_is_changed()
+
+    def file_saved(self):
+        self.update()
+        self.dump()
 
     def update(self) -> None:
         """

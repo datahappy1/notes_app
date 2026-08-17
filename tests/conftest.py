@@ -8,8 +8,12 @@ from kivymd.app import MDApp
 
 from notes_app.defaults import Defaults
 from notes_app.controller.notes_controller import NotesController
+from notes_app.services.drawing_service import DrawingService
+from notes_app.view.drawing_window import DrawingWindow
+from notes_app.view.markdown_renderer import MarkdownRenderer
 from notes_app.model.notes_model import NotesModel
-from notes_app.file import File
+from notes_app.domain.notes_file import File
+from notes_app.services.notes_service import NotesService
 from notes_app.settings import Settings
 
 TEST_OVERRIDE_DEFAULT_NOTES_FILE_NAME = "my_first_file.txt"
@@ -23,6 +27,12 @@ EMPTY_FILE_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/{EMPTY_FILE_NAME
 EMPTY_FILE_CONTENT = """"""
 
 DUMP_FILES_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/"
+DRAWING_FILES_PATH = f"{TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH}/"
+
+TEST_SECTION_NAME = "test"
+TEST_SECTION_FILE_SEPARATOR = "<section=test> "
+TEST_SECTION_DATA = "test data"
+TEST_SECTION_UPDATED_NAME = "updated_section_name"
 
 defaults = Defaults()
 defaults.DEFAULT_NOTES_FILE_NAME = TEST_OVERRIDE_DEFAULT_NOTES_FILE_PATH
@@ -31,7 +41,9 @@ defaults.DEFAULT_NOTES_FILE_CONTENT = TEST_OVERRIDE_DEFAULT_NOTES_FILE_CONTENT
 
 def create_settings_file():
     with open(
-        file=f"{getcwd()}/{defaults.DEFAULT_SETTINGS_STORE_FILE_NAME}", mode="w", encoding="utf8"
+        file=f"{getcwd()}/{defaults.DEFAULT_SETTINGS_STORE_FILE_NAME}",
+        mode="w",
+        encoding="utf8",
     ) as f:
         f.write(
             json.dumps(
@@ -53,7 +65,9 @@ def delete_settings_file():
 
 def create_model_file():
     with open(
-        file=f"{getcwd()}/{defaults.DEFAULT_MODEL_STORE_FILE_NAME}", mode="w", encoding="utf8"
+        file=f"{getcwd()}/{defaults.DEFAULT_MODEL_STORE_FILE_NAME}",
+        mode="w",
+        encoding="utf8",
     ) as f:
         f.write(
             json.dumps(
@@ -73,7 +87,9 @@ def delete_model_file():
 
 
 def create_default_notes_file():
-    with open(file=defaults.DEFAULT_NOTES_FILE_NAME, mode="w", encoding="utf8") as notes_file:
+    with open(
+        file=defaults.DEFAULT_NOTES_FILE_NAME, mode="w", encoding="utf8"
+    ) as notes_file:
         notes_file.write(defaults.DEFAULT_NOTES_FILE_CONTENT)
 
 
@@ -98,6 +114,11 @@ def delete_dump_files():
             os.remove(file)
 
 
+@pytest.fixture
+def get_defaults():
+    return Defaults()
+
+
 @pytest.fixture(autouse=True)
 def get_default_test_files_state():
     create_settings_file()
@@ -113,8 +134,23 @@ def get_default_test_files_state():
 
 
 @pytest.fixture
+def get_empty_file_dir_path():
+    return TEST_OVERRIDE_DEFAULT_NOTES_FILE_DIR_PATH
+
+
+@pytest.fixture
 def get_empty_file_file_path():
     return EMPTY_FILE_PATH
+
+
+@pytest.fixture
+def get_test_section_separator_data():
+    return TEST_SECTION_FILE_SEPARATOR, TEST_SECTION_DATA
+
+
+@pytest.fixture
+def get_test_section_name():
+    return TEST_SECTION_NAME
 
 
 @pytest.fixture
@@ -122,17 +158,10 @@ def get_model():
     return NotesModel(store=JsonStore, defaults=defaults)
 
 
-@pytest.fixture()
-def get_file():
-    controller = NotesController(
-        settings=Settings(store=JsonStore, defaults=defaults),
-        model=NotesModel(store=JsonStore, defaults=defaults),
-        defaults=defaults,
-    )
-
+@pytest.fixture
+def get_notes_file():
     file = File(
         file_path=defaults.DEFAULT_NOTES_FILE_NAME,
-        controller=controller,
         defaults=defaults,
     )
     return file
@@ -141,6 +170,39 @@ def get_file():
 @pytest.fixture(autouse=True)
 def get_settings():
     return Settings(store=JsonStore, defaults=defaults)
+
+
+@pytest.fixture(autouse=True)
+def get_notes_service():
+    file = File(
+        file_path=defaults.DEFAULT_NOTES_FILE_NAME,
+        defaults=defaults,
+    )
+    return NotesService(file=file, defaults=defaults)
+
+
+@pytest.fixture()
+def get_markdown_renderer():
+    return MarkdownRenderer()
+
+
+@pytest.fixture()
+def get_drawing_window(get_defaults, get_notes_file):
+    section = "Test"
+
+    separator = get_defaults.DEFAULT_SECTION_FILE_SEPARATOR.format(name=section)
+
+    get_notes_file.set_section_content(
+        separator,
+        "",
+    )
+
+    service = DrawingService(
+        defaults=get_defaults,
+        file=get_notes_file,
+    )
+
+    return DrawingWindow(section, service)
 
 
 @pytest.fixture(autouse=True)

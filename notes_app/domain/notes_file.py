@@ -1,8 +1,11 @@
+import os
 import re
+from datetime import datetime
 from typing import List, Dict, Optional
 
 SECTION_FILE_NEW_SECTION_PLACEHOLDER = ""
 SECTION_FILE_NAME_MINIMAL_CHAR_COUNT = 2
+SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT = 20
 
 
 def get_validated_file_path(file_path: str) -> Optional[str]:
@@ -10,36 +13,22 @@ def get_validated_file_path(file_path: str) -> Optional[str]:
         with open(file=file_path, mode="r", encoding="utf8"):
             pass
     except (PermissionError, FileNotFoundError, IsADirectoryError):
-        return
+        return None
     return file_path
 
 
-def transform_section_separator_to_section_name(
-    defaults, section_separator: str
-) -> str:
-    return re.search(
-        defaults.DEFAULT_SECTION_FILE_SEPARATOR_GROUP_SUBSTR_REGEX, section_separator,
-    ).group(1)
-
-
-def transform_section_name_to_section_separator(defaults, section_name: str) -> str:
-    return defaults.DEFAULT_SECTION_FILE_SEPARATOR.format(name=section_name)
-
-
 class File:
-    def __init__(self, file_path, controller, defaults):
+    def __init__(self, file_path, defaults):
         self._file_path = file_path
-        self._controller = controller
-
         self.defaults = defaults
 
         self._raw_data_content: str = self._get_validated_raw_data(
             raw_data=self.get_raw_data_content()
         )
 
-        self._data_by_sections: Dict[
-            str, str
-        ] = self._transform_raw_data_content_to_data_by_sections()
+        self._data_by_sections: Dict[str, str] = (
+            self._transform_raw_data_content_to_data_by_sections()
+        )
 
     def _get_validated_raw_data(self, raw_data) -> str:
         matches = re.findall(
@@ -60,7 +49,27 @@ class File:
         self._data_by_sections = self._transform_raw_data_content_to_data_by_sections()
 
     def get_raw_data_content(self) -> str:
-        return self._controller.read_file_data(file_path=self._file_path)
+        with open(self._file_path, mode="r", encoding="utf8") as f:
+            return f.read()
+
+    def save_file_data(self):
+        """
+        save_file_data saves provided data to the file with location set in model.file_path
+        """
+        data = self.transform_data_by_sections_to_raw_data_content()
+        if len(data) == 0:
+            return
+
+        try:
+            with open(self._file_path, "w", encoding="utf8") as f:
+                f.write(data)
+        except Exception as exc:
+            # another attempt at writing at least a dump file
+            with open(
+                f"__dump__{datetime.now():%Y_%m_%d_%H_%M_%S}", "w", encoding="utf8"
+            ) as f:
+                f.write(data)
+            raise exc
 
     @property
     def default_section_separator(self) -> str:

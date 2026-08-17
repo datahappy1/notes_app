@@ -1,22 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
-
-kivymd_datas = collect_data_files("kivymd")
-kivymd_hiddenimports = collect_submodules("kivymd")
+from kivymd.icon_definitions import md_icons
 
 a = Analysis(
     ['notes_app/main.py'],
     pathex=[],
     binaries=[],
-    datas=[
-    ("notes_app\\view\\notes_view.kv", "notes_app\\view\\"),
-    *kivymd_datas,
-    ],
-    hiddenimports=[
-        *kivymd_hiddenimports,
-        "kivymd.icon_definitions",
-    ],
+    datas=[("notes_app/view/notes_view.kv", "notes_app/view/")],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -29,12 +19,10 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
-    exclude_binaries=False,
+    exclude_binaries=True,
     name='notes',
-    debug=False,
+    debug=True,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
@@ -52,5 +40,15 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='notes',
+    name='Notes',
+)
+app = BUNDLE(
+    coll,
+    name='notes.app',
+    version='1.0.0',
+    icon="notes_app/assets/notes_app_icon.ico",
+    bundle_identifier='com.github.datahappy1.notes_app',
+    info_plist={
+        'NSHighResolutionCapable': 'False',
+    },
 )

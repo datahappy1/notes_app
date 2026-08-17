@@ -1,24 +1,8 @@
 #:kivy 1.0
 
-<CustomSnackbar>
-    MDIconButton:
-        pos_hint: {'center_y': .5}
-        icon: root.icon
-        opposite_colors: True
-
-    MDLabel:
-        size_hint_y: None
-        height: self.texture_size[1]
-        text: root.text
-        shorten: True
-        shorten_from: 'right'
-        pos_hint: {'center_y': .5}
-
 <ItemDrawer>
     id: section_item
     text: root.text
-    theme_text_color: "Custom"
-    # on_release: self.parent.set_color_item(self)
     on_size:
         self.ids._right_container.width = icons_container.width
         self.ids._right_container.x = icons_container.width
@@ -29,26 +13,27 @@
         MDIconButton:
             icon: 'file-document-edit-outline'
             on_release: root.edit(section_item)
-            theme_text_color: "Custom"
 
         MDIconButton:
             icon: 'trash-can-outline'
             on_release: root.delete(section_item)
-            theme_text_color: "Custom"
 
 <NotesView>:
     orientation: "vertical"
     text_section_view: text_input
 
-    MDToolbar:
+    MDTopAppBar:
         id: toolbar
         elevation: 8
-        md_bg_color: app.theme_cls.bg_dark
         left_action_items: [["menu", lambda x: nav_drawer.set_state("open")],["magnify", lambda x: root.press_icon_search()]]
-        right_action_items: [["file", lambda x: root.menu_storage.open()],["cog", lambda x: root.menu_settings.open()]]
+        right_action_items: [["eye", lambda x: root.toggle_preview()],["file", lambda x: root.menu_storage.open()],["cog", lambda x: root.menu_settings.open()]]
 
     ScreenManager:
+        id: editor_manager
+
         MDScreen:
+            name: "edit"
+
             FloatLayout:
                 id: float_text_layout
                 CustomTextInput:
@@ -60,14 +45,26 @@
                     use_bubble: True
                     on_text: root.text_input_changed_callback()
 
+            MDFloatingActionButton:
+                icon: "draw"
+                pos_hint: {"right": 0.98, "y": 0.02}
+                on_release: root.open_drawpad()
+
             MDNavigationDrawer:
                 id: nav_drawer
+                width: self.parent.width * 0.3
 
                 ContentNavigationDrawer:
                     orientation: "vertical"
                     padding: "8dp"
                     spacing: "8dp"
-                    md_bg_color: app.theme_cls.bg_dark
+
+                    MDTextField:
+                        id: section_filter
+                        hint_text: "Filter sections..."
+                        mode: "rectangle"
+                        size_hint_y: None
+                        height: "48dp"
 
                     ScrollView:
                         DrawerList:
@@ -78,6 +75,17 @@
                         on_release: root.press_add_section()
                         elevation_normal: 12
                         pos_hint: {'x': .8, 'y':.05}
+
+        MDScreen:
+            name: "preview"
+
+            ScrollView:
+                MDBoxLayout:
+                    id: markdown_preview
+                    orientation: "vertical"
+                    adaptive_height: True
+                    padding: "15dp"
+                    spacing: "8dp"
 
 <ShowFileMetadataDialogContent>
     orientation: "vertical"
@@ -163,36 +171,69 @@
                 id: scroll
 
         MDBoxLayout:
-            orientation: "horizontal"
+            orientation: "vertical"
             adaptive_height: True
-            spacing: "10dp"
+            spacing: "8dp"
 
-            MDSwitch:
-                id: search_all_sections_switch
-                active: root.get_search_switch_state("search_all_sections_switch")
-                on_active: root.search_switch_callback("search_all_sections_switch", self.active)
-            MDLabel:
-                text: "all sections"
+            MDBoxLayout:
+                adaptive_height: True
+                spacing: "36dp"
 
-            MDSwitch:
-                id: search_case_sensitive_switch
-                active: root.get_search_switch_state("search_case_sensitive_switch")
-                on_active: root.search_switch_callback("search_case_sensitive_switch", self.active)
-            MDLabel:
-                text: "case sensitive"
+                MDSwitch:
+                    id: search_all_sections_switch
+                    size_hint_y: None
+                    height: "48dp"
+                    pos_hint: {"center_y": 0.5}
+                    active: root.get_search_switch_state("search_all_sections_switch")
+                    on_active: root.search_switch_callback("search_all_sections_switch", self.active)
 
-            MDSwitch:
-                id: search_full_words_switch
-                active: root.get_search_switch_state("search_full_words_switch")
-                on_active: root.search_switch_callback("search_full_words_switch", self.active)
-            MDLabel:
-                text: "full words"
+                MDLabel:
+                    text: "All sections"
+                    valign: "center"
+                    size_hint_y: None
+                    height: "48dp"
+
+            MDBoxLayout:
+                adaptive_height: True
+                spacing: "36dp"
+
+                MDSwitch:
+                    id: search_case_sensitive_switch
+                    size_hint_y: None
+                    height: "48dp"
+                    pos_hint: {"center_y": 0.5}
+                    active: root.get_search_switch_state("search_case_sensitive_switch")
+                    on_active: root.search_switch_callback("search_case_sensitive_switch", self.active)
+
+                MDLabel:
+                    text: "Case sensitive"
+                    valign: "center"
+                    size_hint_y: None
+                    height: "48dp"
+
+            MDBoxLayout:
+                adaptive_height: True
+                spacing: "36dp"
+
+                MDSwitch:
+                    id: search_full_words_switch
+                    size_hint_y: None
+                    height: "48dp"
+                    pos_hint: {"center_y": 0.5}
+                    active: root.get_search_switch_state("search_full_words_switch")
+                    on_active: root.search_switch_callback("search_full_words_switch", self.active)
+
+                MDLabel:
+                    text: "Full words"
+                    valign: "center"
+                    size_hint_y: None
+                    height: "48dp"
 
         MDTextField:
             id: search_string_input_value
             text: root.search_string_placeholder
             hint_text: "What string to search for?"
-            max_text_length: 10
+            max_text_length: 20
 
         MDBoxLayout:
             size_hint_y: None
@@ -273,3 +314,27 @@
                 size_hint: (.5, .8)
                 text: "Save"
                 on_release: root.execute_edit_section(root.old_section_name, section_name_input_value.text)
+
+<DeleteSectionDialogContent>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "180dp"
+
+    MDLabel:
+        text: "Delete section '" + root.section_name + "'?"
+        halign: "center"
+        valign: "center"
+
+    MDBoxLayout:
+        size_hint_y: None
+        height: "48dp"
+        spacing: "8dp"
+
+        MDFlatButton:
+            text: "Cancel"
+            on_release: root.cancel()
+
+        MDRectangleFlatButton:
+            text: "Delete"
+            on_release: root.execute_delete_section()

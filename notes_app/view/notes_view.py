@@ -5,16 +5,16 @@ from enum import Enum
 from os import path, linesep
 from os.path import exists
 
-from kivy.core.window import Window
+from kivy.base import EventLoop
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.uix.scrollview import ScrollView
-from kivymd.theming import ThemableBehavior
+from kivy.uix.textinput import TextInput, FL_IS_LINEBREAK
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.textfield import TextInput
 from kivymd.uix.filemanager import MDFileManager
+from kivymd.uix.label import MDLabel
 from kivymd.uix.list import (
     MDList,
     OneLineAvatarIconListItem,
@@ -23,55 +23,47 @@ from kivymd.uix.list import (
 )
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.screen import MDScreen
-from kivymd.uix.snackbar import BaseSnackbar
+from kivymd.uix.snackbar import MDSnackbar
 
-from kivy.base import EventLoop
-from kivy.uix.textinput import FL_IS_LINEBREAK
-
-from notes_app import __version__
-from notes_app.diff import merge_strings
+from notes_app import __version__, __repository_url__
+from notes_app.domain.notes_file import (
+    get_validated_file_path,
+    File,
+    SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+    SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
+    SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT,
+)
 from notes_app.observer.notes_observer import Observer
-
-from notes_app.color import (
+from notes_app.services.drawing_service import DrawingService
+from notes_app.services.notes_service import NotesService
+from notes_app.services.search_service import (
+    validate_search_input,
+    transform_section_text_placeholder_to_section_name,
+    transform_position_text_placeholder_to_position,
+)
+from notes_app.utils.color import (
     get_color_by_name,
     get_next_color_by_rgba,
     AVAILABLE_COLORS,
     AVAILABLE_SNACK_BAR_COLORS,
 )
-from notes_app.file import (
-    get_validated_file_path,
-    File,
-    transform_section_separator_to_section_name,
-    transform_section_name_to_section_separator,
-    SECTION_FILE_NEW_SECTION_PLACEHOLDER,
-    SECTION_FILE_NAME_MINIMAL_CHAR_COUNT,
-)
-from notes_app.font import get_next_font, AVAILABLE_FONTS
-from notes_app.mark import get_marked_text
-from notes_app.search import (
-    Search,
-    validate_search_input,
-    SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT,
-    SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR,
-    SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
-    transform_section_text_placeholder_to_section_name,
-    transform_section_name_to_section_text_placeholder,
-    transform_position_text_placeholder_to_position,
-    transform_position_to_position_text_placeholder,
-)
+from notes_app.utils.diff import merge_strings
+from notes_app.utils.font import get_next_font, AVAILABLE_FONTS
+from notes_app.view.drawing_window import DrawingWindow
+from notes_app.view.markdown_renderer import MarkdownRenderer
 
 APP_TITLE = "Notes"
 APP_METADATA_ROWS = [
     "A simple notes application",
-    "built with Python 3.8 & KivyMD",
+    "built with Python 3.11 & KivyMD",
     f"version {__version__}",
 ]
-EXTERNAL_REPOSITORY_URL = "https://www.github.com/datahappy1/notes_app/"
+EXTERNAL_REPOSITORY_URL = __repository_url__
 
 
 class CustomTextInput(TextInput):
     # overriding TextInput.insert_text() with added extra condition and (len(_lines_flags) - 1 >= row + 1)
-    # to handle a edge case when external update adds multiple line breaks and results in uncaught index error
+    # to handle an edge case when external update adds multiple line breaks and results in uncaught index error
     def insert_text(self, substring, from_undo=False):
         """Insert new text at the current cursor position. Override this
         function in order to pre-process text for input validation.
@@ -131,7 +123,7 @@ class CustomTextInput(TextInput):
             # Allows for faster typing of text when the amount of text in
             # TextInput gets large.
 
-            (start, finish, lines, lines_flags, len_lines) = self._get_line_from_cursor(
+            start, finish, lines, lines_flags, len_lines = self._get_line_from_cursor(
                 row, new_text
             )
 
@@ -162,18 +154,8 @@ class ContentNavigationDrawer(MDBoxLayout):
     pass
 
 
-class DrawerList(ThemableBehavior, MDList):
-    pass  # set_color_item causing app crashes hard to reproduce
-
-    # def set_color_item(self, instance_item):
-    #     """Called when tap on a menu item.
-    #     Set the color of the icon and text for the menu item.
-    #     """
-    #     for item in self.children:
-    #         if item.text_color == self.theme_cls.primary_color:
-    #             item.text_color = self.theme_cls.text_color
-    #             break
-    #     instance_item.text_color = self.theme_cls.primary_color
+class DrawerList(MDList):
+    pass
 
 
 class OpenFileDialogContent(MDBoxLayout):
@@ -205,6 +187,12 @@ class EditSectionDialogContent(MDBoxLayout):
     cancel = ObjectProperty(None)
 
 
+class DeleteSectionDialogContent(MDBoxLayout):
+    section_name = StringProperty(None)
+    execute_delete_section = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+
 class SearchDialogContent(MDBoxLayout):
     get_search_switch_state = ObjectProperty(None)
     search_switch_callback = ObjectProperty(None)
@@ -222,9 +210,8 @@ class CustomListItem(ThreeLineListItem):
     pass
 
 
-class CustomSnackbar(BaseSnackbar):
-    text = StringProperty(None)
-    icon = StringProperty(None)
+class CustomSnackbar(MDSnackbar):
+    pass
 
 
 class MenuStorageItems(Enum):
@@ -244,7 +231,7 @@ class MenuSettingsItems(Enum):
 
 
 class NotesView(MDBoxLayout, MDScreen, Observer):
-    """"
+    """ "
     A class that implements the visual presentation `NotesModel`.
 
     """
@@ -270,17 +257,30 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.last_searched_string = str()
         self.auto_save_text_input_change_counter = 0
 
-        self.search = Search(defaults=self.defaults)
         self.set_properties_from_settings()
 
         self.file = File(
             file_path=self.model.file_path,
-            controller=self.controller,
             defaults=self.defaults,
         )
-        self.current_section = self.file.default_section_separator
+
+        self.notes_service = NotesService(
+            file=self.file,
+            defaults=self.defaults,
+        )
+
+        self.current_section = self.notes_service.file.default_section_separator
+        self.all_sections = []
+
+        self.bind_section_filter()
+
         self.filter_data_split_by_section()
-        self.set_drawer_items(section_separators=self.file.section_separators_sorted)
+        self.set_drawer_items(
+            section_separators=self.notes_service.file.section_separators_sorted
+        )
+
+        self.markdown_renderer = MarkdownRenderer()
+        self.drawing_service = DrawingService(file=self.file, defaults=self.defaults)
 
     @property
     def is_unsaved_change(self):
@@ -301,9 +301,9 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.text_section_view.section_file_separator = section_separator
 
-        self.text_section_view.text = self.file.get_section_content(
+        self.text_section_view.text = self.notes_service.get_section(
             section_separator=section_separator
-        )
+        ).text
 
         # setting self.text_section_view.text invokes the on_text event method
         # but changing the section without any actual typing is not an unsaved change
@@ -313,20 +313,23 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         # the search result is selected even after the related section is deleted
         self.text_section_view.select_text(0, 0)
 
-        section_name = transform_section_separator_to_section_name(
+        section_name = self.notes_service.transform_section_separator_to_section_name(
             defaults=self.defaults, section_separator=section_separator
         )
 
         self.ids.toolbar.title = f"{APP_TITLE} section: {section_name}"
 
     def set_drawer_items(self, section_separators):
+        self.all_sections = list(section_separators)
+        self.filter_sections("")
+
         self.ids.md_list.clear_widgets()
 
         for section_separator in section_separators:
             self.ids.md_list.add_widget(
                 ItemDrawer(
                     id=section_separator,
-                    text=transform_section_separator_to_section_name(
+                    text=self.notes_service.transform_section_separator_to_section_name(
                         defaults=self.defaults, section_separator=section_separator
                     ),
                     on_release=lambda x=f"{section_separator}": self.press_drawer_item_callback(
@@ -343,6 +346,37 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.current_section = text_item.id  # separator
         self.filter_data_split_by_section()
+
+    def filter_sections(self, text):
+        text = text.lower().strip()
+
+        self.ids.md_list.clear_widgets()
+
+        for separator in self.all_sections:
+            section_name = (
+                self.notes_service.transform_section_separator_to_section_name(
+                    defaults=self.defaults,
+                    section_separator=separator,
+                )
+            )
+
+            if text and text not in section_name.lower():
+                continue
+
+            self.ids.md_list.add_widget(
+                ItemDrawer(
+                    id=separator,
+                    text=section_name,
+                    on_release=lambda x=separator: self.press_drawer_item_callback(x),
+                    edit=self.press_edit_section,
+                    delete=self.press_delete_section,
+                )
+            )
+
+    def bind_section_filter(self):
+        self.ids.section_filter.bind(
+            text=lambda instance, value: self.filter_sections(value)
+        )
 
     def get_menu_storage(self):
         menu_items = [
@@ -424,43 +458,35 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             self.press_menu_item_show_app_metadata()
             self.menu_settings.dismiss()
 
+    def show_message(self, message, color):
+        self.snackbar = CustomSnackbar(
+            MDLabel(
+                text=message,
+                theme_text_color="Custom",
+                text_color=(1, 1, 1, 1),
+            ),
+            snackbar_x=10,
+            snackbar_y=10,
+            md_bg_color=get_color_by_name(
+                colors_list=AVAILABLE_SNACK_BAR_COLORS,
+                color_name=color,
+            ).rgba_value,
+        )
+        self.snackbar.open()
+
     def notify_model_is_changed(self):
         """
         The method is called when the model changes.
         Requests and displays the value of the sum.
         """
-        self.snackbar = CustomSnackbar(
-            text="changes saved",
-            icon="information",
-            snackbar_x="10dp",
-            snackbar_y="10dp",
-            bg_color=get_color_by_name(
-                colors_list=AVAILABLE_SNACK_BAR_COLORS, color_name="success_green"
-            ).rgba_value,
-        )
-        self.snackbar.size_hint_x = (
-            Window.width - (self.snackbar.snackbar_x * 2)
-        ) / Window.width
-        self.snackbar.open()
+        self.show_message(message="Changes saved", color="success_green")
 
     def show_error_bar(self, error_message):
         """
         The method is called when the model changes.
         Requests and displays the value of the sum.
         """
-        self.snackbar = CustomSnackbar(
-            text=error_message,
-            icon="alert-circle",
-            snackbar_x="10dp",
-            snackbar_y="10dp",
-            bg_color=get_color_by_name(
-                colors_list=AVAILABLE_SNACK_BAR_COLORS, color_name="failure_red"
-            ).rgba_value,
-        )
-        self.snackbar.size_hint_x = (
-            Window.width - (self.snackbar.snackbar_x * 2)
-        ) / Window.width
-        self.snackbar.open()
+        self.show_message(message=error_message, color="failure_red")
 
     def execute_open_file(self, file_path):
         if not file_path or not exists(file_path):
@@ -475,19 +501,24 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.controller.set_file_path(validated_file_path)
 
         try:
-            self.file = File(
+            self.notes_service.file = File(
                 file_path=validated_file_path,
-                controller=self.controller,
                 defaults=self.defaults,
             )
+
             self.set_drawer_items(
-                section_separators=self.file.section_separators_sorted
+                section_separators=self.notes_service.file.section_separators_sorted
             )
             self.filter_data_split_by_section(
-                section_separator=self.file.default_section_separator
+                section_separator=self.notes_service.file.default_section_separator
             )
+
+            self.show_message(
+                message=f"File changed to {validated_file_path}", color="success_green"
+            )
+
         except ValueError:
-            self.file.delete_all_sections_content()
+            self.notes_service.file.delete_all_sections_content()
             self.press_add_section()
 
     def execute_goto_search_result(self, custom_list_item):
@@ -495,8 +526,10 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
             section_text_placeholder=custom_list_item.secondary_text
         )
 
-        self.current_section = transform_section_name_to_section_separator(
-            defaults=self.defaults, section_name=section_name
+        self.current_section = (
+            self.notes_service.transform_section_name_to_section_separator(
+                defaults=self.defaults, section_name=section_name
+            )
         )
         self.filter_data_split_by_section()
 
@@ -515,19 +548,19 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
     def get_search_switch_state(self, switch_id):
         if switch_id == "search_case_sensitive_switch":
-            return self.search.search_case_sensitive
+            return self.notes_service.search_engine.search_case_sensitive
         elif switch_id == "search_all_sections_switch":
-            return self.search.search_all_sections
+            return self.notes_service.search_engine.search_all_sections
         elif switch_id == "search_full_words_switch":
-            return self.search.search_full_words
+            return self.notes_service.search_engine.search_full_words
 
     def search_switch_callback(self, switch_id, state, *args):
         if switch_id == "search_case_sensitive_switch":
-            self.search.search_case_sensitive = state
+            self.notes_service.search_engine.search_case_sensitive = state
         elif switch_id == "search_all_sections_switch":
-            self.search.search_all_sections = state
+            self.notes_service.search_engine.search_all_sections = state
         elif switch_id == "search_full_words_switch":
-            self.search.search_full_words = state
+            self.notes_service.search_engine.search_full_words = state
 
     def execute_search(self, *args):
         if not validate_search_input(input_string=args[0]):
@@ -538,56 +571,29 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         self.dialog.content_cls.results_list.clear_widgets()
 
-        found_occurrences = self.search.search_for_occurrences(
-            pattern=self.last_searched_string,
-            file=self.file,
+        results = self.notes_service.search(
+            query=self.last_searched_string,
             current_section=self.current_section,
+            case_sensitive=self.notes_service.search_engine.search_case_sensitive,
+            full_words=self.notes_service.search_engine.search_full_words,
+            all_sections=self.notes_service.search_engine.search_all_sections,
         )
 
-        if not found_occurrences:
+        if not results:
             self.dialog.content_cls.search_results_message = "No match found"
             return
 
-        found_occurrences_count = 0
-
-        for (
-            section_file_separator,
-            section_found_occurrences,
-        ) in found_occurrences.items():
-            found_occurrences_count += len(section_found_occurrences)
-            text_data = self.file.get_section_content(section_file_separator)
-
-            for position_start in section_found_occurrences:
-                position_end = position_start + len(self.last_searched_string)
-
-                found_string = text_data[position_start:position_end]
-                found_string_marked = get_marked_text(
-                    text=found_string,
-                    highlight_style=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_STYLE,
-                    highlight_color=SEARCH_LIST_ITEM_MATCHED_HIGHLIGHT_COLOR,
+        for result in results:
+            self.dialog.content_cls.results_list.add_widget(
+                CustomListItem(
+                    text=result.preview,
+                    secondary_text=f"section {result.section}",
+                    tertiary_text=f"position {result.position}",
+                    on_release=self.execute_goto_search_result,
                 )
+            )
 
-                found_string_extra_chars = text_data[
-                    position_end : position_end
-                    + SEARCH_LIST_ITEM_MATCHED_EXTRA_CHAR_COUNT
-                ]
-
-                section_name = transform_section_separator_to_section_name(
-                    defaults=self.defaults, section_separator=section_file_separator
-                )
-
-                self.dialog.content_cls.results_list.add_widget(
-                    CustomListItem(
-                        text=f"{found_string_marked}{found_string_extra_chars}...",
-                        secondary_text=transform_section_name_to_section_text_placeholder(
-                            section_name=section_name
-                        ),
-                        tertiary_text=transform_position_to_position_text_placeholder(
-                            position_start=position_start
-                        ),
-                        on_release=self.execute_goto_search_result,
-                    )
-                )
+        found_occurrences_count = len(results)
 
         self.dialog.content_cls.search_results_message = (
             f"Matches on {found_occurrences_count} positions found"
@@ -601,30 +607,35 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         if (
             not section_name
             or len(section_name) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+            or len(section_name) > SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT
             or section_name.isspace()
             or section_name
             in [
-                transform_section_separator_to_section_name(
+                self.notes_service.transform_section_separator_to_section_name(
                     defaults=self.defaults, section_separator=section_separator
                 )
-                for section_separator in self.file.section_separators_sorted
+                for section_separator in self.notes_service.file.section_separators_sorted
             ]
         ):
             self.dialog.content_cls.add_section_result_message = "Invalid name"
             return
 
-        section_separator = transform_section_name_to_section_separator(
-            defaults=self.defaults, section_name=section_name
+        section_separator = (
+            self.notes_service.transform_section_name_to_section_separator(
+                defaults=self.defaults, section_name=section_name
+            )
         )
 
-        self.file.set_section_content(
+        self.notes_service.save_section(
             section_separator=section_separator,
-            section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+            text=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
         )
 
         self.filter_data_split_by_section(section_separator=section_separator)
 
-        self.set_drawer_items(section_separators=self.file.section_separators_sorted)
+        self.set_drawer_items(
+            section_separators=self.notes_service.file.section_separators_sorted
+        )
 
         self.cancel_dialog()
 
@@ -634,35 +645,52 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         if (
             not new_section_name
             or len(new_section_name) < SECTION_FILE_NAME_MINIMAL_CHAR_COUNT
+            or len(new_section_name) > SECTION_FILE_NAME_MAXIMUM_CHAR_COUNT
             or new_section_name.isspace()
             or new_section_name
             in [
-                transform_section_separator_to_section_name(
+                self.notes_service.transform_section_separator_to_section_name(
                     defaults=self.defaults, section_separator=section_separator
                 )
-                for section_separator in self.file.section_separators_sorted
+                for section_separator in self.notes_service.file.section_separators_sorted
             ]
             or old_section_name == new_section_name
         ):
             self.dialog.content_cls.edit_section_result_message = "Invalid name"
             return
 
-        new_section_separator = transform_section_name_to_section_separator(
-            defaults=self.defaults, section_name=new_section_name
+        new_section_separator = (
+            self.notes_service.transform_section_name_to_section_separator(
+                defaults=self.defaults, section_name=new_section_name
+            )
         )
 
-        old_section_separator = transform_section_name_to_section_separator(
-            defaults=self.defaults, section_name=old_section_name
+        old_section_separator = (
+            self.notes_service.transform_section_name_to_section_separator(
+                defaults=self.defaults, section_name=old_section_name
+            )
         )
 
-        self.file.rename_section(
+        self.notes_service.rename_section(
             old_section_separator=old_section_separator,
             new_section_separator=new_section_separator,
         )
 
+        try:
+            self.drawing_service.rename_section(
+                old_section=old_section_name,
+                new_section=new_section_name,
+            )
+        except Exception as exc:
+            self.show_error_bar(
+                error_message=f"Error while renaming corresponding drawing files, details: {exc}"
+            )
+
         self.filter_data_split_by_section(section_separator=new_section_separator)
 
-        self.set_drawer_items(section_separators=self.file.section_separators_sorted)
+        self.set_drawer_items(
+            section_separators=self.notes_service.file.section_separators_sorted
+        )
 
         self.current_section = new_section_separator
 
@@ -680,21 +708,21 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
 
         try:
             if self.model.external_update:
-                self.file.reload()
+                self.notes_service.file.reload()
                 try:
-                    current_section_text_before = self.file.get_section_content(
+                    current_section_text_before = self.notes_service.get_section(
                         section_separator=self.text_section_view.section_file_separator
-                    )
-                # KeyError raised if the current section was removed or renamed by a external update
+                    ).text
+                # KeyError raised if the current section was removed or renamed by an external update
                 except KeyError:
                     # merge_strings prioritizes current_section_text_after over current_section_text_before
                     # so empty string placeholder is set to current_section_text_before
                     current_section_text_before = ""
-                    # self.file.reload() will remove the current section separator from self.file.section_separators
+                    # self.notes_service.file.reload() will remove the current section separator from self.notes_service.file.section_separators
                     # in case it was deleted or renamed so the current section identifier is added back
-                    self.file.set_section_content(
+                    self.notes_service.save_section(
                         section_separator=self.text_section_view.section_file_separator,
-                        section_content=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
+                        text=SECTION_FILE_NEW_SECTION_PLACEHOLDER,
                     )
 
                 current_section_text_after = self.text_section_view.text
@@ -708,18 +736,16 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
                 self.text_section_view.focus = False
 
                 self.set_drawer_items(
-                    section_separators=self.file.section_separators_sorted
+                    section_separators=self.notes_service.file.section_separators_sorted
                 )
 
-            self.file.set_section_content(
+            self.notes_service.save_section(
                 section_separator=self.text_section_view.section_file_separator,
-                section_content=merged_current_section_text_data
-                or self.text_section_view.text,
+                text=merged_current_section_text_data or self.text_section_view.text,
             )
 
-            raw_text_data = self.file.transform_data_by_sections_to_raw_data_content()
-
-            self.controller.save_file_data(data=raw_text_data)
+            self.notes_service.file.save_file_data()
+            self.model.file_saved()
 
         except Exception as exc:
             self.show_error_bar(
@@ -776,7 +802,7 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.dialog.open()
 
     def press_edit_section(self, section_item):
-        section_name = transform_section_separator_to_section_name(
+        section_name = self.notes_service.transform_section_separator_to_section_name(
             defaults=self.defaults, section_separator=section_item.id
         )
 
@@ -793,18 +819,47 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         self.dialog.open()
 
     def press_delete_section(self, section_item):
-        if len(self.file.section_separators_sorted) == 1:
+        if len(self.notes_service.file.section_separators_sorted) == 1:
             self.show_error_bar(error_message="Cannot delete last section")
             return
 
-        self.ids.md_list.remove_widget(section_item)
+        section_name = self.notes_service.transform_section_separator_to_section_name(
+            defaults=self.defaults,
+            section_separator=section_item.id,
+        )
 
+        content = DeleteSectionDialogContent(
+            section_name=section_name,
+            execute_delete_section=lambda *_: self.execute_delete_section(section_item),
+            cancel=self.cancel_dialog,
+        )
+
+        self.dialog = MDDialog(
+            title="Delete section?",
+            type="custom",
+            content_cls=content,
+        )
+        self.dialog.open()
+
+    def execute_delete_section(self, section_item):
         section_separator = section_item.id
-        self.file.delete_section_content(section_separator=section_separator)
+
+        section_name = self.notes_service.transform_section_separator_to_section_name(
+            defaults=self.defaults,
+            section_separator=section_item.id,
+        )
+
+        self.notes_service.delete_section(section_separator=section_separator)
 
         self.filter_data_split_by_section(
-            section_separator=self.file.default_section_separator
+            section_separator=self.notes_service.file.default_section_separator
         )
+
+        self.set_drawer_items(
+            section_separators=self.notes_service.file.section_separators_sorted
+        )
+
+        self.cancel_dialog()
 
     def text_input_changed_callback(self):
         self.auto_save_text_input_change_counter += 1
@@ -841,6 +896,37 @@ class NotesView(MDBoxLayout, MDScreen, Observer):
         """
         self.manager_open = False
         self.file_manager.close()
+
+    def render_markdown(self):
+        layout = self.ids.markdown_preview
+
+        layout.clear_widgets()
+
+        widgets = self.markdown_renderer.render(self.ids.text_input.text)
+
+        for widget in widgets:
+            layout.add_widget(widget)
+
+    def toggle_preview(self):
+        manager = self.ids.editor_manager
+        if manager.current == "edit":
+            self.render_markdown()
+            manager.current = "preview"
+        else:
+            manager.current = "edit"
+
+    def open_drawpad(self):
+        section_name = self.notes_service.transform_section_separator_to_section_name(
+            defaults=self.defaults,
+            section_separator=self.current_section,
+        )
+
+        window = DrawingWindow(
+            section=section_name,
+            drawing_service=self.drawing_service,
+        )
+
+        window.open()
 
 
 Builder.load_file(path.join(path.dirname(__file__), "notes_view.kv"))
