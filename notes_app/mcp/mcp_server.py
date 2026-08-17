@@ -151,7 +151,6 @@ def save_note(section: str, content: str):
         text=content,
     )
     notes.file.save_file_data()
-    notes.file.reload()
 
     return {"success": True}
 
@@ -167,7 +166,6 @@ def create_note(section: str, content: str = ""):
         text=content,
     )
     notes.file.save_file_data()
-    notes.file.reload()
 
     return {"success": True}
 
@@ -183,7 +181,6 @@ def rename_note(old_name: str, new_name: str):
         new_section_name=new_name,
     )
     notes.file.save_file_data()
-    notes.file.reload()
 
     return {"success": True}
 
@@ -196,7 +193,6 @@ def delete_note(section: str):
 
     notes.delete_section_by_name(section)
     notes.file.save_file_data()
-    notes.file.reload()
 
     return {"success": True}
 

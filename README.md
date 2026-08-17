@@ -45,7 +45,6 @@ A lightweight desktop notes application built with **Python 3.11** and **KivyMD*
 - Drawing pad associated with note sections
 - Multiple drawing pen colors
 - Drawing undo and clear functionality
-- Export drawings to PNG
 - Detect changes made to the notes file outside the application
 - Best-effort handling of concurrent modifications
 - MCP server for integration with compatible AI clients
@@ -269,9 +268,8 @@ The drawing pad supports:
 - Clear
 - Save without closing the drawing window
 - Closing the drawing window without saving
-- PNG export
 
-Drawings are stored separately from the note text while remaining associated with the relevant section.
+Drawings are stored as json-serialized strokes in the note text file and are placed in the associated notes section.
 
 ---
 
@@ -306,6 +304,7 @@ notes.search
 notes.list_sections
 notes.get_note
 notes.save_note
+notes.list_markdown_commands
 ```
 
 The server can be run independently:
@@ -574,38 +573,7 @@ For macOS builds, dependencies such as Kivy's SDL2/GStreamer stack may require a
 
 The project is organized around the MVC architecture and separates UI, application logic, and services.
 
-```text
-notes_app/
-├── main.py
-├── controller/
-├── model/
-├── services/
-├── view/
-├── observer/
-└── utils/
-
-mcp_server.py
-```
-
-Important application components include:
-
-```text
-notes_app/
-├── controller/
-│   └── notes_controller.py
-│
-├── services/
-│   ├── notes_service.py
-│   └── drawing_service.py
-│
-├── view/
-│   ├── notes_view.py
-│   ├── notes_view.kv
-│   ├── drawing_canvas.py
-│   └── drawing_window.py
-│
-└── ...
-```
+![Notes architecture](https://github.com/datahappy1/notes_app/blob/main/notes_app_architecture.png)
 
 ---
 

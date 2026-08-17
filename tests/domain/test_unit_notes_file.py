@@ -3,16 +3,13 @@ from os import listdir, getcwd
 
 import pytest
 
-from notes_app.defaults import Defaults
 from notes_app.domain.notes_file import (
     get_validated_file_path,
 )
 
-defaults = Defaults()
 
-
-def test_get_validated_file_path():
-    file_path = defaults.DEFAULT_NOTES_FILE_NAME
+def test_get_validated_file_path(get_defaults):
+    file_path = get_defaults.DEFAULT_NOTES_FILE_NAME
     assert get_validated_file_path(file_path=file_path) == file_path
 
     file_path = f"sample_not_existing_{uuid.uuid4().hex}.txt"
@@ -131,6 +128,10 @@ class TestNotesFile:
     def test_save_file_data(self, get_notes_file):
         get_notes_file._raw_data_content = """<section=first> Quod equidem non reprehendo
 <section=second> Quis istum dolorem timet"""
+        assert get_notes_file.save_file_data() is None
+
+    def test_save_file_data_empty(self, get_notes_file):
+        get_notes_file._raw_data_content = """"""
         assert get_notes_file.save_file_data() is None
 
     def test_save_file_data_handle_error(self, get_app, get_notes_file):
